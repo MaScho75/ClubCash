@@ -71,6 +71,10 @@
     text-align: right;
 }
 
+.links {
+    text-align: left;
+}
+
 .rechts_groß {
     text-align: right;
     font-size: 35px;

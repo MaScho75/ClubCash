@@ -24,14 +24,18 @@ if (($handle = fopen($file, "r")) !== FALSE) {
 
         // Wenn das Datum mit dem heutigen übereinstimmt, fügen wir es zum Array hinzu
         if ($date == $today) {
-            $todayData[] = $data;
+            $todayData[] = array_combine($headers, $data);
         }
     }
 
     fclose($handle);
 
     // Die gefilterten Daten als JSON zurückgeben
-    echo json_encode(["status" => "success", "data" => $todayData]);
+    echo json_encode([
+        "status" => "success", 
+        "headers" => $headers,
+        "data" => $todayData
+    ]);
 } else {
     echo json_encode(["status" => "error", "message" => "Datei konnte nicht geöffnet werden"]);
 }

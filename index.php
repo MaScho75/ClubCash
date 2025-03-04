@@ -87,7 +87,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 			<div id="menubar">
 		    	<button onclick="window.location.reload(true);">Abbruch</button>
 			    <button onclick="tagesabrechnung();">Tagesabrechnung</button>
-			    <button onclick="">Tageszusammenfassung</button>
+			    <button onclick="tageszusammenfassung();">Tageszusammenfassung</button>
 			    <button>Kunden Tagesübersicht</button>
 	    	</div>
 				
@@ -322,19 +322,17 @@ async function tagesabrechnung() {
             
             console.log("row: ", row);
             
-            let kunde = kunden.find(kunden => kunden.ID === row[3]);
-            
-            console.log("Kunde: ", kunde);
+            let kunde = kunden.find(kunden => kunden.ID === row.Kunde);
          
-            tagessumme += parseFloat(row[7]);
+            tagessumme += parseFloat(row.Preis);
             
             let tr = document.createElement("tr");
             tr.innerHTML = `
-                <td class="zentriert">` + row[2]+ `</td>
-                <td class="zentriert">` + row[1] + `</td>
+                <td class="zentriert">` + row.Terminal + `</td>
+                <td class="zentriert">` + row.Zeit + `</td>
                 <td>` + kunde.Name + ", " + kunde.Vorname + `</td>
-                <td>` + row[5] + `</td>
-                <td class="währung">` + row[7] + ` €</td>
+                <td>` + row.Produkt + `</td>
+                <td class="währung">` + row.Preis + ` €</td>
             `;
             tbody.appendChild(tr);
      
@@ -352,6 +350,85 @@ async function tagesabrechnung() {
         statusfeld.innerText = "Fehler beim Laden der Daten:", error;
     }
 }
+
+async function tageszusammenfassung() {
+    
+    let tagessumme = 0.0;
+    
+    try {
+        let response = await fetch("tagesabrechnung-csv.php");
+            if (!response.ok) {
+                throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+            }
+    
+        let data = await response.json();
+        console.log("Abgerufene Daten: ", data);
+
+        if (data.status !== "success") {
+            console.error("Fehler beim Abrufen:", data.message);
+            return;
+        }
+       
+        const productCounts = data.data.reduce((acc, row) => {
+            
+            const product = row.Produkt;  // Produktname
+            const price = parseFloat(row.Preis); // Preis
+
+            if (acc[product]) {
+                acc[product].count += 1;  // Falls das Produkt schon im Objekt ist, erhöhe die Zählung
+                acc[product].totalPrice += price;  // und addiere den Preis
+
+            } else {
+                acc[product] = {
+                    count: 1,        // Erstes Vorkommen des Produkts
+                    unitPrice: price,  // Einzelpreis
+                    totalPrice: price  // Summenpreis (zu Beginn gleich dem Einzelpreis) erste Mal ist, setze den Zähler auf 1
+                };
+            }
+            return acc;
+        }, {});
+
+        console.log("Ergebnis: ", productCounts);
+        
+        tbody.innerText = ""; // Bestehenden Inhalt löschen
+		
+        thead.innerHTML = `
+            <tr>
+            <th>Anzahl</th>
+            <th class="links">Produkt</th>   
+            <th class="rechts">Einzelpreis</th>
+            <th class="rechts">Summe</th>
+             </tr>
+             `;
+        
+        for (const [product, details] of Object.entries(productCounts)) {
+            
+            let tr = document.createElement("tr");
+            
+            tr.innerHTML = `
+                <td class="zentriert"> ${details.count} </td>
+                <td> ${product} </td>
+                <td class="währung"> ${details.unitPrice.toFixed(2)} €</td>
+                <td class="währung"> ${details.totalPrice.toFixed(2)} €</td>
+            `;
+            tbody.appendChild(tr);
+        
+            tagessumme += details.totalPrice;
+
+    }
+       
+        statusfeld.innerText = "Tageszusammenfassung";
+    
+        summenfeld.innerText = tagessumme.toFixed(2);
+    
+        Eingabe_Stop();
+
+    } catch (error) {
+        console.error("Fehler beim Laden der Daten:", error);
+        statusfeld.innerText = "Fehler beim Laden der Daten:", error;
+    }
+}
+
 
 function Eingabe_Stop() {
     document.removeEventListener("keydown", tastenkontrolle);
