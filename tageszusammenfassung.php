@@ -15,6 +15,7 @@ if ($conn->connect_error) {
 }
 
 // Aktuelles Datum abrufen
+date_default_timezone_set('Europe/Berlin');
 $heute = date("Y-m-d");
 
 // SQL-Abfrage

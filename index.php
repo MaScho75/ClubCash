@@ -58,20 +58,19 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 		<div id="linkeSpalte">
 			
 			<div id="statusfeld">
-			   	 Bitte Produkt scannen oder Chip einlesen.
+			   	 Guten Tag!
 			</div>
 			
 			<div id="datenfeld">
-   	 			<table id="warenkorbtabelle" border="0">
-					<thead>
-						<tr>
-							<th class="rechts_groß" >Produkt</th>
-							<th class="rechts_groß" style="width: 140px">Preis</th>
-							<th style="width: 50px"></th>
-							
-						</tr>		
-					</thead>
+                <table id="warenkorbtabelle" border="0">
+					<thead></thead>
 					<tbody>
+                        <tr>
+                            <th>Scanne ein Produkt oder lege deinen Chip auf.</th>
+                        </tr>
+                        <tr>
+                            <th>Wenn du zuerste deinen Chip auflegst, bekommst du alle deine bisherigen Käufe angezeigt.</th>
+                        </tr>
 					</tbody>		   
 			    </table>
 		    </div>
@@ -88,7 +87,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 		    	<button onclick="window.location.reload(true);">Abbruch</button>
 			    <button onclick="tagesabrechnung();">Tagesabrechnung</button>
 			    <button onclick="tageszusammenfassung();">Tageszusammenfassung</button>
-			    <button>Kunden Tagesübersicht</button>
+			    <button onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
 	    	</div>
 				
 			<div id="summenkasten">
@@ -104,8 +103,8 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 		let produkte = <?php echo json_encode($produkte); ?>;
 		let kunden = <?php echo json_encode($kunden); ?>;
 
-		console.log("produkte: ", produkte);
-		console.log("kunden: ", kunden);
+		//console.log("produkte: ", produkte);
+		//console.log("kunden: ", kunden);
 		
 		let warenkorb = [];
 		let summe = 0.00;
@@ -128,7 +127,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 		    	kundenprüfung(eingabe);
 				
 		    	if(eingabe) {
-			        console.log("Kein Kunde und kein Produkt!");
+			        //console.log("Kein Kunde und kein Produkt!");
 			        statusfeld.innerText = "Kein Produkt und kein Kunde erkannt."
 			        Fehlerton();
                 eingabe = "";    
@@ -145,10 +144,31 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         document.addEventListener("keydown", tastenkontrolle);
 	
 function produktprüfung(EANr) {
+   
+        if (warenkorb.length == 0) {
+
+            console.log("Warenkorb ist leer!");
+
+            warenkorb2 = [];
+
+            //warenkorbtabelle.innerHTML= "";
+
+            tbody.innerHTML = ""; // Bestehenden Inhalt löschen
+            
+            thead.innerHTML = `
+            <tr>
+							<th class="rechts_groß" >Produkt</th>
+							<th class="rechts_groß" style="width: 140px">Preis</th>
+							<th style="width: 50px"></th>		
+		    </tr>
+             `;
+        }
 
 		let produkt = produkte.find(produkte => produkte.EAN === EANr);
 		
 		if (produkt) {
+
+            console.log("Produkt gefunden: ", produkt);
 
 			warenkorb.push(produkt);
 
@@ -182,12 +202,18 @@ function kundenprüfung(KundenNr) {
 		    if (!summe == 0) {
 		        
 		        let warenkorb2 = [];
-		        let  now = new Date();
-		        let datum = now.toISOString().split("T")[0];
+                let now = new Date();     
+                // Manuelles Erstellen des Datums im Format YYYY-MM-DD
+                let year = now.getFullYear();
+                let month = String(now.getMonth() + 1).padStart(2, '0');  // Monat ist 0-basiert, daher +1
+                let day = String(now.getDate()).padStart(2, '0');  // Den Tag immer auf 2 Stellen auffüllen
+                let datum = `${year}-${month}-${day}`;
 		        let zeit =  now.toTimeString().split(" ")[0].slice(0, 5);
 
 		        for (ds of warenkorb) {
 		            console.log("ds: ", ds);
+                    console.log("now: ", now);  
+                    console.log("Datum: ", datum);
 		            let ds2 = {
 		                Datum: datum,
 		                Zeit: zeit,
@@ -199,14 +225,16 @@ function kundenprüfung(KundenNr) {
 		                Preis: ds.Preis,
 		                MwSt: ds.MwSt
 		            }
-		            
+		            console.log("ds2: ", ds2);
 		            warenkorb2.push(ds2);
 		        }
 
                 übertragung_verkaufsliste(warenkorb2);
                
 			    statusfeld.innerText = "Produkte aus dem Warenkorb wurden dem Kundenkonto von " + kunde.Name + ", " + kunde.Vorname + " übertragen.";
-			    tbody.innerText = "";
+			    tbody.innerHTML = "";
+                thead.innerHTML = "Prokukte bezahlt!";
+
 		        eingabe = "";
 				warenkorb = [];
 				warenkorb2 = [];
@@ -222,6 +250,8 @@ function kundenprüfung(KundenNr) {
 	};
 
 async function kundenkontoübersicht(KundenNr) {
+
+document.removeEventListener("keydown", tastenkontrolle);    
 
 let kontosumme = 0.0;
 
@@ -240,7 +270,7 @@ let kontosumme = 0.0;
         }
     
         let data = await response.json();
-        console.log("Abgerufene Daten: ", data);
+        //console.log("Abgerufene Daten: ", data);
 
         if (data.status !== "success") {
             console.error("Fehler beim Abrufen:", data.message);
@@ -261,17 +291,17 @@ let kontosumme = 0.0;
         
         data.data.forEach(row => {
             
-            console.log("row: ", row);
+            //console.log("row: ", row);
 
-            kontosumme += parseFloat(row[7]);
+            kontosumme += parseFloat(row.Preis);
             
             let tr = document.createElement("tr");
             tr.innerHTML = `
-                <td class="zentriert">` + row[0]+ `</td>
-                <td class="zentriert">` + row[1] + `</td>
-                <td class="zentriert">` + row[2] + `</td>
-                <td>` + row[5] + `</td>
-                <td class="währung">` + row[7] + ` €</td>
+                <td class="zentriert">` + row.Datum+ `</td>
+                <td class="zentriert">` + row.Zeit + `</td>
+                <td class="zentriert">` + row.Terminal + `</td>
+                <td>` + row.Produkt + `</td>
+                <td class="währung">` + row.Preis + ` €</td>
             `;
             tbody.appendChild(tr);
           
@@ -279,17 +309,17 @@ let kontosumme = 0.0;
 
         summenfeld.innerText = kontosumme.toFixed(2);
     
-        Eingabe_Stop();
+        warenkorb = [];
 
     } catch (error) {
         console.error("Fehler beim Laden der Daten:", error);
     }
-
-    
 }
 
 async function tagesabrechnung() {
     
+    document.removeEventListener("keydown", tastenkontrolle);
+
     let tagessumme = 0.0;
     
     try {
@@ -299,7 +329,7 @@ async function tagesabrechnung() {
         }
     
         let data = await response.json();
-        console.log("Abgerufene Daten: ", data);
+        //console.log("Abgerufene Daten: ", data);
 
         if (data.status !== "success") {
             console.error("Fehler beim Abrufen:", data.message);
@@ -320,7 +350,7 @@ async function tagesabrechnung() {
         
         data.data.forEach(row => {
             
-            console.log("row: ", row);
+            //console.log("row: ", row);
             
             let kunde = kunden.find(kunden => kunden.ID === row.Kunde);
          
@@ -343,7 +373,7 @@ async function tagesabrechnung() {
     
         summenfeld.innerText = tagessumme.toFixed(2);
     
-        Eingabe_Stop();
+        warenkorb = [];
 
     } catch (error) {
         console.error("Fehler beim Laden der Daten:", error);
@@ -352,6 +382,8 @@ async function tagesabrechnung() {
 }
 
 async function tageszusammenfassung() {
+
+    document.removeEventListener("keydown", tastenkontrolle);
     
     let tagessumme = 0.0;
     
@@ -362,7 +394,8 @@ async function tageszusammenfassung() {
             }
     
         let data = await response.json();
-        console.log("Abgerufene Daten: ", data);
+        
+        //console.log("Abgerufene Daten: ", data);
 
         if (data.status !== "success") {
             console.error("Fehler beim Abrufen:", data.message);
@@ -388,7 +421,7 @@ async function tageszusammenfassung() {
             return acc;
         }, {});
 
-        console.log("Ergebnis: ", productCounts);
+        //console.log("Ergebnis: ", productCounts);
         
         tbody.innerText = ""; // Bestehenden Inhalt löschen
 		
@@ -421,7 +454,7 @@ async function tageszusammenfassung() {
     
         summenfeld.innerText = tagessumme.toFixed(2);
     
-        Eingabe_Stop();
+        warenkorb = [];
 
     } catch (error) {
         console.error("Fehler beim Laden der Daten:", error);
@@ -429,10 +462,115 @@ async function tageszusammenfassung() {
     }
 }
 
+async function kundentagesübersicht() {
 
-function Eingabe_Stop() {
     document.removeEventListener("keydown", tastenkontrolle);
+    
+    let tagessumme = 0.0;
+    
+    try {
+        let response = await fetch("tagesabrechnung-csv.php");
+            if (!response.ok) {
+                throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+            }
+    
+        let data = await response.json();
+        console.log("Abgerufene Daten: ", data);
+
+        if (data.status !== "success") {
+            console.error("Fehler beim Abrufen:", data.message);
+            return;
+        }
+       
+        const sortedByCustomer = data.data.sort((a, b) => a.Kunde.localeCompare(b.Kunde));
+
+        // Produkte zählen, Einzelpreis und Gesamtsumme berechnen
+        const customerData = sortedByCustomer.reduce((acc, row) => {
+            const customer = row.Kunde; // Kunde
+            const product = row.Produkt; // Produkt
+            const price = parseFloat(row.Preis); // Preis als Zahl
+
+            // Wenn der Kunde noch nicht im Accumulator ist, hinzufügen
+            if (!acc[customer]) {
+                acc[customer] = {};
+            }
+
+            // Wenn das Produkt noch nicht für diesen Kunden existiert
+             if (!acc[customer][product]) {
+                acc[customer][product] = {
+                count: 0,
+                unitPrice: price,
+                totalPrice: 0
+                };
+            }
+
+            // Produktanzahl erhöhen und Gesamtsumme berechnen
+            acc[customer][product].count += 1;
+            acc[customer][product].totalPrice += price;
+
+            return acc;
+
+        }, {});
+    
+
+        console.log(customerData);
+        thead.innerHTML = "";
+        tbody.innerText = ""; // Bestehenden Inhalt löschen
+        
+       for (const Kunde1 in customerData) {
+         
+            let kunde = kunden.find(kunden => kunden.ID === Kunde1);
+
+            console.log("Kunde: ", kunde);
+
+            let tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td colspan="4" id="Namenfeld">` + kunde.Name + `, ` + kunde.Vorname + `</td>
+            `;
+            tbody.appendChild(tr);
+
+            let kundensumme = 0.0;
+            
+            for (const [product, details] of Object.entries(customerData[Kunde1])) {
+             
+                
+                let tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td class="zentriert">` + details.count + `</td>
+                    <td class="links">` + product + `</td>
+                    <td class="währung">` + details.unitPrice.toFixed(2) + ` €</td>
+                    <td class="währung">` + details.totalPrice.toFixed(2) + ` €</td>
+                `;
+                tbody.appendChild(tr);
+                kundensumme += details.totalPrice;
+            }
+
+            tagessumme += kundensumme;
+
+            let tr2 = document.createElement("tr");
+            tr2.innerHTML = `
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="währung"><b>` + kundensumme.toFixed(2) + ` €</b></td>
+            `;
+            tbody.appendChild(tr2); 
+            
+        }
+         
+        statusfeld.innerText = "Kunden Tagesübersicht";
+    
+        summenfeld.innerText = tagessumme.toFixed(2);
+    
+        warenkorb = [];
+
+    } catch (error) {
+        console.error("Fehler beim Laden der Daten:", error);
+        statusfeld.innerText = "Fehler beim Laden der Daten:", error;
+    }
 }
+    
+   
 
 function Fehlerton() {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -454,7 +592,7 @@ function Fehlerton() {
 
 async function übertragung_verkaufsliste(data) {
     
-    console.log("Data: ", data);
+    //console.log("Data: ", data);
 
     fetch("verkaufsliste-api.php", {
         method: "POST",

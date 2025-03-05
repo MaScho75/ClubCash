@@ -21,7 +21,7 @@
 }
 
 #statusfeld {
-	/*background-color: grey;*/
+	/*background-color: yellow;*/
 	height: 40px;
 	display: flex;
     justify-content: center;
@@ -117,6 +117,16 @@ button {
 
 table {
 
+}
+
+#Namenfeld {
+    background-color: rgb(138, 170, 215);
+    font-weight: bold;
+    text-align: left;
+}
+
+th {
+    background-color: rgb(138, 170, 215);
 }
 
 

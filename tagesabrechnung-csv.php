@@ -7,6 +7,7 @@ header("Access-Control-Allow-Origin: *");
 $file = "daten/verkaufsliste.csv";
 
 // Heute im Format YYYY-MM-DD
+date_default_timezone_set('Europe/Berlin');
 $today = date("Y-m-d");
 
 // Datei lesen
