@@ -16,6 +16,8 @@
 	
 	<link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet">
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 </head>
 	
 <?php
@@ -88,12 +90,14 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 			</div>
 			
 			<div id="menubar">
-		    	<button onclick="window.location.reload(true);">Abbruch</button>
-			    <button onclick="tagesabrechnung();">Tagesabrechnung</button>
-			    <button onclick="tageszusammenfassung();">Tageszusammenfassung</button>
-			    <button onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
-			    <button id="Bt_sonderangebote" onclick="sonderangebote();">Sonderangebote</button>
-			    <button id="Bt_manuelleBuchung" onclick="manuell();">Sonderbuchung</button>
+		    	<button onclick="info()">Info</button>
+                <button onclick="window.location.reload(true);">Abbruch</button>
+			    <button id="Bt_tagesabrechnung" onclick="tagesabrechnung();">Tagesabrechnung</button>
+			    <button id="Bt_tageszusammenfassung" onclick="tageszusammenfassung();">Tageszusammenfassung</button>
+			    <button id="Bt_kundentagesübersicht" onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
+			    <button id="Bt_sonderangebote" onclick="sonderangebote();">Produkte</button>
+			    <button id="Bt_manuelleBuchung" onclick="manuell();">Direktbuchung</button>
+                
 	    	</div>
 				
 			<div id="summenkasten">
@@ -102,7 +106,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 			
 		</div>
 		<div id=produktfenster>
-		    <h1>Sonderangebote</h1>
+		    <h1>Produktauswahl</h1>
 		    <button onclick="sonderangebot('4463300106005')">Mittagessen</button>
 		    <button onclick="sonderangebot('4463500000000')">Gastflug</button>
 		    <button onclick="sonderangebot('4463300215004')">T-Shirt</button>
@@ -717,6 +721,18 @@ function warenkorbaddition(produkt) {
 function sonderangebot(EANr) {
     produktfenster.style.display = 'none';
     produktprüfung(EANr);
+}
+
+function info() {
+    statusfeld.innerText = "Infomartion zum Kassensystem";
+    $("#datenfeld").load("info.html");
+
+    Bt_tagesabrechnung.style.display = 'none';
+	Bt_tageszusammenfassung.style.display = 'none';
+    Bt_kundentagesübersicht.style.display = 'none';
+	Bt_manuelleBuchung.style.display = 'none';
+    Bt_sonderangebote.style.display = 'none';
+
 }
 
 </script>
