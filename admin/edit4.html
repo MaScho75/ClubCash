@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV in AG Grid</title>
+
+    <!-- AG-Grid CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://unpkg.com/ag-grid-community/styles/ag-theme-alpine.css">
+
+    <!-- PapaParse (CSV Parser) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+
+    <!-- AG-Grid JavaScript (aktualisierte Version für AG-Grid ab Version 29.x) -->
+    <script src="https://unpkg.com/ag-grid-community@29.0.0/dist/ag-grid-community.min.noStyle.js"></script>
+</head>
+<body>
+
+<h1>CSV Datei in AG Grid</h1>
+<div id="csvTable" style="height: 400px; width: 100%;" class="ag-theme-alpine"></div>
+
+<script>
+    const csvUrl = "daten/produkte.csv"; // Passe den Pfad zur CSV-Datei an
+
+    fetch(csvUrl)
+        .then(response => response.text())
+        .then(csv => {
+            const parsedData = Papa.parse(csv, {
+                header: true,
+                skipEmptyLines: true,
+                delimiter: ";",  // Trennzeichen für die CSV
+                dynamicTyping: true
+            });
+
+            console.log("Parsed Daten:", parsedData);  // Prüfe die geparsten Daten
+
+            const columnDefs = Object.keys(parsedData.data[0]).map(key => ({
+                headerName: key,
+                field: key
+            }));
+
+            // Setze AG-Grid mit den geparsten Daten
+            const gridOptions = {
+                columnDefs: columnDefs,
+                rowData: parsedData.data,
+                pagination: true,
+                paginationPageSize: 10,
+                defaultColDef: { resizable: true, flex: 1 },
+                domLayout: 'autoHeight'
+            };
+
+            // Initialisiere die AG-Grid-Instanz mit der richtigen Syntax
+            new agGrid.Grid(document.getElementById("csvTable"), gridOptions);
+        })
+        .catch(error => console.error("Fehler beim Laden der CSV:", error));
+</script>
+
+</body>
+</html>

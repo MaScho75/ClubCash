@@ -13,6 +13,8 @@
     <meta name="robots" content="noindex, nofollow">
 	
 	<link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+	
+	<link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet">
 
 </head>
 	
@@ -66,13 +68,15 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 					<thead></thead>
 					<tbody>
                         <tr>
-                            <th>Scanne ein Produkt oder lege deinen Chip auf.</th>
+                            <td class="zentriert" style="padding: 20px;">Bitte Produkt scannen oder Chip auflegen.</td>
                         </tr>
                         <tr>
-                            <th>Wenn du zuerste deinen Chip auflegst, bekommst du alle deine bisherigen Käufe angezeigt.</th>
-                        </tr>
-					</tbody>		   
+                            <td class="zentriert"><img src="FCC-logo.png" style="width: 300px;"></td>
+                        </tr>    
+					</tbody>
+					
 			    </table>
+			    
 		    </div>
 		
 		</div>
@@ -88,6 +92,8 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 			    <button onclick="tagesabrechnung();">Tagesabrechnung</button>
 			    <button onclick="tageszusammenfassung();">Tageszusammenfassung</button>
 			    <button onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
+			    <button id="Bt_sonderangebote" onclick="sonderangebote();">Sonderangebote</button>
+			    <button id="Bt_manuelleBuchung" onclick="manuell();">Sonderbuchung</button>
 	    	</div>
 				
 			<div id="summenkasten">
@@ -95,17 +101,38 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 			</div>
 			
 		</div>
-	
+		<div id=produktfenster>
+		    <h1>Sonderangebote</h1>
+		    <button onclick="sonderangebot('4463300106005')">Mittagessen</button>
+		    <button onclick="sonderangebot('4463500000000')">Gastflug</button>
+		    <button onclick="sonderangebot('4463300215004')">T-Shirt</button>
+		    <button onclick="sonderangebot('4463300210993')">Wendehut</button>
+		    <button onclick="produktfenster.style.display = 'none';">Abbruch</button>
+	    </div>
+	    
+	    <div id=tastatur>
+	        <button onclick="meingabe(1)">1</button>
+	        <button onclick="meingabe(2)">2</button>
+	        <button onclick="meingabe(3)">3</button>
+	        <button onclick="meingabe(4)">4</button>
+	        <button onclick="meingabe(5)">5</button>
+	        <button onclick="meingabe(6)">6</button>
+	        <button onclick="meingabe(7)">7</button>
+	        <button onclick="meingabe(8)">8</button>
+	        <button onclick="meingabe(9)">9</button>
+	        <button onclick="meingabe(0)">0</button>
+	        <button onclick="meingabe('E')">E</button>
+	        <button onclick="tastatur.style.display = 'none';">X</button>
+	        
 <script>
 
+		fetch('backup.php') //Backup prüfen und kopieren
+	
         const terminal = 1;
         
 		let produkte = <?php echo json_encode($produkte); ?>;
 		let kunden = <?php echo json_encode($kunden); ?>;
 
-		//console.log("produkte: ", produkte);
-		//console.log("kunden: ", kunden);
-		
 		let warenkorb = [];
 		let summe = 0.00;
 		let eingabe = "";
@@ -117,6 +144,12 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 		let summenfeld = document.getElementById("summenfeld");
 		let menubar = document.getElementById("menubar");
 		let thead = document.querySelector("#warenkorbtabelle thead");
+		let produktfenster = document.getElementById("produktfenster");
+		let tastatur = document.getElementById("tastatur");
+		let eingabestring = "";
+		
+		let Bt_sonderangebote = document.getElementById("Bt_sonderangebote");
+		let Bt_manuelleBuchung = document.getElementById("Bt_manuelleBuchung");
 		
 		let tastenkontrolle = function(event) {
                 
@@ -144,54 +177,19 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         document.addEventListener("keydown", tastenkontrolle);
 	
 function produktprüfung(EANr) {
-   
-        if (warenkorb.length == 0) {
-
-            console.log("Warenkorb ist leer!");
-
-            warenkorb2 = [];
-
-            //warenkorbtabelle.innerHTML= "";
-
-            tbody.innerHTML = ""; // Bestehenden Inhalt löschen
-            
-            thead.innerHTML = `
-            <tr>
-							<th class="rechts_groß" >Produkt</th>
-							<th class="rechts_groß" style="width: 140px">Preis</th>
-							<th style="width: 50px"></th>		
-		    </tr>
-             `;
-        }
 
 		let produkt = produkte.find(produkte => produkte.EAN === EANr);
 		
 		if (produkt) {
-
-            console.log("Produkt gefunden: ", produkt);
-
+            
+            warenkorbüberschrift();
+            
 			warenkorb.push(produkt);
 
-			statusfeld.innerText = "Produkt dem Warenkorb hinzugefügt. Weitere Produkte scannen oder durch auflegen des Chips bezahlen."
-			
-			summe = summe + parseFloat(produkt.Preis);
-			
-			summenfeld.innerText = summe.toFixed(2);
-			
-			let zeile = tbody.insertRow();
-        	let zelle1 = zeile.insertCell();
-        	
-        	zelle1.innerText = produkt.Bezeichnung;
-        	zelle1.className = "rechts_groß";
-        	
-        	let zelle2 = zeile.insertCell();
-        	zelle2.innerText = produkt.Preis + " €";
-        	zelle2.className = "rechts_groß";
-	
+            warenkorbaddition(produkt);
+            
 	        eingabe = "";
-	        
 		}
- 	
 	}
 	
 function kundenprüfung(KundenNr) {
@@ -231,9 +229,19 @@ function kundenprüfung(KundenNr) {
 
                 übertragung_verkaufsliste(warenkorb2);
                
-			    statusfeld.innerText = "Produkte aus dem Warenkorb wurden dem Kundenkonto von " + kunde.Name + ", " + kunde.Vorname + " übertragen.";
-			    tbody.innerHTML = "";
-                thead.innerHTML = "Prokukte bezahlt!";
+			    statusfeld.innerText = "Prokukte bezahlt!";
+			    tbody.innerHTML = `
+			        <tr>
+			            <td class="zentriert">
+			                <p>Alle Produkte aus dem Warenkorb
+			                <br>wurden dem Kundenkonto von</p>
+			                <h1><b>` + kunde.Name + `, ` + kunde.Vorname + `</b></h1>
+			                <p>übertragen.</p>
+			            </td>
+			        </tr>       
+			     `;
+                
+                thead.innerHTML = "";
 
 		        eingabe = "";
 				warenkorb = [];
@@ -246,12 +254,11 @@ function kundenprüfung(KundenNr) {
 		        kundenkontoübersicht(KundenNr);
 		    }
 		}
-
-	};
+	}
 
 async function kundenkontoübersicht(KundenNr) {
 
-document.removeEventListener("keydown", tastenkontrolle);    
+eingabestopp();
 
 let kontosumme = 0.0;
 
@@ -318,7 +325,7 @@ let kontosumme = 0.0;
 
 async function tagesabrechnung() {
     
-    document.removeEventListener("keydown", tastenkontrolle);
+    eingabestopp();
 
     let tagessumme = 0.0;
     
@@ -344,9 +351,9 @@ async function tagesabrechnung() {
             <th>Zeit</th>
             <th style="text-align: left;">Kunde</th>
             <th style="text-align: left;">Produkt</th>
-             <th class="rechts">Preis</th>
-             </tr>
-             `;
+            <th class="rechts">Preis</th>
+            </tr>
+            `;
         
         data.data.forEach(row => {
             
@@ -383,7 +390,7 @@ async function tagesabrechnung() {
 
 async function tageszusammenfassung() {
 
-    document.removeEventListener("keydown", tastenkontrolle);
+    eingabestopp();
     
     let tagessumme = 0.0;
     
@@ -421,8 +428,6 @@ async function tageszusammenfassung() {
             return acc;
         }, {});
 
-        //console.log("Ergebnis: ", productCounts);
-        
         tbody.innerText = ""; // Bestehenden Inhalt löschen
 		
         thead.innerHTML = `
@@ -438,6 +443,20 @@ async function tageszusammenfassung() {
             
             let tr = document.createElement("tr");
             
+            if (product == "Sonderbuchung") {
+                tr.innerHTML = `
+                <td class="zentriert"> ${details.count} </td>
+                <td> ${product} </td>
+                <td class="währung"> * </td>
+                <td class="währung"> ${details.totalPrice.toFixed(2)} €</td>
+                `;
+                tbody.appendChild(tr);
+                
+                tagessumme += details.totalPrice;
+                
+                continue;
+            }
+            
             tr.innerHTML = `
                 <td class="zentriert"> ${details.count} </td>
                 <td> ${product} </td>
@@ -451,9 +470,7 @@ async function tageszusammenfassung() {
     }
        
         statusfeld.innerText = "Tageszusammenfassung";
-    
         summenfeld.innerText = tagessumme.toFixed(2);
-    
         warenkorb = [];
 
     } catch (error) {
@@ -464,7 +481,7 @@ async function tageszusammenfassung() {
 
 async function kundentagesübersicht() {
 
-    document.removeEventListener("keydown", tastenkontrolle);
+    eingabestopp();
     
     let tagessumme = 0.0;
     
@@ -512,7 +529,6 @@ async function kundentagesübersicht() {
 
         }, {});
     
-
         console.log(customerData);
         thead.innerHTML = "";
         tbody.innerText = ""; // Bestehenden Inhalt löschen
@@ -535,12 +551,25 @@ async function kundentagesübersicht() {
              
                 
                 let tr = document.createElement("tr");
-                tr.innerHTML = `
+                
+                if (product == "Sonderbuchung") {
+                  tr.innerHTML = `
+                    <td class="zentriert">` + details.count + `</td>
+                    <td class="links">` + product + `</td>
+                    <td class="währung">*</td>
+                    <td class="währung">` + details.totalPrice.toFixed(2) + ` €</td>
+                  `;  
+                }
+                
+                else { 
+                  tr.innerHTML = `
                     <td class="zentriert">` + details.count + `</td>
                     <td class="links">` + product + `</td>
                     <td class="währung">` + details.unitPrice.toFixed(2) + ` €</td>
                     <td class="währung">` + details.totalPrice.toFixed(2) + ` €</td>
-                `;
+                  `;
+                }
+                
                 tbody.appendChild(tr);
                 kundensumme += details.totalPrice;
             }
@@ -552,16 +581,14 @@ async function kundentagesübersicht() {
                 <td></td>
                 <td></td>
                 <td></td>
-                <td class="währung"><b>` + kundensumme.toFixed(2) + ` €</b></td>
+                <td class="währung" style="padding-bottom: 10px;"><b>` + kundensumme.toFixed(2) + ` €</b></td>
             `;
             tbody.appendChild(tr2); 
             
         }
          
         statusfeld.innerText = "Kunden Tagesübersicht";
-    
         summenfeld.innerText = tagessumme.toFixed(2);
-    
         warenkorb = [];
 
     } catch (error) {
@@ -570,9 +597,8 @@ async function kundentagesübersicht() {
     }
 }
     
-   
-
 function Fehlerton() {
+    
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -591,8 +617,6 @@ function Fehlerton() {
 }
 
 async function übertragung_verkaufsliste(data) {
-    
-    //console.log("Data: ", data);
 
     fetch("verkaufsliste-api.php", {
         method: "POST",
@@ -616,9 +640,90 @@ async function übertragung_verkaufsliste(data) {
     })
     .then(result => console.log(result))
     .catch(error => console.error("Fehler:", error));
-
 }
-    </script>
+
+function sonderangebote() {
+    produktfenster.style.display = "flex";
+}
+
+function manuell() {
+    tastatur.style.display = "block";
+    eingabestring = "";
+}
+
+function meingabe(x) {
+    if (x == "E") {
+        let manuelles_Produkt = {
+            EAN: 9990000000000,
+            Bezeichnung: "Sonderbuchung",
+            Preis: eingabestring/100,
+            MwSt: 19,
+            Kategorie: "Sonderbuchung"
+        }
+        tastatur.style.display = "none";
+        warenkorbüberschrift();
+        warenkorb.push(manuelles_Produkt);
+        warenkorbaddition(manuelles_Produkt);
+        return;
+    }
+    eingabestring += x;
+    summenfeld.innerText = (eingabestring/100).toFixed(2);
+}
+
+function eingabestopp() {
+    document.removeEventListener("keydown", tastenkontrolle);
+    Bt_sonderangebote.style.display = 'none';
+	Bt_manuelleBuchung.style.display = 'none';
+}
+
+
+function warenkorbüberschrift() {
+    
+    console.log("Warenkorb: ", warenkorb);
+    console.log("Warenkorblänge: ", warenkorb.length);
+    
+    if (warenkorb.length == 0) {
+            warenkorb2 = [];
+            tbody.innerHTML = ""; // Bestehenden Inhalt löschen
+            thead.innerHTML = `
+                <tr>
+				    <th class="rechts_groß" >Produkt</th>
+					<th class="rechts_groß" style="width: 140px">Preis</th>
+					<th style="width: 50px"></th>		
+		        </tr>
+             `;
+        }
+}
+
+function warenkorbaddition(produkt) {
+    			
+    		statusfeld.innerText = "Produkt dem Warenkorb hinzugefügt."
+			
+			summe = summe + parseFloat(produkt.Preis);
+			
+			summenfeld.innerText = summe.toFixed(2);
+			
+			let zeile = tbody.insertRow();
+        	let zelle1 = zeile.insertCell();
+        	
+        	zelle1.innerText = produkt.Bezeichnung;
+        	zelle1.className = "rechts_groß";
+        	
+        	let zelle2 = zeile.insertCell();
+        	zelle2.innerText = produkt.Preis + " €";
+        	zelle2.className = "rechts_groß";
+}
+
+function sonderangebot(EANr) {
+    produktfenster.style.display = 'none';
+    produktprüfung(EANr);
+}
+
+</script>
+
+
+
+
 
 </body>
 </html>

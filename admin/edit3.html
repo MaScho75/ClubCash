@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV in Tabulator</title>
+    <link href="https://unpkg.com/tabulator-tables@5.3.4/dist/css/tabulator.min.css" rel="stylesheet">
+</head>
+<body>
+
+<h1>CSV Datei in Tabulator</h1>
+<div id="csvTable"></div>
+
+<script src="https://unpkg.com/tabulator-tables@5.3.4/dist/js/tabulator.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+
+<script>
+    const csvUrl = "daten/produkte.csv";
+
+    fetch(csvUrl)
+        .then(response => response.text())
+        .then(csv => {
+            const parsedData = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
+
+            new Tabulator("#csvTable", {
+                data: parsedData,
+                layout: "fitColumns",
+                columns: Object.keys(parsedData[0]).map(field => ({
+                    title: field,
+                    field: field,
+                    editor: "input" // Macht die Tabelle editierbar
+                })),
+                movableColumns: true,
+                resizableRows: true
+            });
+        });
+</script>
+
+</body>
+</html>

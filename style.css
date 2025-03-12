@@ -1,11 +1,67 @@
+body {
+	margin: 0px;
+	font-family: 'Carlito', sans-serif;
+	font-size: 20px;
+}
+#adminfenster {
+    display: flex;
+    flex-direction: column;
+    align-items: center;  display: flex;
+    flex-wrap: wrap;
+}
+
+#adminfenster button {
+    width: 280px;
+}
+
+#kopf {
+    display: flex;
+    align-items: center;
+    gap: 20px; 
+    margin: 10px;
+}
+
+#tastatur {
+    display: none;
+    width: 195px;
+    position: fixed;
+    background: white;
+    left: 600Px;
+    top: 120px;
+    border: solid 1px;
+    height: 300px;
+}
+
+#tastatur button {
+    width: 50px;
+    height: 50px;
+    margin: 5px;
+    font-size: 30px;
+}
+
 #display {
 	background-color: #f0f0f0;
     margin: 0;
     padding: 0;
- 	height: 440px;
+ 	height: 480px;
 	width: 800px;
 	display: grid;
     grid-template-columns: repeat(2, 1fr); 
+}
+
+#produktfenster {
+    border: 1px black solid;
+    position: fixed;
+    background-color: white;
+    margin: 10px;
+    padding: 10px;
+    width: 760px;
+    height: 440px;
+    display: none; /*unsicherbar*/
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
 }
 
 #linkeSpalte {
@@ -39,7 +95,7 @@
 }
 
 #datenfeld {
-	height: 365px;
+	height: 400px;
     /*background-color: green;*/
     overflow: auto;
     border: 1px solid black; /* 2px dicker schwarzer Rahmen */
@@ -64,7 +120,7 @@
 
 #menubar {
     /*background-color: #D8BFD8;*/
-	height: 270px;
+	height: 300px;
 }
 
 .rechts {
@@ -78,6 +134,7 @@
 .rechts_groß {
     text-align: right;
     font-size: 35px;
+    padding-right: 10px;
     
 }
 
@@ -101,11 +158,6 @@ h1 {
     margin: 0px;
 }
 
-body {
-	margin: 0px;
-	font-family: calibri;
-	font-size: 20px;
-}
 
 button { 
 	height: 40px;

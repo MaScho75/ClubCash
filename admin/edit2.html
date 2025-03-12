@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV in DataTables</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+</head>
+<body>
+
+<h1>CSV Datei in DataTables</h1>
+<table id="csvTable" class="display">
+    <thead>
+        <tr id="csvHeader"></tr>
+    </thead>
+    <tbody id="csvBody"></tbody>
+</table>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+
+<script>
+    const csvUrl = "daten/produkte.csv";
+
+    fetch(csvUrl)
+        .then(response => response.text())
+        .then(csv => {
+            const parsedData = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
+            const tableHeaders = Object.keys(parsedData[0]);
+
+            // Kopfzeile generieren
+            document.getElementById('csvHeader').innerHTML = tableHeaders.map(h => `<th>${h}</th>`).join("");
+
+            // Daten einfügen
+            let tableBody = document.getElementById('csvBody');
+            parsedData.forEach(row => {
+                let tr = document.createElement('tr');
+                tableHeaders.forEach(header => {
+                    let td = document.createElement('td');
+                    td.textContent = row[header];
+                    tr.appendChild(td);
+                });
+                tableBody.appendChild(tr);
+            });
+
+            // DataTable initialisieren (Sortieren, Filtern, Suchen)
+            $('#csvTable').DataTable();
+        });
+</script>
+
+</body>
+</html>
