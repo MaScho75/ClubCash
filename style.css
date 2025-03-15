@@ -10,6 +10,10 @@ body {
     flex-wrap: wrap;
 }
 
+p {
+    margin-block-start: 0em;
+}
+
 #adminfenster button {
     width: 280px;
 }
@@ -58,10 +62,6 @@ body {
     width: 760px;
     height: 440px;
     display: none; /*unsicherbar*/
-    flex-direction: column;
-    justify-content: center;
-    align-content: center;
-    align-items: center;
 }
 
 #linkeSpalte {
@@ -72,12 +72,22 @@ body {
 
 }
 
+#bt_x {    
+    background-color: rgb(108, 159, 56);
+    position: absolute;
+    top: 2px;
+    right: 20px;
+    border: 1px solid;
+    height: 50px;
+    width: 50px;
+    font-size: 30px;
+}
+
 #warenkorbtabelle {
     width: 100%;
 }
 
 #statusfeld {
-	/*background-color: yellow;*/
 	height: 40px;
 	display: flex;
     justify-content: center;
@@ -87,7 +97,6 @@ body {
 }
 
 #logo {
-    /*background-color: yellow;*/
 	display: flex;
     justify-content: center;
     align-items: center; 
@@ -96,7 +105,6 @@ body {
 
 #datenfeld {
 	height: 400px;
-    /*background-color: green;*/
     overflow: auto;
     border: 1px solid black; /* 2px dicker schwarzer Rahmen */
     padding: 5px; /* Etwas Abstand innen */
@@ -119,7 +127,6 @@ body {
 }
 
 #menubar {
-    /*background-color: #D8BFD8;*/
 	height: 300px;
 }
 
@@ -156,6 +163,14 @@ body {
 
 h1 {
     margin: 0px;
+    text-align: center;
+}
+
+h2 {
+    text-align: left;
+    font-size: 25px;
+    font-weight: bold;
+    margin: 20px 0px 0px 0px;
 }
 
 
@@ -181,5 +196,13 @@ th {
     background-color: rgb(138, 170, 215);
 }
 
+.bt_produkt {
+    height: 50px;
+    width: 240px;
+    margin: 5px 5px 0px 5px;
+    font-weight: normal;
+    font-size: 15px;
+    border: 1px solid;
+}
 
 

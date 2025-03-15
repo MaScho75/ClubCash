@@ -107,12 +107,8 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 		</div>
 		<div id=produktfenster>
 		    <h1>Produktauswahl</h1>
-		    <button onclick="sonderangebot('4463300106005')">Mittagessen</button>
-		    <button onclick="sonderangebot('4463500000000')">Gastflug</button>
-		    <button onclick="sonderangebot('4463300215004')">T-Shirt</button>
-		    <button onclick="sonderangebot('4463300210993')">Wendehut</button>
-		    <button onclick="produktfenster.style.display = 'none';">Abbruch</button>
-	    </div>
+            <button id="bt_x" onclick="produktfenster.style.display = 'none';">X</button>  
+        </div>
 	    
 	    <div id=tastatur>
 	        <button onclick="meingabe(1)">1</button>
@@ -125,8 +121,8 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 	        <button onclick="meingabe(8)">8</button>
 	        <button onclick="meingabe(9)">9</button>
 	        <button onclick="meingabe(0)">0</button>
-	        <button onclick="meingabe('E')">E</button>
-	        <button onclick="tastatur.style.display = 'none';">X</button>
+	        <button id="BT_Eingabe" style="background-color: RGB(227, 180, 14); border: 1px solid black;" onclick="meingabe('E')">E</button>
+            <button style="background-color: RGB(108, 159, 56); border: 1px solid black;" onclick="tastatur.style.display = 'none';">X</button>
 	        
 <script>
 
@@ -164,7 +160,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 		    	kundenprüfung(eingabe);
 				
 		    	if(eingabe) {
-			        //console.log("Kein Kunde und kein Produkt!");
 			        statusfeld.innerText = "Kein Produkt und kein Kunde erkannt."
 			        Fehlerton();
                 eingabe = "";    
@@ -179,6 +174,22 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         }
         
         document.addEventListener("keydown", tastenkontrolle);
+
+//Produktauswahl Fenster mit Buttons erstellen
+
+produkte.forEach(produkt => {
+    if (parseInt(produkt.EAN) < 22) {
+        let button = document.createElement("button");
+        button.innerText = produkt.EAN + " - " + produkt.Bezeichnung + " - " + produkt.Preis + " €";
+        button.className = "bt_produkt";
+        button.onclick = function() {
+            produktfenster.style.display = "none";
+            produktprüfung(produkt.EAN);
+        }
+        produktfenster.appendChild(button);
+    }
+});
+
 	
 function produktprüfung(EANr) {
 
@@ -281,7 +292,7 @@ let kontosumme = 0.0;
         }
     
         let data = await response.json();
-        //console.log("Abgerufene Daten: ", data);
+        console.log("Abgerufene Daten: ", data);
 
         if (data.status !== "success") {
             console.error("Fehler beim Abrufen:", data.message);
@@ -447,7 +458,7 @@ async function tageszusammenfassung() {
             
             let tr = document.createElement("tr");
             
-            if (product == "Sonderbuchung") {
+            if (product == "Direktbuchung") {
                 tr.innerHTML = `
                 <td class="zentriert"> ${details.count} </td>
                 <td> ${product} </td>
@@ -556,7 +567,7 @@ async function kundentagesübersicht() {
                 
                 let tr = document.createElement("tr");
                 
-                if (product == "Sonderbuchung") {
+                if (product == "Direktbuchung") {
                   tr.innerHTML = `
                     <td class="zentriert">` + details.count + `</td>
                     <td class="links">` + product + `</td>
@@ -647,7 +658,7 @@ async function übertragung_verkaufsliste(data) {
 }
 
 function sonderangebote() {
-    produktfenster.style.display = "flex";
+    produktfenster.style.display = "flow";
 }
 
 function manuell() {
@@ -659,10 +670,10 @@ function meingabe(x) {
     if (x == "E") {
         let manuelles_Produkt = {
             EAN: 9990000000000,
-            Bezeichnung: "Sonderbuchung",
+            Bezeichnung: "Direktbuchung",
             Preis: eingabestring/100,
             MwSt: 19,
-            Kategorie: "Sonderbuchung"
+            Kategorie: "Direktbuchung"
         }
         tastatur.style.display = "none";
         warenkorbüberschrift();
@@ -724,7 +735,7 @@ function sonderangebot(EANr) {
 }
 
 function info() {
-    statusfeld.innerText = "Infomartion zum Kassensystem";
+    statusfeld.innerText = "Information zum Kassensystem";
     $("#datenfeld").load("info.html");
 
     Bt_tagesabrechnung.style.display = 'none';
@@ -736,10 +747,6 @@ function info() {
 }
 
 </script>
-
-
-
-
 
 </body>
 </html>
