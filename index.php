@@ -131,18 +131,21 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
 		fetch('backup.php') //Backup prüfen und kopieren
 	
-        const terminal = 1;
-        
+        //Terminal ermitteln aus der URL https://host/index.html?zahl=42
+        const urlParams = new URLSearchParams(window.location.search);
+        let terminal = urlParams.get("terminal"); // Holt den Wert von von "terminal" aus der URL
+
+        if (terminal == null) {
+            terminal = "X"; // Wenn kein "Terminal" in der URL, dann X
+        }
+     
 		let produkte = <?php echo json_encode($produkte); ?>;
 		//let kunden = <?php echo json_encode($kunden); ?>;
         let kunden = <?php echo json_encode($jsonKundenDaten); ?>;
 
-        console.log("Kunden: ", kunden);
-
 		let warenkorb = [];
 		let summe = 0.00;
 		let eingabe = "";
-
 		let datenfeld = document.getElementById("datenfeld");
 		let warenkorbtabelle = document.getElementById("warenkorbtabelle");
 		let tbody = document.querySelector("#warenkorbtabelle tbody");
@@ -176,7 +179,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 				eingabe += event.key;
 				console.log("Eingabe hat den Wert: " + eingabe);
 			} 
-
         }
         
         document.addEventListener("keydown", tastenkontrolle);
@@ -201,14 +203,10 @@ function produktprüfung(EANr) {
 
 		let produkt = produkte.find(produkte => produkte.EAN === EANr);
 		
-		if (produkt) {
-            
-            warenkorbüberschrift();
-            
+		if (produkt) {          
+            warenkorbüberschrift(); 
 			warenkorb.push(produkt);
-
             warenkorbaddition(produkt);
-            
 	        eingabe = "";
 		}
 	}
@@ -230,9 +228,6 @@ function kundenprüfung(KundenNr) {
 		        let zeit =  now.toTimeString().split(" ")[0].slice(0, 5);
 
 		        for (ds of warenkorb) {
-		            console.log("ds: ", ds);
-                    console.log("now: ", now);  
-                    console.log("Datum: ", datum);
 		            let ds2 = {
 		                Datum: datum,
 		                Zeit: zeit,
@@ -244,7 +239,6 @@ function kundenprüfung(KundenNr) {
 		                Preis: ds.Preis,
 		                MwSt: ds.MwSt
 		            }
-		            console.log("ds2: ", ds2);
 		            warenkorb2.push(ds2);
 		        }
 
@@ -298,8 +292,7 @@ let kontosumme = 0.0;
         }
     
         let data = await response.json();
-        console.log("Abgerufene Daten: ", data);
-
+   
         if (data.status !== "success") {
             console.error("Fehler beim Abrufen:", data.message);
             return;
@@ -318,8 +311,6 @@ let kontosumme = 0.0;
              `;
         
         data.data.forEach(row => {
-            
-            //console.log("row: ", row);
 
             kontosumme += parseFloat(row.Preis);
             
@@ -357,7 +348,6 @@ async function tagesabrechnung() {
         }
     
         let data = await response.json();
-        //console.log("Abgerufene Daten: ", data);
 
         if (data.status !== "success") {
             console.error("Fehler beim Abrufen:", data.message);
@@ -377,9 +367,7 @@ async function tagesabrechnung() {
             `;
         
         data.data.forEach(row => {
-            
-            //console.log("row: ", row);
-            
+
             let kunde = kunden.find(kunden => kunden.key2designation === row.Kunde);
          
             tagessumme += parseFloat(row.Preis);
@@ -422,8 +410,6 @@ async function tageszusammenfassung() {
             }
     
         let data = await response.json();
-        
-        //console.log("Abgerufene Daten: ", data);
 
         if (data.status !== "success") {
             console.error("Fehler beim Abrufen:", data.message);
@@ -513,7 +499,6 @@ async function kundentagesübersicht() {
             }
     
         let data = await response.json();
-        console.log("Abgerufene Daten: ", data);
 
         if (data.status !== "success") {
             console.error("Fehler beim Abrufen:", data.message);
@@ -550,15 +535,12 @@ async function kundentagesübersicht() {
 
         }, {});
     
-        console.log(customerData);
         thead.innerHTML = "";
         tbody.innerText = ""; // Bestehenden Inhalt löschen
         
        for (const Kunde1 in customerData) {
          
             let kunde = kunden.find(kunden => kunden.key2designation === Kunde1);
-
-            console.log("Kunde: ", kunde);
 
             let tr = document.createElement("tr");
             tr.innerHTML = `
@@ -699,9 +681,6 @@ function eingabestopp() {
 
 
 function warenkorbüberschrift() {
-    
-    console.log("Warenkorb: ", warenkorb);
-    console.log("Warenkorblänge: ", warenkorb.length);
     
     if (warenkorb.length == 0) {
             warenkorb2 = [];
