@@ -21,6 +21,11 @@
 </head>
 	
 <?php
+
+// Mitgliederdaten laden
+$jsonKundenDatei = file_get_contents("daten/kunden.json");
+$jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
+
 // csv kunden laden
 
 $csvDatei = "daten/kunden.csv"; // Name der CSV-Datei
@@ -129,7 +134,10 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         const terminal = 1;
         
 		let produkte = <?php echo json_encode($produkte); ?>;
-		let kunden = <?php echo json_encode($kunden); ?>;
+		//let kunden = <?php echo json_encode($kunden); ?>;
+        let kunden = <?php echo json_encode($jsonKundenDaten); ?>;
+
+        console.log("Kunden: ", kunden);
 
 		let warenkorb = [];
 		let summe = 0.00;
@@ -207,7 +215,7 @@ function produktprüfung(EANr) {
 	
 function kundenprüfung(KundenNr) {
 		
-		let kunde = kunden.find(kunden => kunden.ID === KundenNr);
+		let kunde = kunden.find(kunden => kunden.key2designation === KundenNr); // key2designation ist die Kundennummer
 		
 		if (kunde) {
 		    if (!summe == 0) {
@@ -229,7 +237,7 @@ function kundenprüfung(KundenNr) {
 		                Datum: datum,
 		                Zeit: zeit,
 		                Terminal: terminal,
-		                Kunde: kunde.ID,
+		                Kunde: kunde.key2designation,
 		                EAN: ds.EAN,
 		                Produkt: ds.Bezeichnung,
 		                Kategorie: ds.Kategorie,
@@ -248,7 +256,7 @@ function kundenprüfung(KundenNr) {
 			            <td class="zentriert">
 			                <p>Alle Produkte aus dem Warenkorb
 			                <br>wurden dem Kundenkonto von</p>
-			                <h1><b>` + kunde.Name + `, ` + kunde.Vorname + `</b></h1>
+			                <h1><b>` + kunde.lastname + `, ` + kunde.firstname + `</b></h1>
 			                <p>übertragen.</p>
 			            </td>
 			        </tr>       
@@ -263,7 +271,7 @@ function kundenprüfung(KundenNr) {
 		    }
 		    else {
 		        eingabe = "";
-		        statusfeld.innerText = "Kontoübersicht " + kunde.Name + ", " + kunde.Vorname;
+		        statusfeld.innerText = "Kontoübersicht " + kunde.lastname + ", " + kunde.firstname;
 		        kundenkontoübersicht(KundenNr);
 		    }
 		}
@@ -372,7 +380,7 @@ async function tagesabrechnung() {
             
             //console.log("row: ", row);
             
-            let kunde = kunden.find(kunden => kunden.ID === row.Kunde);
+            let kunde = kunden.find(kunden => kunden.key2designation === row.Kunde);
          
             tagessumme += parseFloat(row.Preis);
             
@@ -380,7 +388,7 @@ async function tagesabrechnung() {
             tr.innerHTML = `
                 <td class="zentriert">` + row.Terminal + `</td>
                 <td class="zentriert">` + row.Zeit + `</td>
-                <td>` + kunde.Name + ", " + kunde.Vorname + `</td>
+                <td>` + kunde.lastname + ", " + kunde.firstname + `</td>
                 <td>` + row.Produkt + `</td>
                 <td class="währung">` + row.Preis + ` €</td>
             `;
@@ -548,13 +556,13 @@ async function kundentagesübersicht() {
         
        for (const Kunde1 in customerData) {
          
-            let kunde = kunden.find(kunden => kunden.ID === Kunde1);
+            let kunde = kunden.find(kunden => kunden.key2designation === Kunde1);
 
             console.log("Kunde: ", kunde);
 
             let tr = document.createElement("tr");
             tr.innerHTML = `
-                <td colspan="4" id="Namenfeld">` + kunde.Name + `, ` + kunde.Vorname + `</td>
+                <td colspan="4" id="Namenfeld">` + kunde.lastname + `, ` + kunde.firstname + `</td>
             `;
             tbody.appendChild(tr);
 
