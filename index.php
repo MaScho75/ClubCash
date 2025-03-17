@@ -69,12 +69,10 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                 <table id="warenkorbtabelle" border="0">
 					<thead></thead>
 					<tbody>
-                        <tr>
-                            <td class="zentriert" style="padding: 20px;">Bitte Produkt scannen oder Chip auflegen.</td>
-                        </tr>
-                        <tr>
-                            <td class="zentriert"><img src="FCC-logo.png" style="width: 300px;"></td>
-                        </tr>    
+                        <tr><td class="zentriert" style="padding: 20px;">Bitte Produkt scannen oder Chip auflegen.</td></tr>
+                        <tr><td class="zentriert"><img src="FCC-logo.png" style="width: 200px;"></td></tr>    
+                        <tr><td class="zentriert">Mittagessen: x.xx €</td></tr>
+                        <tr><td class="zentriert"><button>Preisliste</button></td></tr>
 					</tbody>
 					
 			    </table>
