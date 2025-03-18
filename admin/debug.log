@@ -1,4 +1,6 @@
-EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung
+Array
+(
+    [csvData] => EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung
 1;Mittagessen;3.33;19;Getränke;Nicht Löschen oder ändern!!! Der Preis kann durch den CafeLüsseDienst selbst angepasst werden;100
 2;Testprodukt 2;2.00;19;Getränke;Testeintrag;100
 3;Testprodukt 3;3.00;19;Getränke;Testeintrag;100
@@ -81,3 +83,4 @@ EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung
 4337185369995;Wasser K 1,5 L Full;0.80;;Getränke;;
 4337185369940;Wasser K 1,5 L Still;0.80;;Getränke;;
 4463300210993;Wendehut;10.00;;;SK 1937 (Verkauf Merchandising);
+)

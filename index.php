@@ -26,6 +26,7 @@
 $jsonKundenDatei = file_get_contents("daten/kunden.json");
 $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
 
+/*
 // csv kunden laden
 
 $csvDatei = "daten/kunden.csv"; // Name der CSV-Datei
@@ -41,6 +42,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
     }
     fclose($handle);
 }
+*/
 
 // csv produkte laden
 
@@ -61,7 +63,17 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 ?>	
 	
 <body>
-    
+    <div id="Testhinweis" style=" 
+    position: absolute;
+    top: 200px;
+    left: 50px;
+    text-align: center;
+    font-size: 23px;
+    color: rgba(255, 0, 0, 0.6);
+    font-weight: bold;">  
+        <p>Achtung: Diese Kasse ist im Testmodus!<br>
+        Es werden keine echten Transaktionen durchgeführt!</p>
+    </div>
 	<div id="display">
    	
 		<div id="linkeSpalte">
@@ -76,7 +88,11 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 					<tbody>
                         <tr><td class="zentriert" style="padding: 20px;">Bitte Produkt scannen oder Chip auflegen.</td></tr>
                         <tr><td class="zentriert"><img src="FCC-logo.png" style="width: 200px;"></td></tr>    
-                        <tr><td class="zentriert">Mittagessen: x.xx €</td></tr>
+                        <tr>
+                            <td class="zentriert">Mittagessen: 
+                                <span id=Mittagessenpreis>x.xx</span> € 
+                            </td>
+                        </tr>
                         <tr><td class="zentriert"><button>Preisliste</button></td></tr>
 					</tbody>
 					
@@ -129,6 +145,14 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 	        
 <script>
 
+        //Textwarnung blinken lassen
+        function blinker() {
+            $('#Testhinweis').fadeOut(2000);
+            $('#Testhinweis').fadeIn(2000);
+        }
+        
+       //setInterval(blinker, 700); //Textwarnung blinken lassen
+
 		fetch('backup.php') //Backup prüfen und kopieren
 	
         //Terminal ermitteln aus der URL https://host/index.html?zahl=42
@@ -140,7 +164,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         }
      
 		let produkte = <?php echo json_encode($produkte); ?>;
-		//let kunden = <?php echo json_encode($kunden); ?>;
+		
         let kunden = <?php echo json_encode($jsonKundenDaten); ?>;
 
 		let warenkorb = [];
@@ -159,6 +183,9 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 		
 		let Bt_sonderangebote = document.getElementById("Bt_sonderangebote");
 		let Bt_manuelleBuchung = document.getElementById("Bt_manuelleBuchung");
+
+        let mittagessen = produkte.find(produkte => produkte.EAN === "1");
+        document.getElementById("Mittagessenpreis").innerText = mittagessen.Preis;
 		
 		let tastenkontrolle = function(event) {
                 
