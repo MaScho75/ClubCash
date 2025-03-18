@@ -26,24 +26,6 @@
 $jsonKundenDatei = file_get_contents("daten/kunden.json");
 $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
 
-/*
-// csv kunden laden
-
-$csvDatei = "daten/kunden.csv"; // Name der CSV-Datei
-$kunden = [];
-
-if (($handle = fopen($csvDatei, "r")) !== FALSE) {
-    $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
-
-    while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
-        if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
-            $kunden[] = array_combine($header, $row); // Header mit Werten kombinieren
-        }
-    }
-    fclose($handle);
-}
-*/
-
 // csv produkte laden
 
 $csvDatei = "daten/produkte.csv"; // Name der CSV-Datei
@@ -93,7 +75,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                                 <span id=Mittagessenpreis>x.xx</span> € 
                             </td>
                         </tr>
-                        <tr><td class="zentriert"><button>Preisliste</button></td></tr>
+                        <tr><td class="zentriert"><button disabled onclick="">Preisliste</button></td></tr>
 					</tbody>
 					
 			    </table>
@@ -151,7 +133,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             $('#Testhinweis').fadeIn(2000);
         }
         
-       //setInterval(blinker, 700); //Textwarnung blinken lassen
+       setInterval(blinker, 700); //Textwarnung blinken lassen
 
 		fetch('backup.php') //Backup prüfen und kopieren
 	
