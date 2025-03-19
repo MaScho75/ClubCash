@@ -47,7 +47,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 <body>
     <div id="Testhinweis" style=" 
     position: absolute;
-    top: 200px;
+    top: 300px;
     left: 50px;
     text-align: center;
     font-size: 23px;
@@ -69,13 +69,15 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 					<thead></thead>
 					<tbody>
                         <tr><td class="zentriert" style="padding: 20px;">Bitte Produkt scannen oder Chip auflegen.</td></tr>
-                        <tr><td class="zentriert"><img src="FCC-logo.png" style="width: 200px;"></td></tr>    
+                        
+                        
+                        <tr><td class="zentriert"><h1>Terminal <span id=terminal>X</span></h1></td></tr>    
                         <tr>
                             <td class="zentriert">Mittagessen: 
                                 <span id=Mittagessenpreis>x.xx</span> € 
                             </td>
                         </tr>
-                        <tr><td class="zentriert"><button disabled onclick="">Preisliste</button></td></tr>
+                        <tr><td class="zentriert"><button  onclick="preisliste()">Preisliste</button></td></tr>
 					</tbody>
 					
 			    </table>
@@ -133,7 +135,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             $('#Testhinweis').fadeIn(2000);
         }
         
-       setInterval(blinker, 700); //Textwarnung blinken lassen
+       //setInterval(blinker, 700); //Textwarnung blinken lassen
 
 		fetch('backup.php') //Backup prüfen und kopieren
 	
@@ -144,6 +146,8 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         if (terminal == null) {
             terminal = "X"; // Wenn kein "Terminal" in der URL, dann X
         }
+
+        document.getElementById("terminal").innerText = terminal;
      
 		let produkte = <?php echo json_encode($produkte); ?>;
 		
@@ -696,9 +700,9 @@ function warenkorbüberschrift() {
             tbody.innerHTML = ""; // Bestehenden Inhalt löschen
             thead.innerHTML = `
                 <tr>
-				    <th class="rechts_groß" >Produkt</th>
-					<th class="rechts_groß" style="width: 140px">Preis</th>
-					<th style="width: 50px"></th>		
+				    <th class="produktspalte" >Produkt</th>
+					<th class="preisspalte">Preis</th>
+					<th class="leerspalte"></th>		
 		        </tr>
              `;
         }
@@ -737,6 +741,38 @@ function info() {
     Bt_kundentagesübersicht.style.display = 'none';
 	Bt_manuelleBuchung.style.display = 'none';
     Bt_sonderangebote.style.display = 'none';
+
+}
+
+function preisliste() {
+    
+    console.log("Produkte: ", produkte);
+    
+    produkte.sort((a, b) => a.Sortierung - b.Sortierung);
+
+    console.log("Produkte: ", produkte);
+
+
+    statusfeld.innerText = "Preisliste";
+    tbody.innerHTML = "";
+    thead.innerHTML = `
+        <tr>
+            <th class="produktspalte" >Produkt</th>
+            <th class="preispalte" >Preis</th>
+            <th class="leerspalte" ></th>		
+        </tr>
+    `;
+
+    produkte.forEach(produkt => {
+        let zeile = tbody.insertRow();
+        let zelle1 = zeile.insertCell();
+        zelle1.innerText = produkt.Bezeichnung;
+        zelle1.className = "rechts_groß";
+        let zelle2 = zeile.insertCell();
+        zelle2.innerText = produkt.Preis + " €";
+        zelle2.className = "rechts_groß";
+    });
+    
 
 }
 

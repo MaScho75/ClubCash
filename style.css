@@ -115,6 +115,23 @@ p {
     font-weight: bold;
 }
 
+.prouktspalte {
+    width: 400px;
+    font-size: 25px;
+    text-align: right;
+}
+
+.preispalte
+{
+    width: 100px;
+    font-size: 25px;
+    text-align: right;
+}
+.leerspalte {
+    width: 20px;
+}
+
+
 #logo {
 	display: flex;
     justify-content: center;
@@ -159,7 +176,7 @@ p {
 
 .rechts_groß {
     text-align: right;
-    font-size: 35px;
+    font-size: 25px;
     padding-right: 10px;
     
 }
