@@ -22,8 +22,8 @@
     
 	<div id="adminfenster">
 	   
-	    <div id="kopf">
-            <img src="../CL-Logo_100.png">	   
+	    <div id="kopf" style="display: flex; align-items: center;">
+			<img src="../CL-Logo_100.png" style="margin: 10px;">
 	        <h1>Cafe Lüsse Kasse Abrechnung</h1>
 	    </div>
 	    
@@ -32,7 +32,6 @@
 	        <button disabled onclick="">Kunden Tagesübersicht</button>
 	        <button disabled onclick="">Preis Mittagessen festlegen</button>
 	        
-	    
     </div>
 
 </body>

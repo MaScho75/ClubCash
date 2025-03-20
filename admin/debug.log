@@ -1,86 +1,34 @@
 Array
 (
     [csvData] => EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung
-1;Mittagessen;3.33;19;Getränke;Nicht Löschen oder ändern!!! Der Preis kann durch den CafeLüsseDienst selbst angepasst werden;100
-2;Testprodukt 2;2.00;19;Getränke;Testeintrag;100
-3;Testprodukt 3;3.00;19;Getränke;Testeintrag;100
-4;Testprodukt 4;4.00;19;Getränke;Testeintrag;100
-5;Testprodukt 5;5.00;19;Getränke;Testeintrag;100
-6;Testprodukt 6;6.00;19;Getränke;Testeintrag;100
-7;Testprodukt 7;7.00;19;Getränke;Testeintrag;100
-8;Testprodukt 8;8.00;19;Getränke;Testeintrag;100
-9;Testprodukt 9;9.00;19;Getränke;Testeintrag;100
-10;Testprodukt 10;10.00;19;Getränke;Testeintrag;100
-11;Testprodukt 11;11.00;19;Getränke;Testeintrag;100
-12;Testprodukt 12;12.00;19;Getränke;Testeintrag;100
-13;Testprodukt 13;13.00;19;Getränke;Testeintrag;100
-14;Testprodukt 14;14.00;19;Getränke;Testeintrag;100
-15;Testprodukt 15;15.00;19;Getränke;Testeintrag;100
-16;Testprodukt 16;16.00;19;Getränke;Testeintrag;100
-17;Testprodukt 17;17.00;19;Getränke;Testeintrag;100
-18;Testprodukt 19;19.00;19;Getränke;Testeintrag;100
-19;Testprodukt 18;20.00;19;Getränke;Testeintrag;100
-20;Testprodukt 20;21.00;19;Getränke;Testeintrag;100
-21;Testprodukt 21;21.00;19;Getränke;Testeintrag;100
-4463500000000;Gastflug;30.00;;Flugbetrieb;;
-4463300000501;Allgemein 0.50€;0.50;;;;
-4463300001003;Allgemein 1€;1.00;;;;
-4463300002000;Allgemein 2€;2.00;;;;
-4463300005001;Allgemein 5€;5.00;;;;
-4463300300809;Apfelschorle 0,5 L;0.80;;Getränke;;
-44444;Berliner Pils 0.33l;1.00;;Getränke;;
-4004160005338;Berliner Pilsner 0,5l;1.20;;Getränke;neuer Preis ab 15.06.2023;
-4014472280156;Bionade Eistee Pfirsich 0.33l;1.30;;Getränke;;5
-4014472280163;Bionade Eistee Zitrone 0.33l;1.30;;;;6
-4014472279198;Bionade Himbeer-Plaume 0.33L;1.30;;Getränke;;7
-4014472002512;Bionade Holunder 0.33l;1.30;;Getränke;neuer Preis ab 15.06.2023;
-4014472280132;Bionade Naturtrüb Blutorange 0.33l;1.30;;;;
-4053400201634;Bionade Schwarze Joh 0,33 L;1.30;;Getränke;neuer Preis ab 15.06.2023;
-4014472281719;Bionade Zitronen Bergamotte 0.33l;1.30;;Getränke;neuer Preis ab 15.06.2023;
-8594403410129;Budweiser Lager 0.33l;1.00;;Getränke;;
-33333;Coca Cola 0.33 l;1.10;;Getränke;neuer Preis ab 15.06.2023;1
-90357879;Cola Zero 0.33 L;1.10;;Getränke;;2
-4463300400509;Eis 0,5 €;0.50;;;;
-4463300401001;Eis 1,0 €;1.00;;;;
-4463300401506;Eis 1,5 €;1.50;;;;
-4463300402008;Eis 2,0 €;2.00;;;;
-4463300402503;Eis 2,5 €;1.50;;;;
-4002103019107;Erdinger Alkoholfrei 0.5l;1.50;;Getränke;neuer Preis ab 15.06.2023;
-4002103000105;Erdinger Weißbier 0.33l;1.20;;Getränke;neuer Preis ab 15.06.2023;
-4002103000013;Erdinger Weißbier 0.5l;1.50;;Getränke;neuer Preis ab 15.06.2023;
-87126860;Fanta 0,33l;1.10;;Getränke;neuer Preis ab 15.06.2023;3
-4260386220331;Fläminger Radler 0,33 L;1.10;;Getränke;neuer Preis ab 15.06.2023;
-4311596436002;G Mineral Wasser Sprudel 0.5l;0.50;;Getränke;;
-11111;hella Kirsche 0.75l;3.88;7;Getränke;Testeintrag;
-4463300220008;ICAO Wettbewerbskarte Extern;20.00;;;;
-4463300210009;ICAO Wettbewerbskarte Mitglied;10.00;;;;
-4463300200000;Jacke Hakro;100.00;;;SK 1937 (Verkauf Merchandising);
-4463300285007;Jacke Stargazer;85.00;;;SK 1937 (Verkauf Merchandising);
-22222;Jever Pils 0,5 L;1.30;;Getränke;;
-4463300309505;Kaffee;0.50;;;neuer EAN ab 12.06.2023;
-4463300320098;Kasten Berliner Pilsener 20 x 0,5 L;23.00;;Getränke;neuer Preis ab 15.06.2023;
-4463300325000;Kasten Bier 20 x 0,5 L (Jever);25.00;;Getränke;neuer Preis ab 15.06.2023;
-4463300328001;Kasten Erdinger 20x0,5L;28.00;;Getränke;neu ab 15.06.2023;
-4008287054026;Krombacher Pils 0.5l;1.30;;Getränke;;
-4463300101093;Kuchen;1.00;;;neuer EAN ab 12.06.2023;
-4463300320005;Kullerkasten gemischt;23.00;;Getränke;neuer Preis ab 15.06.2023;
-4463300210092;Navy Hut;10.00;;;SK 1937 (Verkauf Merchandising);
-8594404110127;Pilsner Urquell 0.33l;1.00;;Getränke;;
-42376163;Saskia Jessen Medium 0,5l;0.50;;;;
-4463300100508;Speisen 0,5 €;0.50;;;;
-4463300101000;Speisen 1,0 €;1.00;;;;
-4463300102007;Speisen 2 €;2.00;;;;
-4463300103004;Speisen 3€;3.00;;;neue Bezeichnung (alt: Mittagessen);
-4463300104001;Speisen 4€;4.00;;;neue Bezeichnung (alt: Mittagessen);
-4463300105008;Speisen 5€;5.00;;;neue Bezeichnung (alt: Mittagessen);
-4463300106005;Speisen 6€;6.00;;;neue Bezeichnung (alt: Mittagessen);
-50112135;Sprite Zitrone Limette 0.33 L;1.10;;;;4
-4463300215004;T-Shirt;15.00;;;SK 1937 (Verkauf Merchandising);
-4463300300502;Wasser 0,5 L;0.50;;;;
-4337185151316;Wasser K 0,5 L Full;0.50;;Getränke;;
-4337185151637;Wasser K 0,5 L Med;0.50;;Getränke;;
-4337185151613;Wasser K 0,5 L Still;0.50;;Getränke;;
-4337185369995;Wasser K 1,5 L Full;0.80;;Getränke;;
-4337185369940;Wasser K 1,5 L Still;0.80;;Getränke;;
-4463300210993;Wendehut;10.00;;;SK 1937 (Verkauf Merchandising);
+1;Mittagessen;4.44;19;Speisen;Nicht Löschen oder ändern!!! Der Preis kann durch den CafeLüsseDienst selbst angepasst werden;1
+2;Kaffee;0.50;19;Speisen;neuer EAN ab 12.06.2023;2
+3;Kuchen;1.00;19;Speisen;neuer EAN ab 12.06.2023;3
+4463300320005;Kullerkasten gemischt;23.00;19;Getränke;neuer Preis ab 15.06.2023;4
+33333;Coca Cola 0.33l;1.10;19;Getränke;neuer Preis ab 15.06.2023;20
+90357879;Cola Zero 0.33l;1.10;19;Getränke;;21
+87126860;Fanta 0,33l;1.10;19;Getränke;neuer Preis ab 15.06.2023;22
+50112135;Sprite Zitrone Limette 0.33l;1.10;19;Getränke;;23
+4463300300809;Apfelschorle 0,5l;0.80;19;Getränke;;24
+4014472280156;Bionade Eistee Pfirsich 0.33l;1.30;19;Getränke;;30
+4014472280163;Bionade Eistee Zitrone 0.33l;1.30;19;Getränke;;31
+4014472279198;Bionade Himbeer-Plaume 0.33l;1.30;19;Getränke;;32
+4014472002512;Bionade Holunder 0.33l;1.30;19;Getränke;neuer Preis ab 15.06.2023;33
+4014472280132;Bionade Naturtrüb Blutorange 0.33l;1.30;19;Getränke;;34
+4053400201634;Bionade Schwarze Joh 0,33l;1.30;19;Getränke;neuer Preis ab 15.06.2023;35
+4014472281719;Bionade Zitronen Bergamotte 0.33l;1.30;19;Getränke;neuer Preis ab 15.06.2023;36
+4004160005338;Berliner Pilsner 0,5l;1.20;19;Getränke;neuer Preis ab 15.06.2023;50
+4260386220331;Fläminger Radler 0,33l;1.10;19;Bier;neuer Preis ab 15.06.2023;50
+22222;Jever Pils 0,5l;1.30;19;Bier;;51
+4002103000013;Erdinger Weißbier 0.5l;1.50;19;Bier;neuer Preis ab 15.06.2023;52
+4002103019107;Erdinger Alkoholfrei 0.5l;1.50;19;Bier;neuer Preis ab 15.06.2023;53
+4463500000000;Gastflug;30.00;19;Flugbetrieb;;90
+4463300210009;ICAO Wettbewerbskarte Mitglied;10.00;19;Merchendise;;91
+4463300220008;ICAO Wettbewerbskarte Extern;20.00;19;Merchendise;;92
+4463300200000;Jacke Hakro;100.00;19;Merchendise;SK 1937 (Verkauf Merchandising);93
+4463300285007;Jacke Stargazer;85.00;19;Merchendise;SK 1937 (Verkauf Merchandising);94
+4463300210092;Navy Hut;10.00;19;Merchendise;SK 1937 (Verkauf Merchandising);95
+4463300210993;Wendehut;10.00;19;Merchendise;SK 1937 (Verkauf Merchandising);96
+4463300215004;T-Shirt;15.00;19;Merchendise;SK 1937 (Verkauf Merchandising);97
+;;;;;;
 )

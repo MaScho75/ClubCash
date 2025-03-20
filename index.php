@@ -46,17 +46,38 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 	
 <body>
     <div id="Testhinweis" style=" 
-    position: absolute;
-    top: 300px;
-    left: 50px;
-    text-align: center;
-    font-size: 23px;
-    color: rgba(255, 0, 0, 0.6);
-    font-weight: bold;">  
-        <p>Achtung: Diese Kasse ist im Testmodus!<br>
-        Es werden keine echten Transaktionen durchgeführt!</p>
+            position: absolute;
+            top: 300px;
+            left: 50px;
+            text-align: center;
+            font-size: 23px;
+            color: rgba(255, 0, 0, 0.6);
+            font-weight: bold;">  
+        <p>
+            Achtung: Diese Kasse ist im Testmodus!<br>
+            Es werden keine echten Transaktionen durchgeführt!
+        </p>
     </div>
-	<div id="display">
+    
+    <div id="preisfenster">
+
+        <div id="preisfenster_inhalt">
+            <h1>Preisliste</h1>  
+            <button id="preisliste_schließen" onclick="preisfenster.style.display = 'none';">X</button>  
+            <table id="preislistentabelle" border="0">
+                <thead>
+                    <tr>
+                        <th class="produktspalte2">Produkt</th>
+                        <th class="preisspalte2">Preis</th>
+                        <th class="leerspalte"></th>		
+                    </tr>
+                </thead>
+                <tbody></tbody>   
+            </table> 
+        </div>	    
+    </div>
+    
+    <div id="display">
    	
 		<div id="linkeSpalte">
 			
@@ -72,12 +93,11 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                         
                         
                         <tr><td class="zentriert"><h1>Terminal <span id=terminal>X</span></h1></td></tr>    
-                        <tr>
-                            <td class="zentriert">Mittagessen: 
-                                <span id=Mittagessenpreis>x.xx</span> € 
+                  
+                        <tr> 
+                            <td class="zentriert"> 
+                                <div id="direktwahl"></div>
                             </td>
-                        </tr>
-                        <tr><td class="zentriert"><button  onclick="preisliste()">Preisliste</button></td></tr>
 					</tbody>
 					
 			    </table>
@@ -93,14 +113,12 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 			</div>
 			
 			<div id="menubar">
-		    	<button onclick="info()">Info</button>
-                <button onclick="window.location.reload(true);">Abbruch</button>
-			    <button id="Bt_tagesabrechnung" onclick="tagesabrechnung();">Tagesabrechnung</button>
+		    	<button id="Bt_preisfenster" onclick="preisfenster.style.display = 'flex';">Preisliste</button><button onclick="info()">Info</button>
+                <button id="Bt_tagesabrechnung" onclick="tagesabrechnung();">Tagesabrechnung</button>
 			    <button id="Bt_tageszusammenfassung" onclick="tageszusammenfassung();">Tageszusammenfassung</button>
 			    <button id="Bt_kundentagesübersicht" onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
-			    <button id="Bt_sonderangebote" onclick="sonderangebote();">Produkte</button>
-			    <button id="Bt_manuelleBuchung" onclick="manuell();">Direktbuchung</button>
-                
+                <button id="Bt_manuelleBuchung" onclick="manuell();">Direktbuchung</button>
+                <button onclick="window.location.reload(true);">Abbruch</button>
 	    	</div>
 				
 			<div id="summenkasten">
@@ -108,10 +126,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 			</div>
 			
 		</div>
-		<div id=produktfenster>
-		    <h1>Produktauswahl</h1>
-            <button id="bt_x" onclick="produktfenster.style.display = 'none';">X</button>  
-        </div>
 	    
 	    <div id=tastatur>
 	        <button onclick="meingabe(1)">1</button>
@@ -126,58 +140,61 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 	        <button onclick="meingabe(0)">0</button>
 	        <button id="BT_Eingabe" style="background-color: RGB(227, 180, 14); border: 1px solid black;" onclick="meingabe('E')">E</button>
             <button style="background-color: RGB(108, 159, 56); border: 1px solid black;" onclick="tastatur.style.display = 'none';">X</button>
-	        
+        </div>
+
+    </div>   
+    
+    
 <script>
 
-        //Textwarnung blinken lassen
+        // Textwarnung blinken lassen
         function blinker() {
             $('#Testhinweis').fadeOut(2000);
             $('#Testhinweis').fadeIn(2000);
         }
         
-       //setInterval(blinker, 700); //Textwarnung blinken lassen
+        // setInterval(blinker, 700); // Textwarnung blinken lassen
 
-		fetch('backup.php') //Backup prüfen und kopieren
-	
-        //Terminal ermitteln aus der URL https://host/index.html?zahl=42
+        fetch('backup.php') // Backup prüfen und kopieren
+
+        // Terminal ermitteln aus der URL https://host/index.html?zahl=42
         const urlParams = new URLSearchParams(window.location.search);
-        let terminal = urlParams.get("terminal"); // Holt den Wert von von "terminal" aus der URL
+        let terminal = urlParams.get("terminal"); // Holt den Wert von "terminal" aus der URL
 
         if (terminal == null) {
             terminal = "X"; // Wenn kein "Terminal" in der URL, dann X
         }
 
         document.getElementById("terminal").innerText = terminal;
-     
-		let produkte = <?php echo json_encode($produkte); ?>;
-		
+         
+        let produkte = <?php echo json_encode($produkte); ?>;
         let kunden = <?php echo json_encode($jsonKundenDaten); ?>;
-
-		let warenkorb = [];
-		let summe = 0.00;
-		let eingabe = "";
-		let datenfeld = document.getElementById("datenfeld");
-		let warenkorbtabelle = document.getElementById("warenkorbtabelle");
-		let tbody = document.querySelector("#warenkorbtabelle tbody");
-		let statusfeld = document.getElementById("statusfeld");
-		let summenfeld = document.getElementById("summenfeld");
-		let menubar = document.getElementById("menubar");
-		let thead = document.querySelector("#warenkorbtabelle thead");
-		let produktfenster = document.getElementById("produktfenster");
-		let tastatur = document.getElementById("tastatur");
-		let eingabestring = "";
-		
-		let Bt_sonderangebote = document.getElementById("Bt_sonderangebote");
+        let warenkorb = [];
+        let summe = 0.00;
+        let eingabe = "";
+        let datenfeld = document.getElementById("datenfeld");
+        let warenkorbtabelle = document.getElementById("warenkorbtabelle");
+        let tbody = document.querySelector("#warenkorbtabelle tbody");
+        let statusfeld = document.getElementById("statusfeld");
+        let summenfeld = document.getElementById("summenfeld");
+        let menubar = document.getElementById("menubar");
+        let thead = document.querySelector("#warenkorbtabelle thead");
+        let preisfenster = document.getElementById("preisfenster");
+        let tastatur = document.getElementById("tastatur");
+        let eingabestring = "";
 		let Bt_manuelleBuchung = document.getElementById("Bt_manuelleBuchung");
+        let preislisten_tbody = document.querySelector("#preislistentabelle tbody");
 
-        let mittagessen = produkte.find(produkte => produkte.EAN === "1");
-        document.getElementById("Mittagessenpreis").innerText = mittagessen.Preis;
-		
+        
 		let tastenkontrolle = function(event) {
                 
             if (event.key === "Enter") {
-        
-        		produktprüfung(eingabe);
+
+                tastatur.style.display = 'none'; //solte die Tastatur noch offen sein, wird sie geschlossen
+                preisfenster.style.display = 'none';  //FEHLER: sollte das Preisfenster noch offen sein, wird es geschlossen
+                document.activeElement.blur(); // ist notwendig, damit nicht ein Button fokussiert bleibt und nach dem Enter eine Aktion auslöst
+                        		
+                produktprüfung(eingabe);
 				
 		    	kundenprüfung(eingabe);
 				
@@ -191,26 +208,29 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             if (event.key.length === 1) {
 				eingabe += event.key;
 				console.log("Eingabe hat den Wert: " + eingabe);
-			} 
+                preisfenster.style.display = 'none'; 
+			}
         }
         
         document.addEventListener("keydown", tastenkontrolle);
 
-//Produktauswahl Fenster mit Buttons erstellen
+        preisliste();
 
-produkte.forEach(produkt => {
-    if (parseInt(produkt.EAN) < 22) {
-        let button = document.createElement("button");
-        button.innerText = produkt.EAN + " - " + produkt.Bezeichnung + " - " + produkt.Preis + " €";
-        button.className = "bt_produkt";
-        button.onclick = function() {
-            produktfenster.style.display = "none";
-            produktprüfung(produkt.EAN);
-        }
-        produktfenster.appendChild(button);
-    }
-});
+        direktwahl(); // Direktwahl-Funktion aufrufen - Produkte in der Sortierung 1-9 anzeigen
 
+function direktwahl() {
+
+        produkte.forEach(produkt => {
+            if (produkt.Sortierung > 0 && produkt.Sortierung < 13) {
+                let button = document.createElement("button");
+                button.innerText = produkt.Bezeichnung + " - " + produkt.Preis + " €";
+                button.onclick = function() {
+                    produktprüfung(produkt.EAN);
+                }
+                document.getElementById("direktwahl").appendChild(button);
+            }
+        });
+}
 	
 function produktprüfung(EANr) {
 
@@ -222,8 +242,8 @@ function produktprüfung(EANr) {
             warenkorbaddition(produkt);
 	        eingabe = "";
 		}
-	}
-	
+}
+
 function kundenprüfung(KundenNr) {
 		
 		let kunde = kunden.find(kunden => kunden.key2designation === KundenNr); // key2designation ist die Kundennummer
@@ -282,13 +302,13 @@ function kundenprüfung(KundenNr) {
 		        kundenkontoübersicht(KundenNr);
 		    }
 		}
-	}
+}
 
-async function kundenkontoübersicht(KundenNr) {
+async function kundenkontoübersicht(KundenNr) { 
 
-eingabestopp();
+    eingabestopp();
 
-let kontosumme = 0.0;
+    let kontosumme = 0.0;
 
     try {
   
@@ -315,7 +335,7 @@ let kontosumme = 0.0;
 		
         thead.innerHTML = `
             <tr>
-            <th>Datum</th>
+            <th class="datumspalte">Datum</th>
             <th>Zeit</th>
             <th style="text-align: left;">T</th>
             <th style="text-align: left;">Produkt</th>
@@ -373,9 +393,9 @@ async function tagesabrechnung() {
             <tr>
             <th>T</th>
             <th>Zeit</th>
-            <th style="text-align: left;">Kunde</th>
+            <th class="kundenspalte">Kunde</th>
             <th style="text-align: left;">Produkt</th>
-            <th class="rechts">Preis</th>
+            <th class="preisspalte">Preis</th>
             </tr>
             `;
         
@@ -387,10 +407,10 @@ async function tagesabrechnung() {
             
             let tr = document.createElement("tr");
             tr.innerHTML = `
-                <td class="zentriert">` + row.Terminal + `</td>
-                <td class="zentriert">` + row.Zeit + `</td>
-                <td>` + kunde.lastname + ", " + kunde.firstname + `</td>
-                <td>` + row.Produkt + `</td>
+                <td class="zentriertTop" class="top">` + row.Terminal + `</td>
+                <td class="zentriertTop" class="top">` + row.Zeit + `</td>
+                <td class="top">` + kunde.lastname + ", " + kunde.firstname + `</td>
+                <td class="top">` + row.Produkt + `</td>
                 <td class="währung">` + row.Preis + ` €</td>
             `;
             tbody.appendChild(tr);
@@ -557,7 +577,13 @@ async function kundentagesübersicht() {
 
             let tr = document.createElement("tr");
             tr.innerHTML = `
-                <td colspan="4" id="Namenfeld">` + kunde.lastname + `, ` + kunde.firstname + `</td>
+                <td colspan="4" 
+                id="Namenfeld"
+                style="
+                    position: sticky;
+                    top: 0;
+                    z-index: 1;"
+                >` + kunde.lastname + `, ` + kunde.firstname + `</td>
             `;
             tbody.appendChild(tr);
 
@@ -658,10 +684,6 @@ async function übertragung_verkaufsliste(data) {
     .catch(error => console.error("Fehler:", error));
 }
 
-function sonderangebote() {
-    produktfenster.style.display = "flow";
-}
-
 function manuell() {
     tastatur.style.display = "block";
     eingabestring = "";
@@ -676,6 +698,7 @@ function meingabe(x) {
             MwSt: 19,
             Kategorie: "Direktbuchung"
         }
+        
         tastatur.style.display = "none";
         warenkorbüberschrift();
         warenkorb.push(manuelles_Produkt);
@@ -688,10 +711,9 @@ function meingabe(x) {
 
 function eingabestopp() {
     document.removeEventListener("keydown", tastenkontrolle);
-    Bt_sonderangebote.style.display = 'none';
+    Bt_preisfenster.style.display = 'none';
 	Bt_manuelleBuchung.style.display = 'none';
 }
-
 
 function warenkorbüberschrift() {
     
@@ -701,7 +723,7 @@ function warenkorbüberschrift() {
             thead.innerHTML = `
                 <tr>
 				    <th class="produktspalte" >Produkt</th>
-					<th class="preisspalte">Preis</th>
+					<th class="preisspalteWarenkorb">Preis</th>
 					<th class="leerspalte"></th>		
 		        </tr>
              `;
@@ -725,55 +747,51 @@ function warenkorbaddition(produkt) {
         	let zelle2 = zeile.insertCell();
         	zelle2.innerText = produkt.Preis + " €";
         	zelle2.className = "rechts_groß";
+        
+            if (produkt.EAN != 9990000000000) {
+                let zelle3 = zeile.insertCell();
+            zelle3.innerHTML = "<button onclick='produktprüfung(`" + produkt.EAN + "`)' class='plus-button'>+</button>";
+            }
+            
 }
-
-function sonderangebot(EANr) {
-    produktfenster.style.display = 'none';
-    produktprüfung(EANr);
-}
+                    
 
 function info() {
     statusfeld.innerText = "Information zum Kassensystem";
     $("#datenfeld").load("info.html");
 
+    eingabestopp();
     Bt_tagesabrechnung.style.display = 'none';
 	Bt_tageszusammenfassung.style.display = 'none';
     Bt_kundentagesübersicht.style.display = 'none';
 	Bt_manuelleBuchung.style.display = 'none';
-    Bt_sonderangebote.style.display = 'none';
 
 }
 
 function preisliste() {
-    
-    console.log("Produkte: ", produkte);
-    
+       
     produkte.sort((a, b) => a.Sortierung - b.Sortierung);
-
-    console.log("Produkte: ", produkte);
-
-
-    statusfeld.innerText = "Preisliste";
-    tbody.innerHTML = "";
-    thead.innerHTML = `
-        <tr>
-            <th class="produktspalte" >Produkt</th>
-            <th class="preispalte" >Preis</th>
-            <th class="leerspalte" ></th>		
-        </tr>
-    `;
-
+    preislisten_tbody.innerHTML = "";    
     produkte.forEach(produkt => {
-        let zeile = tbody.insertRow();
+        if (produkt.EAN == "") { // Leere Zeilen überspringen
+            return;
+        } 
+        let zeile = preislisten_tbody.insertRow();
         let zelle1 = zeile.insertCell();
         zelle1.innerText = produkt.Bezeichnung;
-        zelle1.className = "rechts_groß";
+        zelle1.className = "preisliste_rechts_groß";
         let zelle2 = zeile.insertCell();
         zelle2.innerText = produkt.Preis + " €";
-        zelle2.className = "rechts_groß";
+        zelle2.className = "preisliste_rechts_groß";
+        let zelle3 = zeile.insertCell();
+        zelle3.innerHTML = "<button onclick='aus_preisliste_buchen(`" + produkt.EAN + "`)' class='plus-button'>+</button>";
+        
     });
-    
+}
 
+function aus_preisliste_buchen(EAN_Preisliste) {
+    produktprüfung(EAN_Preisliste);
+    preisfenster.style.display = 'none';    
 }
 
 </script>

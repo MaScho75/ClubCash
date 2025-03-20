@@ -22,11 +22,11 @@
     
 	<div id="adminfenster">
 	   
-	    <div id="kopf">
-            <img src="../CL-Logo_100.png">	   
+	    <div id="kopf" style="display: flex; align-items: center;">
+            <img src="../CL-Logo_100.png" style="margin: 10px;">	   
 	        <h1>Cafe Lüsse Kasse AdminTool</h1>
 	    </div>
-		<div id="ausgabe">
+		<div id="ausgabe"  style="display: flex; flex-direction: column;">
 		    <a href="produkte.html"><button>Produktkatalog</button></a>
 	    	<button disabled onclick="">Mitgliederliste</button>
 	        <button disabled onclick="">Verkaufsliste Mitglieder</button>
@@ -38,7 +38,7 @@
     	    <a href="../abrechnung"><button>Tagesabrechnung heute</button></a>
     	    <button disabled onclick="">Tagesabrechnung Datum</button>
     	    <a href="../daten/produkte.csv"><button>Produkte - csv-download</button></a>
-    	    <a href="../daten/kunden.csv"><button disabled>Kunden - csv-download</button></a>
+			<a href="../daten/kunden.JSON"><button>Kunden - JSON-download</button></a>
     	    <a href="../daten/verkaufsliste.csv"><button>Verkaufsliste - csv-download</button></a>
 		</div>
 			
@@ -48,7 +48,7 @@
         function Mitgliedsdaten_ziehen() {
 			document.getElementById("ausgabe").innerHTML = "<p>Bitte warten, die Mitgliederdaten werden aus Vereinsflieger abgerufen...</p>";
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", "pull_Mitgliedsdaten_Vereinsflieger.php", true); // Hier die PHP-Datei anpassen
+            xhr.open("GET", "pull_Mitgliedsdaten_Vereinsflieger.php", true); 
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4 && xhr.status === 200) {
                     document.getElementById("ausgabe").innerHTML = xhr.responseText;

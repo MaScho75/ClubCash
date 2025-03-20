@@ -21,16 +21,10 @@
 
     <h2>Preisanpassung Mittagessen</h2>
 
-    <p>Über den folgenden Button kannst du den Preis für das Mittagessen für den heuigen Tag anpassen:</p>
+    <p>Über den folgenden Button kannst du den Preis für das Mittagessen für den heutigen Tag anpassen:</p>
     <p>aktueller Preis: <span id=Mittagessenpreis2>x.xx</span> €<button onclick="mittagspreis();">Preis
             anpassen</button></p>
-    <p><i>Diese Funktion steht noch nicht zu Verfügung!</i></p>
 
-    <h2>Prokukte</h2>
-    <p>Es können bis zu 21 Produkte ohne Strichcode in die Produktliste eingetragen werden. Jedes Produkt muss eine
-        individuelle EAN
-        von 1 bis 21 zugewiesen bekommen, damit es in der Produktliste erscheint</p>
-    </p>
 
     <script>
         //Mittagessenpreis
@@ -60,17 +54,15 @@
             const produkt = produkte.find(item => item.EAN === "1");
             if (!produkt) {
                 console.error("Fehler: Produkt mit EAN 1 nicht gefunden.");
+                statusbar.innerHTML = "Fehler in der Produktdatenbank!";
                 return;
             }
 
             produkt.Preis = neuerPreis.toFixed(2); // Preis aktualisieren
 
-
             // CSV-Daten aus Array generieren (Annahme: Kopfzeile bleibt gleich)
             const csvData = "EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung\n" +
                 produkte.map(p => `${p.EAN};${p.Bezeichnung};${p.Preis};${p.MwSt};${p.Kategorie};${p.Bemerkung};${p.Sortierung}`).join("\n");
-
-            console.log("CSV-Daten:", csvData);
 
             fetch('admin/save_produkte_csv.php', {
                 method: 'POST',
@@ -80,8 +72,8 @@
                 body: JSON.stringify({ csvData }) // Jetzt im richtigen JSON-Format
             })
                 .then(response => response.text()) // PHP gibt eine Textmeldung zurück
-                .then(data => console.log('Antwort vom Server:', data))
-                .catch(error => console.error('Fehler:', error));
+                .then(data => statusbar.innerHTML = 'Antwort vom Server:', data)
+                .catch(error => statusbar.innerHTML = 'Fehler:', error);
         }
 
 

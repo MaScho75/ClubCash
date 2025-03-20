@@ -1,17 +1,287 @@
+/* Allgemeine Stile */
 body {
-	margin: 0px;
-	font-family: 'Carlito', sans-serif;
-	font-size: 20px;
-}
-#adminfenster {
-    display: flex;
-    flex-direction: column;
-    align-items: center;  display: flex;
-    flex-wrap: wrap;
+    margin: 0px;
+    font-family: 'Carlito', sans-serif;
+    font-size: 20px;
 }
 
 p {
     margin-block-start: 0em;
+}
+
+h1 {
+    margin: 0px;
+    text-align: center;
+}
+
+h2 {
+    text-align: left;
+    font-size: 25px;
+    font-weight: bold;
+    margin: 20px 0px 0px 0px;
+}
+
+button { 
+    height: 38px;
+    width: 190px;
+    margin: 5px 5px 0px 5px;
+    font-weight: bold;
+    font-size: 15px;
+}
+
+/* Admin Fenster */
+#adminfenster {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+#adminfenster button {
+    width: 280px;
+}
+
+/* Preisfenster */
+#preisfenster {
+    display: none;
+    position: absolute;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+    height: 480px;
+    width: 800px;
+}
+
+#preisfenster_inhalt {
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: solid 1px;
+    height: 100%;
+    margin: 15px;
+    padding: 10px;
+}
+
+#preisliste_schließen {
+    background-color: rgb(108, 159, 56);
+    position: absolute;
+    top: 2px;
+    right: 20px;
+    border: 1px solid;
+    height: 50px;
+    width: 50px;
+    font-size: 30px;
+}
+
+#preislistentabelle thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+/* Display */
+#display {
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+    height: 480px;
+    width: 800px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); 
+}
+
+#direktwahl {
+    height: 270px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    align-content: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+#linkeSpalte {
+    width: 600px;
+}
+
+#rechteSpalte {
+    /* Stile für die rechte Spalte */
+}
+
+/* Tastatur */
+#tastatur {
+    display: none;
+    width: 195px;
+    position: fixed;
+    background: white;
+    left: 600px;
+    top: 120px;
+    border: solid 1px;
+    height: 300px;
+}
+
+#tastatur button {
+    width: 50px;
+    height: 50px;
+    margin: 5px;
+    font-size: 30px;
+}
+
+/* Warenkorb Tabelle */
+#warenkorbtabelle {
+    width: 100%;
+}
+
+#datenfeld {
+    height: 400px;
+    overflow: auto;
+    border: 1px solid black; /* 2px dicker schwarzer Rahmen */
+    padding: 5px; /* Etwas Abstand innen */
+    margin: 10px; /* Etwas Abstand außen */
+}
+
+#summenkasten {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50px;
+    font-size: 35px;
+    font-weight: bold;
+}
+
+.leerspalte {
+    width: 50px;
+}
+
+.preisspalte {
+    width: 80px;
+}
+
+.preisspalteWarenkorb {
+    width: 120px;
+}
+
+.datumspalte {
+    width: 100px;
+}
+
+.kundenspalte {
+    min-width: 200px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.top  {
+    vertical-align: top;
+}
+
+
+.preispalte {
+    width: 100px;
+    text-align: right;
+}
+
+/* Statusfeld */
+#statusfeld {
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* Menubar */
+#menubar {
+    height: 300px;
+}
+
+/* Logo */
+#logo {
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    height: 120px;
+}
+
+/* Tabellen */
+th {
+    background-color: rgb(138, 170, 215);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.bt_produkt {
+    height: 50px;
+    width: 240px;
+    margin: 5px 5px 0px 5px;
+    font-weight: normal;
+    font-size: 15px;
+    border: 1px solid;
+}
+
+/* Verschiedene Klassen */
+.rechts {
+    text-align: right;
+}
+
+.links {
+    text-align: left;
+}
+
+.rechts_groß {
+    text-align: right;
+    font-size: 30px;
+    padding-right: 10px;
+}
+
+.preisliste_rechts_groß {
+    text-align: right;
+    font-size: 30px;
+    padding-right: 10px;
+}
+
+.zeit {
+    text-align: center;
+    width: 90px;
+    font-size: 15px;
+}
+
+.währung {
+    text-align: right;
+    vertical-align: bottom
+}
+
+.zentriert {
+    text-align: center;
+}
+
+.zentriertTop {
+    text-align: center;
+    vertical-align: top;
+}
+
+/* Weitere spezifische IDs */
+#bt_x {    
+    background-color: rgb(108, 159, 56);
+    position: absolute;
+    top: 2px;
+    right: 20px;
+    border: 1px solid;
+    height: 50px;
+    width: 50px;
+    font-size: 30px;
+}
+
+#Namenfeld {
+    background-color: rgb(138, 170, 215);
+    font-weight: bold;
+    text-align: left;
 }
 
 .edit-button {
@@ -27,218 +297,10 @@ p {
     color: red;
 }
 
-#adminfenster button {
-    width: 280px;
-}
-
-#kopf {
-    display: flex;
-    align-items: center;
-    gap: 20px; 
-    margin: 10px;
-}
-
-#ausgabe {
-    display: contents;
-    align-items: center;
-    margin: 10px;
-}
-
-#tastatur {
-    display: none;
-    width: 195px;
-    position: fixed;
-    background: white;
-    left: 600Px;
-    top: 120px;
-    border: solid 1px;
-    height: 300px;
-}
-
-#tastatur button {
+.plus-button {
     width: 50px;
-    height: 50px;
+    height: 40px;
+    font-size: 20px;
+    padding: 0px;
     margin: 5px;
-    font-size: 30px;
 }
-
-#display {
-	background-color: #f0f0f0;
-    margin: 0;
-    padding: 0;
- 	height: 480px;
-	width: 800px;
-	display: grid;
-    grid-template-columns: repeat(2, 1fr); 
-}
-
-#produktfenster {
-    border: 1px black solid;
-    position: fixed;
-    background-color: white;
-    margin: 10px;
-    padding: 10px;
-    width: 760px;
-    height: 440px;
-    display: none; /*unsicherbar*/
-}
-
-#linkeSpalte {
-	width: 600px;
-}
-
-#rechteSpalte {
-
-}
-
-#bt_x {    
-    background-color: rgb(108, 159, 56);
-    position: absolute;
-    top: 2px;
-    right: 20px;
-    border: 1px solid;
-    height: 50px;
-    width: 50px;
-    font-size: 30px;
-}
-
-#warenkorbtabelle {
-    width: 100%;
-}
-
-#statusfeld {
-	height: 40px;
-	display: flex;
-    justify-content: center;
-    align-items: center; 
-	font-size: 20px;
-    font-weight: bold;
-}
-
-.prouktspalte {
-    width: 400px;
-    font-size: 25px;
-    text-align: right;
-}
-
-.preispalte
-{
-    width: 100px;
-    font-size: 25px;
-    text-align: right;
-}
-.leerspalte {
-    width: 20px;
-}
-
-
-#logo {
-	display: flex;
-    justify-content: center;
-    align-items: center; 
-	height: 120px;
-}
-
-#datenfeld {
-	height: 400px;
-    overflow: auto;
-    border: 1px solid black; /* 2px dicker schwarzer Rahmen */
-    padding: 5px; /* Etwas Abstand innen */
-    margin: 10px; /* Etwas Abstand außen */
-    
-}
-
-#fußzeile {
-    /*background-color: orange;*/
-}
-
-#summenkasten {
-    /*background-color: red;*/
-	display: flex;
-    justify-content: center;
-    align-items: center;
-	height: 50px;
-    font-size: 35px;
-    font-weight: bold;
-}
-
-#menubar {
-	height: 300px;
-}
-
-.rechts {
-    text-align: right;
-}
-
-.links {
-    text-align: left;
-}
-
-.rechts_groß {
-    text-align: right;
-    font-size: 25px;
-    padding-right: 10px;
-    
-}
-
-.zeit {
-    text-align: center;
-    width: 90px;
-    font-size: 15px;
-}
-
-.währung {
-	text-align: right;
-	width: 100px;
-}
-
-.zentriert {
-	text-align: center;
-}
-
-
-h1 {
-    margin: 0px;
-    text-align: center;
-}
-
-h2 {
-    text-align: left;
-    font-size: 25px;
-    font-weight: bold;
-    margin: 20px 0px 0px 0px;
-}
-
-
-button { 
-	height: 38px;
-    width: 190px;
-    margin: 5px 5px 0px 5px;
-	font-weight: bold;
-	font-size: 15px;
-}
-
-table {
-
-}
-
-#Namenfeld {
-    background-color: rgb(138, 170, 215);
-    font-weight: bold;
-    text-align: left;
-}
-
-th {
-    background-color: rgb(138, 170, 215);
-}
-
-.bt_produkt {
-    height: 50px;
-    width: 240px;
-    margin: 5px 5px 0px 5px;
-    font-weight: normal;
-    font-size: 15px;
-    border: 1px solid;
-}
-
-
