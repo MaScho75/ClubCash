@@ -5,64 +5,77 @@ body {
     font-size: 20px;
 }
 
-        /* Menüleiste */
-        #navbar {
-   			padding: 10px 20px;
-   			display: flex;
-   			justify-content: space-between;
-    		align-items: center;
-    		color: black;
-    		position: absolute;
-        }
+/* Menüleiste */
+#navbar {
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: black;
+    position: absolute;
+}
 
-        /* Hamburger-Icon */
-        .menu-icon {
-            display: block;
-            cursor: pointer;
-            font-size: 24px;
-        }
+/* Hamburger-Icon */
+.menu-icon {
+    display: block;
+    cursor: pointer;
+    font-size: 24px;
+}
 
-        /* Menü-Container */
-        .menu {
-            display: none;
-            flex-direction: column;
-            background: #f0f0f0;
-            position: absolute;
-            top: 50px;
-            left: 0;
-            width: 300px;
-            text-align: center;
-            padding: 10px 0;
-            border: solid 1px;
-            border-top: none;
-            border-left: none;
-            border-bottom-left-radius: 5px;
-            border-bottom-right-radius: 5px;
-            z-index: 10;
-        }
+/* Menü-Container */
+.menu {
+    flex-direction: column;
+    background: #f0f0f0;
+    position: absolute;
+    top: 50px;
+    left: 0;
+    width: 300px;
+    text-align: center;
+    padding: 10px 0;
+    border: solid 1px;
+    border-top: none;
+    border-left: none;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    z-index: 10;
+    transform-origin: top;
+    transition: transform 0.3s ease-out;
+    transform: scaleY(0);
+}
 
-        /* Buttons im Menü */
-        .menu button {
-            background: rgb(138, 170, 215);
-            color: white;
-            border: none;
-            padding: 10px;
-            margin: 5px;
-            width: 96%;
-            cursor: pointer;
-            font-size: 16px;
-            border-radius: 5px;
-        }
+/* Buttons im Menü */
+.menu button {
+    background: rgb(138, 170, 215);
+    color: white;
+    border: none;
+    padding: 10px;
+    margin: 5px;
+    width: 96%;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
 
-        .menu button:hover {
-            background: rgb(227, 180, 14);
-        }
+}
 
-        /* Menü aktivieren */
-        .menu.active {
-            display: flex;
-			
-        }
+.menu button:hover {
+    background: rgb(227, 180, 14);
+}
+
+button:hover {
+    background: rgb(227, 180, 14);
+}
+
+button:disabled {
+    background-color: #ccc; /* Grauer Hintergrund */
+    color: #666; /* Graue Schrift */
+    cursor: not-allowed; /* Zeigt an, dass der Button nicht klickbar ist */
+    opacity: 0.6; /* Macht den Button leicht transparent */
+}
+
+/* Menü aktivieren */
+.menu.active {
+    transform: scaleY(1);
+}
 
 p {
     margin-block-start: 0em;
@@ -80,7 +93,7 @@ h2 {
     margin: 20px 0px 0px 0px;
 }
 
-button { 
+button {
     height: 55px;
     width: 180px;
     margin: 5px 5px 0px 5px;
@@ -90,6 +103,10 @@ button {
     border: none;
     border-radius: 5px;
     color: white;
+}
+
+.zentriert {
+    text-align: center;
 }
 
 /* Admin Fenster */
@@ -155,7 +172,7 @@ button {
     height: 480px;
     width: 800px;
     display: grid;
-    grid-template-columns: repeat(2, 1fr); 
+    grid-template-columns: repeat(2, 1fr);
 }
 
 #direktwahl {
@@ -172,9 +189,7 @@ button {
     width: 600px;
 }
 
-#rechteSpalte {
-    /* Stile für die rechte Spalte */
-}
+/* Removed empty ruleset for #rechteSpalte */
 
 /* Tastatur */
 #tastatur {
@@ -203,9 +218,12 @@ button {
 #datenfeld {
     height: 400px;
     overflow: auto;
-    border: 1px solid black; /* 2px dicker schwarzer Rahmen */
-    padding: 5px; /* Etwas Abstand innen */
-    margin: 10px; /* Etwas Abstand außen */
+    border: 1px solid black;
+    /* 2px dicker schwarzer Rahmen */
+    padding: 5px;
+    /* Etwas Abstand innen */
+    margin: 10px;
+    /* Etwas Abstand außen */
     background-color: rgb(250, 250, 250);
     border-radius: 5px;
 }
@@ -241,7 +259,7 @@ button {
     vertical-align: top;
 }
 
-.top  {
+.top {
     vertical-align: top;
 }
 
@@ -256,7 +274,7 @@ button {
     height: 40px;
     display: flex;
     justify-content: center;
-    align-items: center; 
+    align-items: center;
     font-size: 20px;
     font-weight: bold;
 }
@@ -270,7 +288,7 @@ button {
 #logo {
     display: flex;
     justify-content: center;
-    align-items: center; 
+    align-items: center;
     height: 120px;
 }
 
@@ -284,12 +302,13 @@ th {
 }
 
 .BT_Eingabe {
-    background-color: RGB(227, 180, 14); 
+    background-color: RGB(227, 180, 14);
 }
 
 .BT_Abbruch {
     background-color: RGB(108, 159, 56);
 }
+
 .bt_produkt {
     height: 50px;
     width: 240px;
@@ -328,12 +347,8 @@ th {
 
 .währung {
     text-align: right;
-    vertical-align: bottom
+    vertical-align: bottom;
     width: 100px;
-}
-
-.zentriert {
-    text-align: center;
 }
 
 .zentriertTop {
@@ -342,7 +357,7 @@ th {
 }
 
 /* Weitere spezifische IDs */
-#bt_x {    
+#bt_x {
     background-color: rgb(108, 159, 56);
     position: absolute;
     top: 2px;
@@ -354,7 +369,7 @@ th {
 }
 
 #Namenfeld {
-    background-color: rgb(210,210,210);
+    background-color: rgb(210, 210, 210);
     font-weight: bold;
     text-align: left;
     padding: 5px;
@@ -370,7 +385,8 @@ th {
 
 /* Breite des Scrollbalkens */
 ::-webkit-scrollbar {
-    width: 40px; /* Verbreitern */
+    width: 40px;
+    /* Verbreitern */
 }
 
 /* Hintergrund des Scrollbalkens */
@@ -388,4 +404,45 @@ th {
 /* Scrollbalken beim Hover */
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
+}
+
+/* Weglide-Container */
+
+#bildschirmschoner {
+    display: none;
+    width: 800px;
+    height: 480px;
+    border: none;
+    overflow: hidden;
+    position: absolute;
+    top: 0px
+}
+#bildschirmschoner iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.input-button {
+    display: none;
+}
+
+#circle-timer {
+    display: none;
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    top: 250px;
+    left: 250px;
+}
+svg {
+    transform: rotate(-90deg);
+}
+circle {
+    fill: none;
+    stroke: #6C9F38;
+    stroke-width: 20px;
+    stroke-dasharray: 251; /* Umfang des Kreises */
+    stroke-dashoffset: 251; /* Start: Vollständig gefüllt */
+    transition: stroke-dashoffset 4s linear;
 }
