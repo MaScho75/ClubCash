@@ -376,7 +376,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
             try {
 
-                let response = await fetch("kundenkontoübersicht-cvs.php", {
+                let response = await fetch("kundenkontouebersicht-cvs.php", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"

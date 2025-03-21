@@ -26,7 +26,6 @@ if (($handle = fopen($file, "r")) !== FALSE) {
 
         // Wenn das Datum mit dem heutigen übereinstimmt, fügen wir es zum Array hinzu
         if ($kundennummer == $kundeDS) {
-            //$kundenData[] = $data;
             $kundenData[] = array_combine($headers, $data);
         }
     }
