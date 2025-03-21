@@ -1,1 +1,1 @@
-n.n.
+Dieses Kassensystem ist speziel für FLugvereine erstellt worden. Es bietet eine Verbindung zu vereinsflieger.de. Bisher können nur die Mitgliedsdaten heruntergeladen werden. Zudem ist die Möglichkeit integriert, mit RIFD-Chip oder Strickcode die Bezahlfunktion zu aktivieren. 
