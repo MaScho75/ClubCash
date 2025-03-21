@@ -36,6 +36,8 @@ body {
             border: solid 1px;
             border-top: none;
             border-left: none;
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
             z-index: 10;
         }
 
@@ -205,6 +207,7 @@ button {
     padding: 5px; /* Etwas Abstand innen */
     margin: 10px; /* Etwas Abstand außen */
     background-color: rgb(250, 250, 250);
+    border-radius: 5px;
 }
 
 #summenkasten {

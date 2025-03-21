@@ -723,6 +723,8 @@ async function übertragung_verkaufsliste(data) {
 
 function manuell() {
     tastatur.style.display = "block";
+    statusfeld.innerText = "Manuelle Buchung";
+    summenfeld.innerText = "0.00";
     document.querySelector(".menu").classList.remove("active");
     eingabestring = "";
 }
@@ -730,6 +732,12 @@ function manuell() {
 function meingabe(x) {
     
     if (x == "E") {
+
+        if (eingabestring == "") {
+            statusfeld.innerText = "Keine Eingabe erfolgt.";
+            tastatur.style.display = "none";
+            return;
+        }
         let manuelles_Produkt = {
             EAN: 9990000000000,
             Bezeichnung: "Direktbuchung",
@@ -846,7 +854,10 @@ function mittagspreis() {
         Bt_preisfenster.style.display = 'none';
         Bt_manuelleBuchung.style.display = 'none';
         navbar.style.display = 'none';
-        
+
+        summenfeld.innerText = "0.00";
+        eingabestring = "";
+
         tastatur.style.display = 'block';
         
         datenfeld.innerHTML = `<h1 class="zentriert"> Bitte gebe den neuen Preis für das Mittagessen ein.</h1>`;
@@ -864,6 +875,7 @@ function mittagspreis() {
 
             };
         }
+
 
 function update_mittagspreis(neuerPreis) {
             const produkt = produkte.find(item => item.EAN === "1");

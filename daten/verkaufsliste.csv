@@ -252,3 +252,7 @@ Datum;Zeit;Terminal;Kunde;EAN;Produkt;Kategorie;Preis;MwSt
 2025-03-21;05:28;X;0014252568;2;Kaffee;Speisen;0.50;19
 2025-03-21;05:28;X;0014252568;2;Kaffee;Speisen;0.50;19
 2025-03-21;05:28;X;0014252568;9990000000000;Direktbuchung;Direktbuchung;8.00;19
+2025-03-21;13:35;X;0014252568;1;Mittagessen;Speisen;7.70;19
+2025-03-21;13:39;X;0014252568;2;Kaffee;Speisen;0.50;19
+2025-03-21;13:39;X;0014252568;2;Kaffee;Speisen;0.50;19
+2025-03-21;13:39;X;0014252568;2;Kaffee;Speisen;0.50;19

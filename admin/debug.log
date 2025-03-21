@@ -1,4 +1,6 @@
-EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung
+Array
+(
+    [csvData] => EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung
 ;;;;;;
 1;Mittagessen;0.66;19;Speisen;Nicht Löschen oder ändern!!! Der Preis kann durch den CafeLüsseDienst selbst angepasst werden;1
 2;Kaffee;0.50;19;Speisen;neuer EAN ab 12.06.2023;2
@@ -31,3 +33,4 @@ EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung
 4463300215004;T-Shirt;15.00;19;Merchendise;SK 1937 (Verkauf Merchandising);97
 4102380027083;Test2;8.88;19;Test2;Test 2;98
 5942084505161;Test;9.99;19;Test;Test;99
+)
