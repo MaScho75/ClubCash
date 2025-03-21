@@ -5,6 +5,63 @@ body {
     font-size: 20px;
 }
 
+        /* Menüleiste */
+        #navbar {
+   			padding: 10px 20px;
+   			display: flex;
+   			justify-content: space-between;
+    		align-items: center;
+    		color: black;
+    		position: absolute;
+        }
+
+        /* Hamburger-Icon */
+        .menu-icon {
+            display: block;
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        /* Menü-Container */
+        .menu {
+            display: none;
+            flex-direction: column;
+            background: #f0f0f0;
+            position: absolute;
+            top: 50px;
+            left: 0;
+            width: 300px;
+            text-align: center;
+            padding: 10px 0;
+            border: solid 1px;
+            border-top: none;
+            border-left: none;
+            z-index: 10;
+        }
+
+        /* Buttons im Menü */
+        .menu button {
+            background: rgb(138, 170, 215);
+            color: white;
+            border: none;
+            padding: 10px;
+            margin: 5px;
+            width: 96%;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+
+        .menu button:hover {
+            background: rgb(227, 180, 14);
+        }
+
+        /* Menü aktivieren */
+        .menu.active {
+            display: flex;
+			
+        }
+
 p {
     margin-block-start: 0em;
 }
@@ -22,11 +79,15 @@ h2 {
 }
 
 button { 
-    height: 38px;
-    width: 190px;
+    height: 55px;
+    width: 180px;
     margin: 5px 5px 0px 5px;
     font-weight: bold;
     font-size: 15px;
+    background-color: rgb(138, 170, 215);
+    border: none;
+    border-radius: 5px;
+    color: white;
 }
 
 /* Admin Fenster */
@@ -53,6 +114,7 @@ button {
     padding: 0;
     height: 480px;
     width: 800px;
+    z-index: 3;
 }
 
 #preisfenster_inhalt {
@@ -85,7 +147,7 @@ button {
 
 /* Display */
 #display {
-    background-color: #f0f0f0;
+    background-color: rgb(240, 240, 240);
     margin: 0;
     padding: 0;
     height: 480px;
@@ -142,6 +204,7 @@ button {
     border: 1px solid black; /* 2px dicker schwarzer Rahmen */
     padding: 5px; /* Etwas Abstand innen */
     margin: 10px; /* Etwas Abstand außen */
+    background-color: rgb(250, 250, 250);
 }
 
 #summenkasten {
@@ -210,12 +273,20 @@ button {
 
 /* Tabellen */
 th {
-    background-color: rgb(138, 170, 215);
+    background-color: rgb(210, 210, 210);
     position: sticky;
     top: 0;
     z-index: 1;
+    padding: 5px;
 }
 
+.BT_Eingabe {
+    background-color: RGB(227, 180, 14); 
+}
+
+.BT_Abbruch {
+    background-color: RGB(108, 159, 56);
+}
 .bt_produkt {
     height: 50px;
     width: 240px;
@@ -255,6 +326,7 @@ th {
 .währung {
     text-align: right;
     vertical-align: bottom
+    width: 100px;
 }
 
 .zentriert {
@@ -279,22 +351,10 @@ th {
 }
 
 #Namenfeld {
-    background-color: rgb(138, 170, 215);
+    background-color: rgb(210,210,210);
     font-weight: bold;
     text-align: left;
-}
-
-.edit-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 20px;
-    color: #333;
-    transition: color 0.3s ease-in-out;
-}
-
-.edit-button:hover {
-    color: red;
+    padding: 5px;
 }
 
 .plus-button {
@@ -303,4 +363,26 @@ th {
     font-size: 20px;
     padding: 0px;
     margin: 5px;
+}
+
+/* Breite des Scrollbalkens */
+::-webkit-scrollbar {
+    width: 40px; /* Verbreitern */
+}
+
+/* Hintergrund des Scrollbalkens */
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+/* Farbe des Scrollbalkens */
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+/* Scrollbalken beim Hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }

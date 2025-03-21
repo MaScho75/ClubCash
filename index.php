@@ -47,11 +47,11 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 <body>
     <div id="Testhinweis" style=" 
             position: absolute;
-            top: 300px;
+            top: 400px;
             left: 50px;
             text-align: center;
             font-size: 23px;
-            color: rgba(255, 0, 0, 0.6);
+            color: rgba(227, 180, 14, 0.6);
             font-weight: bold;">  
         <p>
             Achtung: Diese Kasse ist im Testmodus!<br>
@@ -59,6 +59,17 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         </p>
     </div>
     
+	<div id="navbar">
+        <div class="menu-icon" onclick="toggleMenu()">☰</div>
+        <div class="menu">
+            <button onclick="tagesabrechnung();">Tagesabrechnung</button>
+            <button onclick="tageszusammenfassung();">Tageszusammenfassung</button>
+            <button onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
+			<button onclick="mittagspreis();">Preisanpassung Mittagessen</button>
+			<button onclick="info();">Programminfos</button>
+        </div>
+    </div>	
+	
     <div id="preisfenster">
 
         <div id="preisfenster_inhalt">
@@ -113,10 +124,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 			</div>
 			
 			<div id="menubar">
-		    	<button id="Bt_preisfenster" onclick="preisfenster.style.display = 'flex';">Preisliste</button><button onclick="info()">Info</button>
-                <button id="Bt_tagesabrechnung" onclick="tagesabrechnung();">Tagesabrechnung</button>
-			    <button id="Bt_tageszusammenfassung" onclick="tageszusammenfassung();">Tageszusammenfassung</button>
-			    <button id="Bt_kundentagesübersicht" onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
+		    	<button id="Bt_preisfenster" onclick="preisfenster_öffnen()">Preisliste</button>  
                 <button id="Bt_manuelleBuchung" onclick="manuell();">Direktbuchung</button>
                 <button onclick="window.location.reload(true);">Abbruch</button>
 	    	</div>
@@ -138,22 +146,27 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 	        <button onclick="meingabe(8)">8</button>
 	        <button onclick="meingabe(9)">9</button>
 	        <button onclick="meingabe(0)">0</button>
-	        <button id="BT_Eingabe" style="background-color: RGB(227, 180, 14); border: 1px solid black;" onclick="meingabe('E')">E</button>
-            <button style="background-color: RGB(108, 159, 56); border: 1px solid black;" onclick="tastatur.style.display = 'none';">X</button>
+	        <button id= "BT_EingabeGelb" class="BT_Eingabe" onclick="meingabe('E')">E</button>
+            <button class="BT_Abbruch" onclick="tastatur.style.display = 'none';">X</button>
         </div>
 
     </div>   
     
     
 <script>
-
+		//Hamburger Menu
+	 	function toggleMenu() {
+            document.querySelector(".menu").classList.toggle("active");
+        }
+	
+	
         // Textwarnung blinken lassen
         function blinker() {
             $('#Testhinweis').fadeOut(2000);
             $('#Testhinweis').fadeIn(2000);
         }
         
-        // setInterval(blinker, 700); // Textwarnung blinken lassen
+        //setInterval(blinker, 700); // Textwarnung blinken lassen
 
         fetch('backup.php') // Backup prüfen und kopieren
 
@@ -181,17 +194,22 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         let thead = document.querySelector("#warenkorbtabelle thead");
         let preisfenster = document.getElementById("preisfenster");
         let tastatur = document.getElementById("tastatur");
+        let navbar = document.getElementById("navbar");
         let eingabestring = "";
 		let Bt_manuelleBuchung = document.getElementById("Bt_manuelleBuchung");
         let preislisten_tbody = document.querySelector("#preislistentabelle tbody");
+        let statusbar = document.getElementById("statusfeld");
 
         
 		let tastenkontrolle = function(event) {
                 
-            if (event.key === "Enter") {
-
-                tastatur.style.display = 'none'; //solte die Tastatur noch offen sein, wird sie geschlossen
-                preisfenster.style.display = 'none';  //FEHLER: sollte das Preisfenster noch offen sein, wird es geschlossen
+            if (event.key === "Enter" && eingabe !== "") { //Sollte nur Enter gedrückt worden sein und ein leerer Datensatz in der Produktdatei existieren, wird der folgende Code nicht ausgeführt. 
+                
+                
+                if (eingabe == "") console.log("Eingabe hat keinen Wert");
+                
+                tastatur.style.display = 'none'; //soltte die Tastatur noch offen sein, wird sie geschlossen
+                preisfenster.style.display = 'none';  //sollte das Preisfenster noch offen sein, wird es geschlossen
                 document.activeElement.blur(); // ist notwendig, damit nicht ein Button fokussiert bleibt und nach dem Enter eine Aktion auslöst
                         		
                 produktprüfung(eingabe);
@@ -216,12 +234,17 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
         preisliste();
 
-        direktwahl(); // Direktwahl-Funktion aufrufen - Produkte in der Sortierung 1-9 anzeigen
+        direktwahl(); // Direktwahl-Funktion aufrufen - Produkte in der Sortierung 1-8 anzeigen
+
+function preisfenster_öffnen() {
+    document.querySelector(".menu").classList.remove("active");
+    preisfenster.style.display = 'flex';
+}
 
 function direktwahl() {
 
         produkte.forEach(produkt => {
-            if (produkt.Sortierung > 0 && produkt.Sortierung < 13) {
+            if (produkt.Sortierung > 0 && produkt.Sortierung < 9) {
                 let button = document.createElement("button");
                 button.innerText = produkt.Bezeichnung + " - " + produkt.Preis + " €";
                 button.onclick = function() {
@@ -233,10 +256,12 @@ function direktwahl() {
 }
 	
 function produktprüfung(EANr) {
-
+    
+        document.querySelector(".menu").classList.remove("active"); //Menu ausblenden, sollte es geöffnet sein. 
+        
 		let produkt = produkte.find(produkte => produkte.EAN === EANr);
-		
-		if (produkt) {          
+	
+		if (produkt) {
             warenkorbüberschrift(); 
 			warenkorb.push(produkt);
             warenkorbaddition(produkt);
@@ -295,6 +320,14 @@ function kundenprüfung(KundenNr) {
 				warenkorb = [];
 				warenkorb2 = [];
 		        summe = 0;
+		        
+		        eingabestopp();
+		        
+		        //Seite wird nach 4sec neu gelanden
+		        timeout = setTimeout(() => {
+                    location.reload(); // Seite neu laden
+                    }, 4000); // 4 Sekunden (4.000 ms)
+    
 		    }
 		    else {
 		        eingabe = "";
@@ -370,6 +403,8 @@ async function kundenkontoübersicht(KundenNr) {
 
 async function tagesabrechnung() {
     
+	toggleMenu();
+	
     eingabestopp();
 
     let tagessumme = 0.0;
@@ -426,12 +461,13 @@ async function tagesabrechnung() {
 
     } catch (error) {
         console.error("Fehler beim Laden der Daten:", error);
-        statusfeld.innerText = "Fehler beim Laden der Daten:", error;
+        statusfeld.innerText = "Fehler beim Laden der Daten:" + error;
     }
 }
 
 async function tageszusammenfassung() {
 
+	toggleMenu();
     eingabestopp();
     
     let tagessumme = 0.0;
@@ -521,6 +557,7 @@ async function tageszusammenfassung() {
 
 async function kundentagesübersicht() {
 
+	toggleMenu();
     eingabestopp();
     
     let tagessumme = 0.0;
@@ -686,15 +723,17 @@ async function übertragung_verkaufsliste(data) {
 
 function manuell() {
     tastatur.style.display = "block";
+    document.querySelector(".menu").classList.remove("active");
     eingabestring = "";
 }
 
 function meingabe(x) {
+    
     if (x == "E") {
         let manuelles_Produkt = {
             EAN: 9990000000000,
             Bezeichnung: "Direktbuchung",
-            Preis: eingabestring/100,
+            Preis: (eingabestring/100).toFixed(2),
             MwSt: 19,
             Kategorie: "Direktbuchung"
         }
@@ -757,19 +796,23 @@ function warenkorbaddition(produkt) {
                     
 
 function info() {
+	
+	Bt_preisfenster.style.display = 'none';
+    Bt_manuelleBuchung.style.display = 'none';
+    navbar.style.display = 'none';
+	
+	toggleMenu();
+	
     statusfeld.innerText = "Information zum Kassensystem";
     $("#datenfeld").load("info.html");
 
     eingabestopp();
-    Bt_tagesabrechnung.style.display = 'none';
-	Bt_tageszusammenfassung.style.display = 'none';
-    Bt_kundentagesübersicht.style.display = 'none';
 	Bt_manuelleBuchung.style.display = 'none';
 
 }
 
 function preisliste() {
-       
+    
     produkte.sort((a, b) => a.Sortierung - b.Sortierung);
     preislisten_tbody.innerHTML = "";    
     produkte.forEach(produkt => {
@@ -793,6 +836,60 @@ function aus_preisliste_buchen(EAN_Preisliste) {
     produktprüfung(EAN_Preisliste);
     preisfenster.style.display = 'none';    
 }
+
+//Mittagessenpreis
+        
+function mittagspreis() {
+    
+        toggleMenu();
+        
+        Bt_preisfenster.style.display = 'none';
+        Bt_manuelleBuchung.style.display = 'none';
+        navbar.style.display = 'none';
+        
+        tastatur.style.display = 'block';
+        
+        datenfeld.innerHTML = `<h1 class="zentriert"> Bitte gebe den neuen Preis für das Mittagessen ein.</h1>`;
+
+        document.getElementById('BT_EingabeGelb').onclick = function () {
+
+            datenfeld.innerHTML = `
+                <p><p class="zentriert"><b>Der Preis wurde geändert!<b></p>
+                <p class="zentriert">Der neue Preis für das heutige Mittagessen beträgt jetzt: </p>
+                <h1 class="zentriert">` + summenfeld.firstChild.nodeValue + ` €</h1>
+            `;
+            tastatur.style.display = 'none';
+            let preisNum = parseFloat(summenfeld.firstChild.nodeValue);
+            update_mittagspreis(preisNum);
+
+            };
+        }
+
+function update_mittagspreis(neuerPreis) {
+            const produkt = produkte.find(item => item.EAN === "1");
+            if (!produkt) {
+                console.error("Fehler: Produkt mit EAN 1 nicht gefunden.");
+                statusbar.innerHTML = "Fehler in der Produktdatenbank!";
+                return;
+            }
+
+            produkt.Preis = neuerPreis.toFixed(2); // Preis aktualisieren
+
+            // CSV-Daten aus Array generieren (Annahme: Kopfzeile bleibt gleich)
+            const csvData = "EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung\n" +
+                produkte.map(p => `${p.EAN};${p.Bezeichnung};${p.Preis};${p.MwSt};${p.Kategorie};${p.Bemerkung};${p.Sortierung}`).join("\n");
+
+            fetch('admin/save_produkte_csv.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ csvData }) // Jetzt im richtigen JSON-Format
+            })
+                .then(response => response.text()) // PHP gibt eine Textmeldung zurück
+                .then(data => statusbar.innerHTML = 'Antwort vom Server:' + data)
+                .catch(error => statusbar.innerHTML = 'Fehler:' + error);
+        }
 
 </script>
 

@@ -17,67 +17,11 @@
     <p>entwickelt worden. Bei technischen Störungen, Fragen oder Anregungen wende dich bitte direkt an ihn.
         Bei Fragen zu deiner Abrechnung, kontaktiere bitte den Kassenwart.</p>
     </p>Das System befindet sich noch im Entwicklungsstatium!</p>
-    <p>Letztes Update: 14.03.2024</p>
+    <p>Letztes Update: 21.03.2024</p>
 
     <h2>Preisanpassung Mittagessen</h2>
 
-    <p>Über den folgenden Button kannst du den Preis für das Mittagessen für den heutigen Tag anpassen:</p>
-    <p>aktueller Preis: <span id=Mittagessenpreis2>x.xx</span> €<button onclick="mittagspreis();">Preis
-            anpassen</button></p>
-
-
-    <script>
-        //Mittagessenpreis
-        let mittagessen2 = produkte.find(produkte => produkte.EAN === "1");
-        document.getElementById("Mittagessenpreis2").innerText = mittagessen2.Preis;
-
-        function mittagspreis() {
-            tastatur.style.display = 'block';
-            //var button = document.getElementById('BT_Eingabe').remove();
-
-            document.getElementById('BT_Eingabe').onclick = function () {
-
-                datenfeld.innerHTML = `
-			        <p><p class="zentriert"><b>Der Preis wurde geändert!<b></p>
-                    <p class="zentriert">Der neue Preis für das heutige Mittagessen beträgt jetzt: </p>
-                    <h1 class="zentriert"> ` + summenfeld.firstChild.nodeValue + ` €</h1>
-			    
-			     `;
-                tastatur.style.display = 'none';
-                let preisNum = parseFloat(summenfeld.firstChild.nodeValue);
-                update_mittagspreis(preisNum);
-
-            };
-        }
-
-        function update_mittagspreis(neuerPreis) {
-            const produkt = produkte.find(item => item.EAN === "1");
-            if (!produkt) {
-                console.error("Fehler: Produkt mit EAN 1 nicht gefunden.");
-                statusbar.innerHTML = "Fehler in der Produktdatenbank!";
-                return;
-            }
-
-            produkt.Preis = neuerPreis.toFixed(2); // Preis aktualisieren
-
-            // CSV-Daten aus Array generieren (Annahme: Kopfzeile bleibt gleich)
-            const csvData = "EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung\n" +
-                produkte.map(p => `${p.EAN};${p.Bezeichnung};${p.Preis};${p.MwSt};${p.Kategorie};${p.Bemerkung};${p.Sortierung}`).join("\n");
-
-            fetch('admin/save_produkte_csv.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ csvData }) // Jetzt im richtigen JSON-Format
-            })
-                .then(response => response.text()) // PHP gibt eine Textmeldung zurück
-                .then(data => statusbar.innerHTML = 'Antwort vom Server:', data)
-                .catch(error => statusbar.innerHTML = 'Fehler:', error);
-        }
-
-
-    </script>
+    <p>Über den Button "Preisanpassung Mittagessen" kannst du den Preis für das Mittagessen für den heutigen Tag anpassen</p>
 
 </body>
 
