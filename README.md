@@ -1,1 +1,2 @@
-Dieses Kassensystem ist speziel für FLugvereine erstellt worden. Es bietet eine Verbindung zu vereinsflieger.de. Bisher können nur die Mitgliedsdaten heruntergeladen werden. Zudem ist die Möglichkeit integriert, mit RIFD-Chip oder Strickcode die Bezahlfunktion zu aktivieren. 
+Dieses Kassensystem ist speziel für FLugvereine erstellt worden. Es bietet eine Verbindung zu vereinsflieger.de. Bisher können nur die Mitgliedsdaten heruntergeladen werden. Zudem ist die Möglichkeit integriert, mit RFID-Chip (unverschlüsselt) oder Strickcode die Bezahlfunktion zu aktivieren. 
+Es ist als reine Webanwendung konzipiert. Auf dem Server sollte ein Verzeichnisschutz angelegt werden können und PHP laufen. 
