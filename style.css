@@ -1,3 +1,27 @@
+body {
+    color: var(--text-color-dark);
+}
+
+.button {
+    background-color: var(--button-color);
+    color: var(--text-color-light);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.box_zentrieren {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.button:hover {
+    background-color: var(--button-hover);
+}
+
 /* Allgemeine Stile */
 body {
     margin: 0px;
@@ -11,7 +35,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: black;
+    color: var(--text-color-dark);
     position: absolute;
 }
 
@@ -25,14 +49,14 @@ body {
 /* Menü-Container */
 .menu {
     flex-direction: column;
-    background: #f0f0f0;
+    background: var(--background-light);
     position: absolute;
     top: 50px;
     left: 0;
     width: 300px;
     text-align: center;
     padding: 10px 0;
-    border: solid 1px;
+    border: solid 1px var(--border-color);
     border-top: none;
     border-left: none;
     border-bottom-left-radius: 5px;
@@ -45,31 +69,30 @@ body {
 
 /* Buttons im Menü */
 .menu button {
-    background: rgb(138, 170, 215);
-    color: white;
+    background: var(--secondary-color);
+    color: var(--text-color-light);
     border: none;
     padding: 10px;
     margin: 5px;
     width: 96%;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 20px;
     border-radius: 5px;
-
 }
 
 .menu button:hover {
-    background: rgb(227, 180, 14);
+    background: var(--tertiary-color);
 }
 
 button:hover {
-    background: rgb(227, 180, 14);
+    background: var(--button-hover);
 }
 
 button:disabled {
-    background-color: #ccc; /* Grauer Hintergrund */
-    color: #666; /* Graue Schrift */
-    cursor: not-allowed; /* Zeigt an, dass der Button nicht klickbar ist */
-    opacity: 0.6; /* Macht den Button leicht transparent */
+    background-color: var(--border-color);
+    color: var(--text-color-dark);
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 
 /* Menü aktivieren */
@@ -94,15 +117,39 @@ h2 {
 }
 
 button {
-    height: 55px;
+    height: 70px;
     width: 180px;
     margin: 5px 5px 0px 5px;
     font-weight: bold;
-    font-size: 15px;
-    background-color: rgb(138, 170, 215);
+    font-size: 20px;
+    background-color: var(--button-color);
     border: none;
     border-radius: 5px;
-    color: white;
+    color: var(--text-color-dark)
+}
+
+button:hover {
+    background: var(--button-hover);
+}
+
+.abbruch {
+    background-color: var(--warning-color);
+}
+
+#direktwahl button {
+    height: 65px;
+    width: 270px;
+    margin: 5px 5px 0px 5px;
+    font-weight: bold;
+    font-size: 20px;
+    background-color: var(--button-color);
+    border: none;
+    border-radius: 5px;
+    color: var(--text-color-dark)
+}
+
+#direktwahl button:hover {
+    background: var(--button-hover);
 }
 
 .zentriert {
@@ -128,7 +175,7 @@ button {
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    background-color: #f0f0f0;
+    background-color: var(--background-light);
     margin: 0;
     padding: 0;
     height: 480px;
@@ -137,18 +184,19 @@ button {
 }
 
 #preisfenster_inhalt {
+    background-color: var(--text-color-light);
     overflow: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
-    border: solid 1px;
+    border: solid 1px var(--border-color);
     height: 100%;
     margin: 15px;
     padding: 10px;
 }
 
 #preisliste_schließen {
-    background-color: rgb(108, 159, 56);
+    background-color: var(--success-color);
     position: absolute;
     top: 2px;
     right: 20px;
@@ -166,7 +214,7 @@ button {
 
 /* Display */
 #display {
-    background-color: rgb(240, 240, 240);
+    background-color: var(--background-light);
     margin: 0;
     padding: 0;
     height: 480px;
@@ -176,7 +224,7 @@ button {
 }
 
 #direktwahl {
-    height: 270px;
+    height: 340px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -196,7 +244,7 @@ button {
     display: none;
     width: 195px;
     position: fixed;
-    background: white;
+    background: var(--text-color-light);
     left: 600px;
     top: 120px;
     border: solid 1px;
@@ -218,13 +266,10 @@ button {
 #datenfeld {
     height: 400px;
     overflow: auto;
-    border: 1px solid black;
-    /* 2px dicker schwarzer Rahmen */
+    border: 1px solid var(--border-color);
     padding: 5px;
-    /* Etwas Abstand innen */
     margin: 10px;
-    /* Etwas Abstand außen */
-    background-color: rgb(250, 250, 250);
+    background-color: var(--text-color-light);
     border-radius: 5px;
 }
 
@@ -263,7 +308,6 @@ button {
     vertical-align: top;
 }
 
-
 .preispalte {
     width: 100px;
     text-align: right;
@@ -275,8 +319,9 @@ button {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 20px;
+    font-size: 25px;
     font-weight: bold;
+    color: var(--text-color-dark);
 }
 
 /* Menubar */
@@ -294,7 +339,8 @@ button {
 
 /* Tabellen */
 th {
-    background-color: rgb(210, 210, 210);
+    background-color: var(--border-color);
+    color: var(--text-color-dark);
     position: sticky;
     top: 0;
     z-index: 1;
@@ -302,11 +348,21 @@ th {
 }
 
 .BT_Eingabe {
-    background-color: RGB(227, 180, 14);
+    background-color: var(--sucess-color);
 }
 
+#BT_EingabeBestätigt {
+    background-color: var(--success-color);
+}
+
+#BT_EingabeBestätigt:hover {
+    background: var(--button-hover);
+}
+
+
+
 .BT_Abbruch {
-    background-color: RGB(108, 159, 56);
+    background-color: var(--error-color);
 }
 
 .bt_produkt {
@@ -358,7 +414,7 @@ th {
 
 /* Weitere spezifische IDs */
 #bt_x {
-    background-color: rgb(108, 159, 56);
+    background-color: var(--warning-color);
     position: absolute;
     top: 2px;
     right: 20px;
@@ -369,7 +425,7 @@ th {
 }
 
 #Namenfeld {
-    background-color: rgb(210, 210, 210);
+    background-color: var(--border-color);
     font-weight: bold;
     text-align: left;
     padding: 5px;
@@ -386,27 +442,25 @@ th {
 /* Breite des Scrollbalkens */
 ::-webkit-scrollbar {
     width: 40px;
-    /* Verbreitern */
 }
 
 /* Hintergrund des Scrollbalkens */
 ::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: var(--secondary-color);
     border-radius: 10px;
 }
 
 /* Farbe des Scrollbalkens */
 ::-webkit-scrollbar-thumb {
-    background: #888;
+    background: var(--tertiary-color);
     border-radius: 10px;
 }
 
 /* Scrollbalken beim Hover */
 ::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: var(--tertiary-color);
 }
 
-/* Weglide-Container */
 
 #bildschirmschoner {
     display: none;
@@ -415,12 +469,8 @@ th {
     border: none;
     overflow: hidden;
     position: absolute;
-    top: 0px
-}
-#bildschirmschoner iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
+    top: 0px;
+    background-color: black
 }
 
 .input-button {
@@ -432,17 +482,66 @@ th {
     position: absolute;
     width: 100px;
     height: 100px;
-    top: 250px;
+    top: 350px;
     left: 250px;
 }
+
 svg {
     transform: rotate(-90deg);
 }
+
 circle {
     fill: none;
-    stroke: #6C9F38;
+    stroke: var(--success-color);
     stroke-width: 20px;
-    stroke-dasharray: 251; /* Umfang des Kreises */
-    stroke-dashoffset: 251; /* Start: Vollständig gefüllt */
+    stroke-dasharray: 251;
+    stroke-dashoffset: 251;
     transition: stroke-dashoffset 4s linear;
 }
+
+#offlineFenster {
+    display: none;
+    background-color: var(--background-dark);
+    color: var(--text-color-light);
+    text-align: center;
+    font-size: 20px;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+@keyframes scale-image {
+    0% { width: 0px; opacity: 0; }
+    40% { width: 400px; opacity: 1; } /* Wächst und wird sichtbar */
+    50% { width: 400px; opacity: 1; } /* 5 Sek. sichtbar bleiben */
+    90% { width: 0px; opacity: 0; } /* Schrumpft und wird unsichtbar */
+    100% { width: 0px; opacity: 0; }
+  }
+  
+  .scaling-img {
+    width: 0px;
+    height: auto; /* Höhe bleibt proportional */
+    animation: scale-image 30s linear infinite;
+  }
+
+  .menuspalte {
+    /*background-color: rgb(212, 212, 212);*/
+    width: 300px
+  }
+
+  .menuspalte button {
+    font-size: 15px;
+    height: 45px;
+  }
+
+  #mittelteil {
+    display: flex;
+  }
+
+  #inhaltsspalte {
+    width: 1200px;
+    height: 100%;
+    /*background-color: rgb(222, 222, 240);*/
+  }

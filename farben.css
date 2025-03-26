@@ -1,0 +1,97 @@
+/*Farbpalette*/
+:root {
+    --primary-color: rgb(255, 204, 0); /* Goldgelb */
+    --secondary-color: rgb(0, 51, 102); /* Dunkelblau */
+    --tertiary-color: rgb(0, 102, 204); /* Royalblau */
+    --background-light: rgb(240, 240, 240); /* Hellgrau */
+    --background-dark: rgb(30, 30, 30); /* Dunkelgrau */
+    --text-color-dark: rgb(50, 50, 50); /* Anthrazit */
+    --text-color-light: rgb(255, 255, 255); /* Weiß */
+    --button-color: rgb(255, 204, 0); /* Goldgelb */
+    --button-hover: rgb(204, 153, 0); /* Dunkelgold */
+    --success-color: rgb(0, 153, 76); /* Smaragdgrün */
+    --warning-color: rgb(255, 140, 0); /* Orange */
+    --error-color: rgb(204, 0, 0); /* Rot */
+    --link-color: rgb(0, 153, 255); /* Himmelblau */
+    --border-color: rgb(200, 200, 200); /* Mittelgrau */
+  }
+  
+  .box {
+    width: 100px;
+    height: 100px;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 20px;
+  }
+
+  #box1 {
+    background-color: var(--primary-color);
+    color: white;
+  }
+
+    #box2 {
+        background-color: var(--secondary-color);
+        color: white;
+    }
+
+    #box3 {
+        background-color: var(--tertiary-color);
+        color: white;
+    }
+
+    #box4 {
+        background-color: var(--background-light);
+        color: var(--text-color-dark);
+    }
+
+    #box5 {
+        background-color: var(--background-dark);
+        color: var(--text-color-light);
+    }
+
+    #box6 {
+        background-color: var(--text-color-dark);
+        color: white;
+    }
+
+    #box7 {
+        background-color: var(--text-color-light);
+        color: var(--text-color-dark);
+    }
+
+    #box8 {
+        background-color: var(--button-color);
+        color: white;
+    }
+
+    #box9 {
+        background-color: var(--button-hover);
+        color: white;
+    }
+
+    #box10 {
+        background-color: var(--success-color);
+        color: white;
+    }
+
+    #box11 {
+        background-color: var(--warning-color);
+        color: white;
+    }
+
+    #box12 {
+        background-color: var(--error-color);
+        color: white;
+    }
+
+    #box13 {
+        background-color: var(--link-color);
+        color: white;
+    }
+
+    #box14 {
+        background-color: var(--border-color);
+        color: white;
+    }

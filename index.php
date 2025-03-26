@@ -14,6 +14,7 @@
     <meta name="robots" content="noindex, nofollow">
 
     <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
 
     <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet">
 
@@ -46,19 +47,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 ?>
 
 <body>
-    <div id="Testhinweis" style=" 
-            position: absolute;
-            top: 400px;
-            left: 50px;
-            text-align: center;
-            font-size: 23px;
-            color: rgba(227, 180, 14, 0.6);
-            font-weight: bold;">
-        <p>
-            Achtung: Diese Kasse ist im Testmodus!<br>
-            Es werden keine echten Transaktionen durchgeführt!
-        </p>
-    </div>
 
     <div id="navbar">
         <div class="menu-icon" onclick="toggleMenu()">☰</div>
@@ -66,7 +54,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             <button onclick="tagesabrechnung();">Tagesabrechnung</button>
             <button onclick="tageszusammenfassung();">Tageszusammenfassung</button>
             <button onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
-            <button onclick="mittagspreis();">Preisanpassung Mittagessen</button>
+            <button onclick="mittagspreis();">Preisanpassung Essen</button>
             <button onclick="info();">Programminfos</button>
         </div>
     </div>
@@ -102,18 +90,11 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                     <thead></thead>
                     <tbody>
                         <tr>
-                            <td class="zentriert" style="padding: 20px;">Bitte Produkt scannen oder Chip auflegen.</td>
-                        </tr>
-
-
-                        <tr>
-                            <td class="zentriert">
-                                <h1>Terminal <span id=terminal>X</span></h1>
-                            </td>
+                            <td class="zentriert" style="font-size: 25px; padding: 10px;">Bitte Produkt scannen oder Chip auflegen.</td>
                         </tr>
 
                         <tr>
-                            <td class="zentriert">
+                            <td>
                                 <div id="direktwahl"></div>
                             </td>
                     </tbody>
@@ -127,13 +108,14 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         <div id="rechteSpalte">
 
             <div id="logo">
-                <img src="CL-Logo_100.png" alt="CLK">
+                <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" alt="ClubCash" style="width: 130px;">
             </div>
 
             <div id="menubar">
+                <p class="zentriert"><b>Terminal <span id=terminal>X</span></b></p>
                 <button id="Bt_preisfenster" onclick="preisfenster_öffnen()">Preisliste</button>
                 <button id="Bt_manuelleBuchung" onclick="manuell();">Direktbuchung</button>
-                <button onclick="window.location.reload(true);">Abbruch</button>
+                <button class="abbruch" onclick="window.location.reload(true);">Abbruch</button>                
             </div>
 
             <div id="summenkasten">
@@ -153,49 +135,46 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             <button onclick="meingabe(8)">8</button>
             <button onclick="meingabe(9)">9</button>
             <button onclick="meingabe(0)">0</button>
-            <button id="BT_EingabeGelb" class="BT_Eingabe" onclick="meingabe('E')">E</button>
+            <button id="BT_EingabeBestätigt" class="BT_Eingabe" onclick="meingabe('E')">E</button>
             <button class="BT_Abbruch" onclick="tastatur.style.display = 'none';">X</button>
         </div>
 
     </div>
 
-    <div id="bildschirmschoner">
-        <iframe src="https://www.weglide.org/embedded/airport/152702?bgcolor=f0f0f0f0" 
-                title="WeGlide Flughafen Lüsse">
-        </iframe>
-            <div style="
-                background-color:#f0f0f0; 
-                width: 200px; 
-                height: 50px; 
-                position: absolute; 
-                top: 424px; 
-                left: 300px;">
-                <p class="zentriertTop" >zum aktiveren der Kasse<br>
-                Bildschirm berühren</p>
-            </div>
-    </div>
-
+    
+    <!-- Wenn die Daten in die Verkaufsliste übertragen wirde, wird dieser Kreis angezeigt -->
     <div id="circle-timer">
             <svg width="200" height="200">
                 <circle cx="150" cy="50" r="40"></circle>
             </svg>
     </div>
 
+
+    <!-- Bildschirmschoner -->
+    <div class="box_zentrieren" id="bildschirmschoner" onclick="hideScreensaver()">
+        <img src="grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" class="scaling-img">
+        
+    </div>
+
+
+
+    <!-- offline Bildschrim  - wird nicht angezeigt solange display: none in der style.css steht -->
+    <div id="offlineFenster">
+            <img src="grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" style="margin: 50px ; height: 200px;">
+         <h1>System offline...</h1>
+         <p>marcel@schommer.berlin</p>
+         <p><i>+49 170 5510566</i></p>
+    </div>
+
+    <!-- manuelles auslösen des Screensavers
+    <button onclick="div_Bildschirmschoner.style.display = 'flex';">Screensaver</button>
+    -->
+
+
     <script>
-        //Hamburger Menu
-        function toggleMenu() {
-            document.querySelector(".menu").classList.toggle("active");
-        }
 
 
-        // Textwarnung blinken lassen
-        function blinker() {
-            $('#Testhinweis').fadeOut(2000);
-            $('#Testhinweis').fadeIn(2000);
-        }
-
-        setInterval(blinker, 700); // Textwarnung blinken lassen
-
+        // Backup
         (async () => {
             await fetch('backup.php'); // Backup prüfen und kopieren
         })();
@@ -268,6 +247,13 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
         direktwahl(); // Direktwahl-Funktion aufrufen - Produkte in der Sortierung 1-8 anzeigen
 
+        resetTimer(); // Initialer Timer für den Bildschirmschoner
+
+        //Hamburger Menu
+        function toggleMenu() {
+            document.querySelector(".menu").classList.toggle("active");
+        }
+
         function preisfenster_öffnen() {
             document.querySelector(".menu").classList.remove("active");
             preisfenster.style.display = 'flex';
@@ -276,7 +262,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         function direktwahl() {
 
             produkte.forEach(produkt => {
-                if (produkt.Sortierung > 0 && produkt.Sortierung < 9) {
+                if (produkt.Sortierung > 0 && produkt.Sortierung < 11) {
                     let button = document.createElement("button");
                     button.innerText = produkt.Bezeichnung + " - " + produkt.Preis + " €";
                     button.onclick = function() {
@@ -338,10 +324,10 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                     tbody.innerHTML = `
 			        <tr>
 			            <td class="zentriert">
-			                <p>Alle Produkte aus dem Warenkorb
+			                <p style="font-size: 35px; ">Alle Produkte aus dem Warenkorb
 			                <br>wurden dem Kundenkonto von</p>
 			                <h1><b>` + kunde.lastname + `, ` + kunde.firstname + `</b></h1>
-			                <p>übertragen.</p>
+			                <p style="margin: 30px; font-size: 35px"; >übertragen.</p>
 			            </td>
 			        </tr>       
 			     `;
@@ -434,6 +420,8 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
         async function tagesabrechnung() {
 
+            tastatur.style.display = 'none';
+
             toggleMenu();
 
             eingabestopp();
@@ -500,6 +488,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
             toggleMenu();
             eingabestopp();
+            tastatur.style.display = 'none';
 
             let tagessumme = 0.0;
 
@@ -590,6 +579,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
             toggleMenu();
             eingabestopp();
+            tastatur.style.display = 'none';
 
             let tagessumme = 0.0;
 
@@ -752,7 +742,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
         function manuell() {
             tastatur.style.display = "block";
-            statusfeld.innerText = "Manuelle Buchung";
+            statusfeld.innerText = "Direkte Buchung";
             summenfeld.innerText = "0.00";
             document.querySelector(".menu").classList.remove("active");
             eingabestring = "";
@@ -831,12 +821,12 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
         }
 
-
         function info() {
 
             Bt_preisfenster.style.display = 'none';
             Bt_manuelleBuchung.style.display = 'none';
             navbar.style.display = 'none';
+            tastatur.style.display = 'none';
 
             toggleMenu();
 
@@ -875,7 +865,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         }
 
         //Mittagessenpreis
-
         function mittagspreis() {
 
             toggleMenu();
@@ -889,14 +878,16 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
             tastatur.style.display = 'block';
 
-            datenfeld.innerHTML = `<h1 class="zentriert"> Bitte gebe den neuen Preis für das Mittagessen ein.</h1>`;
+            datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Bitte gebe den neuen Preis für das Essen ein.</h1></div>`;
 
-            document.getElementById('BT_EingabeGelb').onclick = function() {
+            statusfeld.innerText = "Preisänderung für das Mittagessen";
+
+            document.getElementById('BT_EingabeBestätigt').onclick = function() {
 
                 datenfeld.innerHTML = `
-                <p><p class="zentriert"><b>Der Preis wurde geändert!<b></p>
-                <p class="zentriert">Der neue Preis für das heutige Mittagessen beträgt jetzt: </p>
-                <h1 class="zentriert">` + summenfeld.firstChild.nodeValue + ` €</h1>
+                <p><p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Der Preis wurde geändert!<b></p>
+                <p class="zentriert" style="font-size: 30px;">Der neue Preis für das heutige Essen beträgt jetzt: </p>
+                <h1 class="zentriert" style="color: var(--success-color);">` + summenfeld.firstChild.nodeValue + ` €</h1>
             `;
                 tastatur.style.display = 'none';
                 let preisNum = parseFloat(summenfeld.firstChild.nodeValue);
@@ -930,20 +921,16 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                     }) // Jetzt im richtigen JSON-Format
                 })
                 .then(response => response.text()) // PHP gibt eine Textmeldung zurück
-                .then(data => statusbar.innerHTML = 'Antwort vom Server:' + data)
-                .catch(error => statusbar.innerHTML = 'Fehler:' + error);
+                .then(data => statusbar.innerHTML = 'Antwort vom Server: ' + data)
+                .catch(error => statusbar.innerHTML = 'Fehler: ' + error);
         }
-
-        function bildschirmschoner() {
-            div_Bildschirmschoner.style.display = 'block';
-        }
-
 
         // Funktion zum Anzeigen des Bildschirm-Schoners
         let timeout;
         
         function showScreensaver() {
-            div_Bildschirmschoner.style.display = 'block';
+            div_Bildschirmschoner.style.display = 'flex';
+            console.log('Screensaver aktiviert');
         }
 
         // Funktion zum Deaktivieren des Bildschirm-Schoners
@@ -957,14 +944,8 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             clearTimeout(timeout);
             timeout = setTimeout(showScreensaver, 120000); // 2 Minuten
         }
- 
-        // Event-Listener für jede Aktion des Nutzers (Mausbewegung, Klicks, Tastatureingaben)
-        document.addEventListener('mousemove', hideScreensaver);
-        document.addEventListener('keydown', hideScreensaver);
-        document.addEventListener('click', hideScreensaver);
 
-        // Initialer Timer
-        resetTimer();
+
 
         //wartekreis
         function wartekreis() {

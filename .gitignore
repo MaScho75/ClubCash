@@ -2,3 +2,5 @@ admin/.env
 daten/kunden.csv
 daten/kunden.json
 daten/verkaufsliste.csv
+backup/
+```

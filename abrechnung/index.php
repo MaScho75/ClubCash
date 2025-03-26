@@ -13,8 +13,10 @@
     <meta name="robots" content="noindex, nofollow">
 	
 	<link rel="stylesheet" href="../style.css?v=<?php echo time(); ?>">
+	<link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
 	
 	<link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet">
+	
 
 </head>
 
