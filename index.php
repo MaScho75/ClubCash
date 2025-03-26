@@ -880,7 +880,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
             datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Bitte gebe den neuen Preis für das Essen ein.</h1></div>`;
 
-            statusfeld.innerText = "Preisänderung für das Mittagessen";
+            statusfeld.innerText = "Preisänderung für das Essen";
 
             document.getElementById('BT_EingabeBestätigt').onclick = function() {
 
