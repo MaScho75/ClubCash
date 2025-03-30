@@ -19,6 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet">
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="admin/config.js?v=<?php echo time(); ?>"></script>
 
 </head>
 
@@ -30,7 +31,7 @@ $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assozia
 
 // csv produkte laden
 
-$csvDatei = "daten/produkte.csv"; // Name der CSV-Datei
+$csvDatei = "daten/produkte.csv"; 
 $produkte = [];
 
 if (($handle = fopen($csvDatei, "r")) !== FALSE) {
@@ -51,11 +52,11 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
     <div id="navbar">
         <div class="menu-icon" onclick="toggleMenu()">☰</div>
         <div class="menu">
-            <button onclick="tagesabrechnung();">Tagesabrechnung</button>
-            <button onclick="tageszusammenfassung();">Tageszusammenfassung</button>
-            <button onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
-            <button onclick="mittagspreis();">Preisanpassung Essen</button>
-            <button onclick="info();">Programminfos</button>
+            <button id="bt_tagesabrechnung" onclick="tagesabrechnung();">Tagesabrechnung</button>
+            <button id="bt_tageszusammenfassung" onclick="tageszusammenfassung();">Tageszusammenfassung</button>
+            <button id="bt_kundentagesübersicht" onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
+            <button id="bt_mittagspreis" onclick="mittagspreis();">Preisanpassung Essen</button>
+            <button id="bt_info" onclick="info();">Programminfos</button>
         </div>
     </div>
 
@@ -125,6 +126,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         </div>
 
         <div id=tastatur>
+            <span id="Zifferneingabefeld"></span>
             <button onclick="meingabe(1)">1</button>
             <button onclick="meingabe(2)">2</button>
             <button onclick="meingabe(3)">3</button>
@@ -140,7 +142,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         </div>
 
     </div>
-
     
     <!-- Wenn die Daten in die Verkaufsliste übertragen wirde, wird dieser Kreis angezeigt -->
     <div id="circle-timer">
@@ -149,30 +150,26 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             </svg>
     </div>
 
-
     <!-- Bildschirmschoner -->
-    <div class="box_zentrieren" id="bildschirmschoner" onclick="hideScreensaver()">
+    <div class="box_zentrieren" id="bildschirmschoner" onclick="window.location.reload(true);">
         <img src="grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" class="scaling-img">
         
     </div>
 
-
-
-    <!-- offline Bildschrim  - wird nicht angezeigt solange display: none in der style.css steht -->
+    <!-- offline Bildschrim  -->
     <div id="offlineFenster">
             <img src="grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" style="margin: 50px ; height: 200px;">
-         <h1>System offline...</h1>
+         <h1>System ist im Wartungsmodus!</h1>
          <p>marcel@schommer.berlin</p>
          <p><i>+49 170 5510566</i></p>
     </div>
 
-    <!-- manuelles auslösen des Screensavers
+    <!-- manuelles auslösen des Screensavers 
     <button onclick="div_Bildschirmschoner.style.display = 'flex';">Screensaver</button>
     -->
 
 
     <script>
-
 
         // Backup
         (async () => {
@@ -195,6 +192,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         let summe = 0.00;
         let eingabe = "";
         let eingabestring = "";
+        let timeout; //Bildschirmschone Timer
 
         const datenfeld = document.getElementById("datenfeld");
         const warenkorbtabelle = document.getElementById("warenkorbtabelle");
@@ -211,6 +209,26 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         const preislisten_tbody = document.querySelector("#preislistentabelle tbody");
         const statusbar = document.getElementById("statusfeld");
 
+
+// Configutarionen
+
+        if (!config.offlinemodus) document.getElementById("offlineFenster").style = "display: none"; // Offlinemodus
+        
+        if (!config.tagesabrechnung) document.getElementById("bt_tagesabrechnung").style = "display: none";
+        if (!config.tageszusammenfassung) document.getElementById("bt_tageszusammenfassung").style = "display: none";
+        if (!config.kundentagesübersicht) document.getElementById("bt_kundentagesübersicht").style = "display: none";
+        if (!config.preisanpassungessen) document.getElementById("bt_mittagspreis").style = "display: none";
+        
+        if (config.bildschirmschoner) {
+            console.log("Bildschirmschoner vorhanden!");
+            document.addEventListener('mousemove', resetTimer);
+            document.addEventListener('mousedown', resetTimer);
+            document.addEventListener('keypress', resetTimer);
+            document.addEventListener('touchstart', resetTimer);
+            document.addEventListener('scroll', resetTimer);
+            resetTimer(); // aktiviert den Bildschirmschoner
+
+        }
 
         let tastenkontrolle = function(event) {
 
@@ -246,8 +264,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         preisliste();
 
         direktwahl(); // Direktwahl-Funktion aufrufen - Produkte in der Sortierung 1-8 anzeigen
-
-        resetTimer(); // Initialer Timer für den Bildschirmschoner
 
         //Hamburger Menu
         function toggleMenu() {
@@ -926,26 +942,15 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         }
 
         // Funktion zum Anzeigen des Bildschirm-Schoners
-        let timeout;
-        
         function showScreensaver() {
             div_Bildschirmschoner.style.display = 'flex';
-            console.log('Screensaver aktiviert');
-        }
-
-        // Funktion zum Deaktivieren des Bildschirm-Schoners
-        function hideScreensaver() {
-            div_Bildschirmschoner.style.display = 'none';
-            resetTimer(); // Timeout zurücksetzen, wenn eine Aktion erfolgt
         }
 
         // Funktion, die den Inaktivitäts-Timer zurücksetzt
         function resetTimer() {
             clearTimeout(timeout);
-            timeout = setTimeout(showScreensaver, 120000); // 2 Minuten
+            timeout = setTimeout(showScreensaver, 60000 + config.bildschirmschoner);
         }
-
-
 
         //wartekreis
         function wartekreis() {

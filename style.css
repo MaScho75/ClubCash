@@ -470,7 +470,9 @@ th {
     overflow: hidden;
     position: absolute;
     top: 0px;
-    background-color: black
+    background-color: black;
+    z-index: 20;
+    
 }
 
 .input-button {
@@ -478,11 +480,11 @@ th {
 }
 
 #circle-timer {
-    display: none;
+    display: block;
     position: absolute;
     width: 100px;
     height: 100px;
-    top: 350px;
+    top: 300px;
     left: 250px;
 }
 
@@ -500,7 +502,7 @@ circle {
 }
 
 #offlineFenster {
-    display: none;
+    display: block;
     background-color: var(--background-dark);
     color: var(--text-color-light);
     text-align: center;

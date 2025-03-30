@@ -251,8 +251,6 @@ Datum;Zeit;Terminal;Kunde;EAN;Produkt;Kategorie;Preis;MwSt
 2025-03-21;05:28;X;0014252568;2;Kaffee;Speisen;0.50;19
 2025-03-21;05:28;X;0014252568;2;Kaffee;Speisen;0.50;19
 2025-03-21;05:28;X;0014252568;2;Kaffee;Speisen;0.50;19
-2025-03-21;05:28;X;0014252568;9990000000000;Direktbuchung;Direktbuchung;8.00;19
-2025-03-21;13:35;X;0014252568;1;Mittagessen;Speisen;7.70;19
 2025-03-21;13:39;X;0014252568;2;Kaffee;Speisen;0.50;19
 2025-03-21;13:39;X;0014252568;2;Kaffee;Speisen;0.50;19
 2025-03-21;13:39;X;0014252568;2;Kaffee;Speisen;0.50;19
@@ -318,3 +316,7 @@ Datum;Zeit;Terminal;Kunde;EAN;Produkt;Kategorie;Preis;MwSt
 2025-03-26;22:10;F;0014252568;4463300320005;"Kullerkasten gemischt";Getränke;23.00;19
 2025-03-26;22:10;F;0014252568;4463300320005;"Kullerkasten gemischt";Getränke;23.00;19
 2025-03-26;22:10;F;0014252568;9990000000000;Direktbuchung;Direktbuchung;7.00;19
+2025-03-30;21:51;X;0014252568;1;Essen;Speisen;7.78;19
+2025-03-30;21:59;X;0014252568;1;Essen;Speisen;7.78;19
+2025-03-30;21:59;X;0014252568;1;Essen;Speisen;7.78;19
+2025-03-30;22:01;X;0014252568;1;Essen;Speisen;7.78;19

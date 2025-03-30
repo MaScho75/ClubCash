@@ -1,7 +1,7 @@
 Array
 (
     [csvData] => EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung
-1;Essen;7.78;19;Speisen;Nicht Löschen oder ändern!!! Der Preis kann durch den CafeLüsseDienst selbst angepasst werden;1
+1;Essen;7.78;19;Speisen;;1
 2;Kaffee;0.50;19;Speisen;neuer EAN ab 12.06.2023;2
 3;Kuchen;1.00;19;Speisen;neuer EAN ab 12.06.2023;3
 4463300320005;Kullerkasten gemischt;23.00;19;Getränke;neuer Preis ab 15.06.2023;4

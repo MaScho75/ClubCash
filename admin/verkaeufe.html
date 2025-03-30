@@ -26,13 +26,11 @@
     </style>
 </head>
 <body>
-<p>Hinweise: Die Spalte "Sortierung" dient der Anzeige in der Preisliste.
-        Zusätzlich werden die Produkte mit der Sortiernummer 1 bis 8 auf dem Startbildschirm angezeigt.
-        Der Preis für das Mittagessen kann vom Café-Lüsse-Dienst selbst angepasst werden. 
-        Die Sortiernummer 1 und die EAN-Nr 1 dürfen deshalb nicht verändert werden. </p>
 
-<button onclick="saveCSV()">Speichern</button>
-
+<!-- 
+    <button onclick="saveCSV()">Speichern</button>
+-->    
+<p>Datie Daten können aktuell nicht verändert werden! Eintragungen, Anpassungen und Löschungen werden nicht übernommen.</p>
 <div id="csvTable"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/handsontable@latest/dist/handsontable.full.min.js"></script>
@@ -40,8 +38,10 @@
 
 <script>
     Handsontable.helper.licenseKey = 'non-commercial-and-evaluation';
-    const csvUrl = "../daten/produkte.csv"; 
+    const csvUrl = "../daten/verkaufsliste.csv"; 
     let hot;
+
+    loadCSV();
 
     function loadCSV() {
         fetch(csvUrl + "?nocache=" + new Date().getTime()) // Cache umgehen
@@ -69,6 +69,7 @@
         });
     }
 
+/*    
     function saveCSV() {
         const colHeaders = hot.getColHeader();  
         const data = hot.getData();
@@ -96,6 +97,9 @@
     }
 
     loadCSV(); // Initial CSV laden
+    
+*/
+
 </script>
 
 </body>
