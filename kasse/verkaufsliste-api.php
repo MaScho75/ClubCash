@@ -6,31 +6,31 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 header("Content-Type: application/json");
 
-$file = "daten/verkaufsliste.csv";
+$file = "../daten/verkaufsliste.csv";
 $input = file_get_contents("php://input");
 
 if (!$input) {
-    echo json_encode(["status" => "error", "message" => "Keine Daten empfangen"]);
+    echo json_encode(["status" => "error", "message" => "Keine Daten empfangen!"]);
     exit;
 }
 
 $data = json_decode($input, true);
 
 if (!is_array($data)) {
-    echo json_encode(["status" => "error", "message" => "Ungültige JSON-Daten"]);
+    echo json_encode(["status" => "error", "message" => "Ungültige JSON-Daten!"]);
     exit;
 }
 
 $fileHandle = fopen($file, "a");
 
 if (!$fileHandle) {
-    echo json_encode(["status" => "error", "message" => "Fehler beim Öffnen der Datei"]);
+    echo json_encode(["status" => "error", "message" => "Fehler beim Öffnen der Datei!"]);
     exit;
 }
 
 foreach ($data as $row) {
     if (!is_array($row)) {
-        echo json_encode(["status" => "error", "message" => "Fehlerhafte Zeilenstruktur"]);
+        echo json_encode(["status" => "error", "message" => "Fehlerhafte Zeilenstruktur!"]);
         fclose($fileHandle);
         exit;
     }
@@ -40,5 +40,5 @@ foreach ($data as $row) {
 
 fclose($fileHandle);
 
-echo json_encode(["status" => "success", "message" => "Daten erfolgreich gespeichert"]);
+echo json_encode(["status" => "success", "message" => "Daten erfolgreich gespeichert!"]);
 ?>

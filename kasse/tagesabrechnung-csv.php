@@ -1,15 +1,14 @@
 <?php
-
 // Header für JSON und CORS
-header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
-header("Access-Control-Allow-Methods: POST");
-header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+header("Access-Control-Allow-Origin: *");
 
 // Pfad zur CSV-Datei
-$file = "daten/verkaufsliste.csv";
+$file = "../daten/verkaufsliste.csv";
 
-$kundennummer = json_decode(file_get_contents("php://input"), true);
+// Heute im Format YYYY-MM-DD
+date_default_timezone_set('Europe/Berlin');
+$today = date("Y-m-d");
 
 // Datei lesen
 if (($handle = fopen($file, "r")) !== FALSE) {
@@ -17,32 +16,28 @@ if (($handle = fopen($file, "r")) !== FALSE) {
     $headers = fgetcsv($handle, 1000, ";");
     
     // Array, um die Ergebnisse zu speichern
-    $kundenData = [];
+    $todayData = [];
 
     // Zeilen durchgehen
     while (($data = fgetcsv($handle, 1000, ";")) !== FALSE) {
         // Datum aus der CSV-Datei (erste Spalte)
-        $kundeDS = $data[3];
+        $date = $data[0];
 
         // Wenn das Datum mit dem heutigen übereinstimmt, fügen wir es zum Array hinzu
-        if ($kundennummer == $kundeDS) {
-            $kundenData[] = array_combine($headers, $data);
+        if ($date == $today) {
+            $todayData[] = array_combine($headers, $data);
         }
     }
 
     fclose($handle);
 
     // Die gefilterten Daten als JSON zurückgeben
-    //echo json_encode(["status" => "success", "data" => $kundenData]);
-
     echo json_encode([
         "status" => "success", 
         "headers" => $headers,
-        "data" => $kundenData
+        "data" => $todayData
     ]);
-    
 } else {
-    echo json_encode(["status" => "error", "message" => "Datei konnte nicht geöffnet werden"]);
+    echo json_encode(["status" => "error", "message" => "Die Verkaufsliste konnte nicht abegerufen werden!"]);
 }
-
 ?>

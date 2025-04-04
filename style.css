@@ -2,6 +2,12 @@ body {
     color: var(--text-color-dark);
 }
 
+.preiseingabe {
+    font-size: 30px;
+    text-align: center;
+    margin: 10px 0px 10px 0px ;
+}
+
 .button {
     background-color: var(--button-color);
     color: var(--text-color-light);
@@ -132,7 +138,7 @@ button:hover {
     background: var(--button-hover);
 }
 
-.abbruch {
+#abbruch {
     background-color: var(--warning-color);
 }
 
@@ -359,9 +365,7 @@ th {
     background: var(--button-hover);
 }
 
-
-
-.BT_Abbruch {
+#BT_Abbruch {
     background-color: var(--error-color);
 }
 

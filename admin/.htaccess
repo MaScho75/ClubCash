@@ -1,0 +1,5 @@
+AuthUserFile /www/htdocs/w0097b28/kasse2.schommer.berlin/admin/.htpasswd
+AuthGroupFile /dev/null
+AuthName 'bitte Zugangsdaten eingeben'
+AuthType Basic
+require valid-user

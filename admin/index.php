@@ -33,6 +33,7 @@
 				<button onclick="Mitgliederdaten_anzeigen ()">Mitgliederliste</button>
 				<button onclick="verkaufsliste()">Verkaufsliste</button>
 				<button onclick="Mitgliedsdaten_ziehen();">Mitglieder aus Vereinsflieger importieren</button>
+				<button disabled onclick="">Konfigurationsdatei anzeigen</button>
 				<button disabled onclick="">Abrechnung per Email an alle Mitglieder senden</button>
 				<button disabled onclick="">Abrechnung per Email an ein ausgewähltes Mitglied senden</button>
 				<button disabled onclick="">alle Mitgliedskonten zurücksetzen</button>

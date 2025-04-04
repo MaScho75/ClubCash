@@ -5,5 +5,9 @@ const config = {
     "tageszusammenfassung": true, // blendet das Menu Tageszusammenfassung ein
     "kundentagesübersicht": true, // lendet das Menu Kundenübersicht ein
     "preisanpassungessen": true, // ermöglicht die Anpassung des Produkt Essen (Sortierung und EAN 1)
-    "sanduhr": 5 // Sekunden, wie lange die Sanduhr angezeigt wird
+    "sanduhr": 5, // Sekunden, wie lange die Sanduhr angezeigt wird
+    "cc_guest": "Gast",// Zugriffsstufe 1 - wird aus Vereinsflieger gelesen
+    "cc_member":  "Mitglied", // Zugriffsstufe 2 - wird aus Vereinsflieger gelesen
+    "cc_seller": "Café Lüsse", // Zugriffsstufe 3 - wird aus Vereinsflieger gelesen
+    "cc_admin": "Fridgekeeper" // Zugriffsstufe 4 (Vollzugriff) - wird aus Vereinsflieger gelesen 
 }
