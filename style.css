@@ -1,5 +1,30 @@
+.portal {
+    background-color: var(--background-light);
+    color: var(--text-color-dark);
+    font-size: 20px;
+}
+
+#portal-menu button {
+    width: 280px;
+    font-size: 15px;
+    height: 45px;
+}
+
+#login-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;    
+    align-items: center;
+}
+
 body {
     color: var(--text-color-dark);
+
 }
 
 .preiseingabe {
@@ -23,6 +48,8 @@ body {
     align-items: center;
     height: 100%;
 }
+
+
 
 .button:hover {
     background-color: var(--button-hover);

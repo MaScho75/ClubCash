@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: portal.php'); // Weiterleitung zur geschützten Seite
             exit();
         } else {
-            $error_message = "Ungültiger Benutzername oder Passwort!";
+            $error_message = "Ungültiger Benutzername oder ungültiges Passwort!<br>Bitte gebe deine Zugangsdaten von Vereinsflieger.de ein.";
         }
     } else {
         $error_message = "Bitte Benutzername und Passwort eingeben.";
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Skalierbarkeit für mobile Geräte sicherstellen -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Cafè Lüsse Zugangsportal</title>
+    <title>Cafè Lüsse Login</title>
 
     <!-- Anweisung an Suchmaschinen, die Seite NICHT zu indexieren -->
     <meta name="robots" content="noindex, nofollow">
@@ -53,28 +53,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	<link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
 
 </head>
-<body>
-    
-    <div id="kopf" style="display: flex; align-items: center;">
-            <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px;  margin: 30px;">	   
-	        <h1>ClubCash Portal</h1>
-	</div>
-    
-    
+<body class="portal">
     <div id="login-container">
-       
-       <p>Gebe deine Benutzerdaten von Vereinfleiger.de ein.</p> 
+       <div id="kopf" style="display: flex; align-items: center;">
+            <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px;  margin: 30px;">	   
+        </div>
         
-        <?php if (isset($error_message)) echo "<p style='color: red;'>$error_message</p>"; ?>
+        <?php if (isset($error_message)) echo "<p style='text-align: center; color: var(--error-color);'>$error_message</p>"; ?>
         
         <form method="POST" action="">
-            <label for="username">Email:</label>
-            <input type="text" name="username" id="username" required><br>
-
-            <label for="password">Passwort:</label>
-            <input type="password" name="password" id="password" required><br>
-
-            <input type="submit" value="Anmelden">
+            <div class="grid-container" style="display: grid; grid-template-columns: auto auto; gap: 10px; margin-bottom: 20px;">
+            
+                <div style=" padding: 5px; text-align: right;">Email</div>
+                
+                <div style=" padding: 5px; text-align: center;"><input type="text" name="username" id="username" required style="font-size: 20px; border: none; font-family: 'Carlito', sans-serif; width: 300px;"></div>
+                
+                <div style=" padding: 5px; text-align: right;">Passwort</div>
+                
+                <div style=" padding: 5px; text-align: center;"><input type="password" name="password" id="password" required style="font-size: 20px; border: none; font-family: 'Carlito', sans-serif; width: 300px;"></div>
+            
+            </div>
+            <div style="text-align: center;">
+                <input class="button" type="submit" value="Anmelden">
+            </div>
         </form>
     </div>
 </body>
