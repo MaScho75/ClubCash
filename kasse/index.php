@@ -27,7 +27,10 @@
 
 //Backup veranlassen
 
-$backupmeldung = file_get_contents('../admin/backup.php');
+$backupmeldung = '';
+ob_start();  // Output Buffering aktivieren
+include('../admin/backup.php');
+$backupmeldung = ob_get_clean();  // Ausgabe in die Variable speichern
 
 // Mitgliederdaten laden
 $jsonKundenDatei = file_get_contents("../daten/kunden.json");
@@ -179,6 +182,9 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
 
     <script>
+
+        // Backupmeldung
+        console.log("Backupmeldung: " + <?php echo json_encode($backupmeldung); ?>);
 
         //Sanduhr
         window.onload = function() {

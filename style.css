@@ -1,3 +1,123 @@
+
+.portal {
+    background-color: var(--background-light);
+    color: var(--text-color-dark);
+    font-size: 20px;
+}
+
+.portal-table {
+    width: 100%;
+    max-width: 800px;
+    border-collapse: collapse;
+    margin: 0 auto;
+    text-align: center;
+    margin-left: 0px;
+
+}
+    
+#portal-inhalt {
+    display: block;
+    margin: 10px;
+    padding: 10px;
+    background-color: var(--text-color-light);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    text-align: left;
+    overflow: auto;
+    max-height: calc(100vh - 260px);
+
+}
+
+/* Für das bestimmte Div den Scrollbalken auf Standard zurücksetzen */
+#portal-inhalt::-webkit-scrollbar {
+    width: auto;  /* Standardgröße */
+}
+
+#portal-inhalt::-webkit-scrollbar-track {
+    background: auto; /* Standard Hintergrund */
+    border-radius: 0;  /* Standard-Rundung */
+}
+
+#portal-inhalt::-webkit-scrollbar-thumb {
+    background: auto;  /* Standard-Farbe */
+    border-radius: 0;   /* Standard-Rundung */
+}
+
+#portal-inhalt::-webkit-scrollbar-thumb:hover {
+    background: auto;  /* Standard Hover-Farbe */
+}
+
+
+
+
+
+    /* Navigation Container */
+    .navbar {
+        background-color: var(--background-dark);
+      }
+  
+      /* Hauptmenü */
+      .navbar > ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        background-color: var(--background-dark);
+      }
+  
+      .navbar > ul > li {
+        position: relative;
+        z-index: 2;
+      }
+  
+      /* Hauptmenü Links */
+      .navbar > ul > li > a {
+        display: block;
+        padding: 14px 20px;
+        color: var(--text-color-light);
+        text-decoration: none;
+      }
+  
+      .navbar > ul > li > a:hover {
+        background-color: var(--text-color-dark);
+      }
+  
+      /* Dropdown-Menü */
+      .navbar li ul {
+        display: none;
+        position: absolute;
+        background-color: var(--background-dark);
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        top: 100%;
+        left: 0;
+        min-width: 160px;
+      }
+  
+      .navbar li:hover ul {
+        display: block;
+      }
+  
+      .navbar li ul li a {
+        display: block;
+        padding: 12px 16px;
+        color: var(--text-color-light);
+        text-decoration: none;
+      }
+  
+      .navbar li ul li a:hover {
+        background-color: var(--text-color-dark);
+      }
+      
+      .navbar li ul li a.disabled {
+        pointer-events: none;
+        color: var(--error-color) !important;
+        cursor: not-allowed;
+        background-color: transparent !important;
+      }
+
+
 .preloader {
             position: fixed;
             top: 0;
@@ -25,20 +145,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-
-
-.portal {
-    background-color: var(--background-light);
-    color: var(--text-color-dark);
-    font-size: 20px;
-}
-
-#portal-menu button {
-    width: 280px;
-    font-size: 15px;
-    height: 45px;
-}
 
 #login-container {
     position: absolute;

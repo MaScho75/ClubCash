@@ -33,23 +33,22 @@ if ($restInterface->SignIn($UserName, $Password, 0, $AppKey, $AuthSecret)) {
         $jsonFile = '../daten/kunden_alles.json';
 
         if (file_put_contents($jsonFile, $usersData)) {
-            echo "<p>Die Daten wurden erfolgreich von Vereinsflieger.de in das Kassensystem importiert.</p>\n";
+            // Header vor jeglicher Ausgabe setzen
+            header('Content-Type: application/json');
+            echo $usersData;
         } else {
-            echo "<p>Es ist ein Fehler beim Speichern der Daten aus Vereinsflieger.de aufgetreten.</p>\n";
+            header('Content-Type: application/json');
+            echo json_encode(["error" => "Fehler beim Speichern der Daten"]);
         }
 
-        // JSON im Browser ausgeben
-        header('Content-Type: application/json');
-        echo $usersData;
-
     } else {
+        header('Content-Type: application/json');
         echo json_encode(["error" => "Fehler beim Abrufen der Daten aus Vereinsflieger.de", "status" => $restInterface->HttpStatusCode]);
     }
 
 } else {
+    header('Content-Type: application/json');
     echo json_encode(["error" => "Anmeldung fehlgeschlagen"]);
 }
-
-echo file_get_contents('../daten/kunden_alles.json');
 
 ?>

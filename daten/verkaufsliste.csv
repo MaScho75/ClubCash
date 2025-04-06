@@ -184,3 +184,5 @@ Datum;Zeit;Terminal;Kunde;EAN;Produkt;Kategorie;Preis;MwSt
 2025-04-06;10:38;A;0016332365;2;Kaffee;Speisen;0.50;19
 2025-04-06;10:57;A;0016163833;4014472002512;"Bionade Holunder 0.33l";Getränke;1.30;19
 2025-04-06;10:57;A;0016163833;1;Essen;Speisen;5.00;19
+2025-04-06;23:05;X;0014252568;9990000000000;Direktbuchung;Direktbuchung;8.00;19
+2025-04-06;23:05;X;0014252568;9990000000000;Direktbuchung;Direktbuchung;5.00;19

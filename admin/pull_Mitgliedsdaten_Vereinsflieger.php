@@ -6,7 +6,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Lade die Datei config.js
-$configJs = file_get_contents('config.js');
+$configJs = file_get_contents('../config.js');
 
 // Entferne "const config =" und Semikolon
 $configJs = preg_replace('/const config =|;/', '', $configJs);
@@ -20,6 +20,8 @@ $config = json_decode(trim($configJs), true);
 if (!$config) {
     die("<pre>❌ Fehler beim Laden der Konfigurationsdatei: " . json_last_error_msg() . "</pre>");
 }
+
+echo "<h2>Vereinsflieger Datenimport</h2>";
 
 echo "<p>✅ Konfigurationsdatei erfolgreich geladen.</p>";
 
@@ -37,6 +39,7 @@ $AuthSecret = $env['AUTRHSECRET'];
 
 // VereinsfliegerRestInterface-Instanz erstellen
 $restInterface = new VereinsfliegerRestInterface();
+
 
 // Anmeldung durchführen
 if ($restInterface->SignIn($UserName, $Password, 0, $AppKey, $AuthSecret)) {

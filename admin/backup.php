@@ -21,11 +21,5 @@ if (!file_exists($backupFile)) {
     echo "Backup für heute existiert bereits.";
 }
 
-if (copy(SOURCE_FILE, $backupFile2)) {
-    echo "Backup2 erfolgreich erstellt: $backupFile";
-} else {
-    echo "Fehler beim Erstellen des Backup2.";
-}
-
 ?>
 

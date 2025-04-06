@@ -1,6 +1,6 @@
 EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung
 ;;;;;;
-1;Essen;5.00;19;Speisen;;1
+1;Essen;5.50;19;Speisen;;1
 2;Kaffee;0.50;19;Speisen;;2
 3;Kuchen;1.00;19;Speisen;;3
 4463300320005;Kullerkasten gemischt;23.00;19;Getränke;;4
@@ -35,3 +35,5 @@ EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung
 4463300210092;Navy Hut;10.00;19;Merchendise;;95
 4463300210993;Wendehut;10.00;19;Merchendise;;96
 4463300215004;T-Shirt;15.00;19;Merchendise;;97
+9990000000000;Direktbuchung;0.00;19;Direktbuchung;Platzhalter;98
+;;;;;;

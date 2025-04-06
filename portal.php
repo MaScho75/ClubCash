@@ -68,75 +68,94 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
-    <script src="admin/config.js?v=<?php echo time(); ?>"></script>
-
-
+    <script src="config.js?v=<?php echo time(); ?>"></script>
 
 </head>
 <body class="portal">
+
+    <!-- Preloader anzeigen -->
+    <div class="preloader" id="preloader">
+        <div class="spinner"></div>
+    </div>
+
      <div id="kopf" style="display: flex; align-items: center;">
             <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px;  margin: 30px;">	   
 	        <h1>ClubCash Portal</h1>
 	</div>
     
-    <div id="portal-container">
-        <nav class="top-menu">
-            <ul>
-            <li class="dropdown">
-                <a href="#" class="dropbtn">Mein Konto</a>
-                <div class="dropdown-content">
-                <button disabled title="Diese Funktion ist derzeit nicht verfügbar.">Meine Käufe</button>
-                <button disabled title="Diese Funktion ist derzeit nicht verfügbar.">Meine Käufe Zusammenfassung</button>
-                <a href="logout.php"><button>Abmelden</button></a>
-                </div>
-            </li>
 
-            <li class="dropdown">
-                <a href="#" class="dropbtn">Produkte & Verkäufe</a>
-                <div class="dropdown-content">
-                <button onclick="produktkatalog_aufrufen()">Produktkatalog</button>
-                <button onclick="verkaufsliste()">Verkaufsliste</button>
-                <button onclick="Mitgliederdaten_anzeigen()">Kundenliste</button>
-                </div>
-            </li>
+<nav class="navbar">
+  <ul>
+    <li>
+      <a href="#">Mein Konto</a>
+      <ul>
+        <li><a href="" onclick="location.reload()">Programminfo</a></li>
+        <li><a href="#" onclick="Meine_Käufe()">Meine Käufe</a></li>
+        <li><a href="#" onclick="Käufe_Zusammenfassung()">Käufe Zusammenfassung</a></li>
+        <li><a href="logout.php" >Abmelden</a></li>
+      </ul>
+    </li>   
 
-            <li class="dropdown">
-                <a href="#" class="dropbtn">Administration</a>
-                <div class="dropdown-content">
-                <button onclick="Mitgliedsdaten_ziehen()">Kunden import aus Vereinsflieger</button>
-                <button disabled title="Diese Funktion ist derzeit nicht verfügbar.">Konfiguration anzeigen</button>
-                <button disabled title="Diese Funktion ist derzeit nicht verfügbar.">Abrechnung an alle senden</button>
-                <button disabled title="Diese Funktion ist derzeit nicht verfügbar.">Einzelabrechnung senden</button>
-                <button disabled title="Diese Funktion ist derzeit nicht verfügbar.">Konten zurücksetzen</button>
-                <button disabled title="Diese Funktion ist derzeit nicht verfügbar.">Export an Vereinsflieger</button>
-                </div>
-            </li>
+    <li>
+      <a href="#">Auswertung</a>
+      <ul>
+        <li><a href="#" class="disabled">Tagesabrechnung heute</a></li>
+        <li><a href="#" class="disabled">Tagesabrechnung Datum</a></li>
+        <li><a href="#" class="disabled">Zusammenfassung heute</a></li>
+        <li><a href="#" class="disabled">Zusammenfassung Datum</a></li>    
+      </ul>
+    </li>
 
-            <li class="dropdown">
-                <a href="#" class="dropbtn">Abrechnungen</a>
-                <div class="dropdown-content">
-                <a href="abrechnung"><button>Tagesabrechnung heute</button></a>
-                <button disabled title="Diese Funktion ist derzeit nicht verfügbar.">Tagesabrechnung Datum</button>
-                </div>
-            </li>
+    <li>
+      <a href="#">Administration</a>
+      <ul>
+        <li><a href="#" onclick="produktkatalog_aufrufen()">Produktkatalog</a></li>
+        <li><a href="#" onclick="verkaufsliste()">Verkaufsliste</a></li>
+        <li><a href="#" onclick="Mitgliederdaten_anzeigen()">Kundenliste</a></li>
+        <li><a href="#" onclick="Mitgliedsdaten_ziehen()">Kundenliste Import VF</a></li>
+        <li><a href="#" class="disabled">Gesamtabrechnung</a></li>
+        <li><a href="#" class="disabled">Einzelabrechnung</a></li>
+        <li><a href="#" class="disabled">Konten zurücksetzen</a></li>
+        <li><a href="#" class="disabled">Einzelkonto zurücksetzen</a></li>
+        <li><a href="#" class="disabled">Export an Vereinsflieger</a></li>
+      </ul>
+    </li>
+ 
+    <li>
+      <a href="#">Einstellungen</a>
+      <ul>
+        <li><a href="#" class="disabled">Zugriff Vereinsflieger</a></li>
+        <li><a href="#" class="disabled">Farben</a></li>
+        <li><a href="#" class="disabled" class="disabled">Porgrammeinstellungen</a></li>
+        <li><a href="#" class="disabled">alle Daten löschen</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#">Download</a>
+      <ul>
+        <li><a href="daten/produkte.csv" >Produktliste CSV</a></li>
+        <li><a href="daten/kunden.json" >Kugendliste JSON</a></li>
+        <li><a href="daten/verkaufsliste.csv" >Verkaufsliste CSV</a></li>
+        <li><a href="#" onclick="backupliste()">Backups</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+       
+<div id="portal-inhalt">
+    <p>Hallo <span id="userName"></span>, willkommen im Portal!</p>
+    <?php include('info.html'); ?>
+</div>
 
-            <li class="dropdown">
-                <a href="#" class="dropbtn">Downloads</a>
-                <div class="dropdown-content">
-                <a href="download.php?file=produkte.csv"><button>Produkte (CSV)</button></a>
-                <button disabled title="Direkter Zugriff auf Kunden (JSON) ist aus Sicherheitsgründen deaktiviert.">Kunden (JSON)</button>
-                <a href="download.php?file=verkaufsliste.csv"><button>Verkaufsliste (CSV)</button></a>
-                </div>
-            </li>
-            </ul>
-        </nav>
-
-        <div id="portal-inhalt">
-            <p>Hallo <span id="userName"></span>,<br>willkommen im Portal!</p>
-        </div>
-    </div>
 
     <script>
+
+        //Sanduhr
+        window.onload = function() {
+        // Preloader ausblenden, wenn die Seite vollständig geladen ist
+        document.getElementById("preloader").style.display = "none";
+        }
+        
         // PHP-Variablen in JavaScript-Variablen umwandeln
         const kunden = <?php echo json_encode($jsonKundenDaten); ?>;
         const produkte = <?php echo json_encode($produkte); ?>;
@@ -149,6 +168,8 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         const angemeldetesMitglied = kunden.find(kunde => 
             kunde.email.toLowerCase() === '<?php echo strtolower($_SESSION['username']); ?>');
         document.getElementById('userName').textContent = `${angemeldetesMitglied.firstname} ${angemeldetesMitglied.lastname}`;
+        console.log('Angemeldetes Mitglied:', angemeldetesMitglied);	
+
 
     function Mitgliederdaten_anzeigen() {
 		
@@ -158,16 +179,16 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 const kunden = data;
                 console.log('Kunden geladen:', kunden);
                 
-                let html = '<h2>Kundenliste</h2><table border="1">';
+                let html = '<h2>Kundenliste</h2><table class="portal-table" style="max-width: none;">';
                 html += `
                 <tr>
                     <th>ID</th>
-                    <th>Vorname</th>
-                    <th>Nachname</th>
-                    <th>Email</th>
+                    <th class="links">Vorname</th>
+                    <th class="links">Nachname</th>
+                    <th class="links">Email</th>
                     <th>Schlüssel</th>
                     <th>Kasse</th>
-                    <th>Cafe Lüsse Dienst</th>
+                    <th>CLD</th>
                     <th>Mitglied</th>
                     <th>Gast</th>                
                 </tr>`;
@@ -175,9 +196,9 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 kunden.forEach(kunde => {
                     html += `<tr>
                         <td>${kunde.uid}</td>
-                        <td>${kunde.firstname}</td>
-                        <td>${kunde.lastname}</td>
-                        <td>${kunde.email}</td>
+                        <td class="links">${kunde.firstname}</td>
+                        <td class="links">${kunde.lastname}</td>
+                        <td class="links">${kunde.email}</td>
                         <td>${kunde.key2designation}</td>
                         <td>${kunde.cc_admin}</td>
                         <td>${kunde.cc_seller}</td>
@@ -197,7 +218,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     }	
 
     function Mitgliedsdaten_ziehen() {
-        portalInhalt.innerHTML = "<p>Bitte warten, die Mitgliederdaten werden aus Vereinsflieger abgerufen...</p>";
+        portalInhalt.innerHTML = "<h2>Vereinsflieger Datenimport</h2><p>Bitte warten, die Mitgliederdaten werden aus Vereinsflieger abgerufen...</p>";
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "admin/pull_Mitgliedsdaten_Vereinsflieger.php", true); 
         xhr.onreadystatechange = function () {
@@ -208,7 +229,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         xhr.send();
     }
 
-
     function produktkatalog_aufrufen() {
         portalInhalt.innerHTML = "<h2>Produktkatalog</h2><iframe src='admin/produkte.html?v=" + Date.now() + "' style='width: 100%; height: 700px'></iframe>";
     }
@@ -217,8 +237,110 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         portalInhalt.innerHTML ="<h2>Verkaufsliste</h2><iframe src='admin/verkaeufe.html?v=" + Date.now() + "' style='width: 100%; height: 700px'></iframe>";
     }    
 
-    function toggleMenu() {
-            document.querySelector(".menu").classList.toggle("active");
+    function Meine_Käufe() {
+        let summe = 0;
+        let tabelle_html = "";
+        tabelle_html = `
+            <h2>Meine Käufe</h2>
+            <p><i>vollständige Liste - nur ClubCash System</i></p>`;
+        tabelle_html += `
+        <table class="portal-table">
+            <tr>
+                <th>Datum</th>
+                <th>Zeit</th>
+                <th>Terminal</th> 
+                <th class="links">Produkt</th>
+                <th class="rechts">Preis</th>
+            </tr>
+        <tbody>`;
+
+        verkäufe.forEach(verkauf => {
+            if (verkauf.Kunde === angemeldetesMitglied.key2designation) {
+                tabelle_html += `
+                    <tr>
+                        <td>${verkauf.Datum}</td>
+                        <td>${verkauf.Zeit}</td>
+                        <td>${verkauf.Terminal}</td>
+                        <td class="links">${verkauf.Produkt}</td>
+                        <td class="rechts">${verkauf.Preis} €</td>
+                    </tr>`;
+                    if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
+                        summe += parseFloat(verkauf.Preis);
+                    }
+            }
+        }); 
+
+        tabelle_html += `
+            <tr>
+                <td colspan="4" class="links"></td>
+                <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
+            </tr>
+        </tbody></table>`;
+        portalInhalt.innerHTML = tabelle_html;
+    }
+
+    function Käufe_Zusammenfassung() { 
+        let summe = 0;
+        let produktsumme = 0;
+        let tabelle_html = "";
+        tabelle_html = `
+            <h2>Meine Käufe - Zusammenfassung</h2>
+            <p><i>* aktueller Preis - kann sich geändert haben</i></p>`;
+        tabelle_html += `
+        <table class="portal-table">
+            <tr>
+                <th>Anzahl</th>
+                <th class="links">Produkt</th>
+                <th class="rechts">Einzelpreis*</th> 
+                <th class="rechts">Gesamtpreis</th>
+            </tr>
+        <tbody>`;
+
+        console.log('Produkte:', produkte); // Debug-Ausgabe der Produkte
+        console.log('Verkäufe:', verkäufe); // Debug-Ausgabe der Verkäufe
+        
+        produkte.forEach(produkt => {
+            produktsumme = 0;
+            produktanzahl = 0;
+            verkäufe.forEach(verkauf => {
+                if (verkauf.Kunde === angemeldetesMitglied.key2designation && verkauf.EAN === produkt.EAN) {
+                    if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
+                        produktsumme += parseFloat(verkauf.Preis);
+                    }
+                    produktanzahl++;
+                }
+            });
+            
+            if (produktanzahl === 0) return; // Wenn keine Verkäufe für dieses Produkt, überspringen
+            
+            summe += produktsumme;
+
+            tabelle_html += `
+                <tr>
+                    <td>${produktanzahl}</td>
+                    <td class="links">${produkt.Bezeichnung}</td>
+                    <td class="rechts">${produkt.Preis} €</td>
+                    <td class="rechts">${produktsumme.toFixed(2)} €</td>
+    
+                </tr>`;
+        });
+        tabelle_html += `
+            <tr>
+                <td colspan="3" class="links"></td>
+                <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
+            </tr>
+            </tbody>
+            </table>`;
+        portalInhalt.innerHTML = tabelle_html;
+    }
+
+    function backupliste() {
+        fetch('get-backup-files.php')
+        .then(response => response.text())
+        .then(data => {
+            portalInhalt.innerHTML = data;
+        })
+        .catch(error => console.error('Fehler beim Laden der Dateien:', error));
     }
 
     </script>
