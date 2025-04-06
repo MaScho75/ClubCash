@@ -19,11 +19,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet">
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="../admin/config.js?v=<?php echo time(); ?>"></script>
+    <script src="../config.js?v=<?php echo time(); ?>"></script>
 
 </head>
 
 <?php
+
+//Backup veranlassen
+
+$backupmeldung = file_get_contents('../admin/backup.php');
 
 // Mitgliederdaten laden
 $jsonKundenDatei = file_get_contents("../daten/kunden.json");
@@ -47,7 +51,12 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
 ?>
 
-<body>
+<body style="overflow: hidden; cursor: none;">
+
+    <!-- Preloader anzeigen -->
+    <div class="preloader" id="preloader">
+        <div class="spinner"></div>
+    </div>
 
     <div id="navbar" onclick="toggleMenu()">
         <div class="menu-icon">☰</div>
@@ -171,10 +180,12 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
     <script>
 
-        // Backup
-        (async () => {
-            await fetch('../admin/backup.php'); // Backup prüfen und kopieren
-        })();
+        //Sanduhr
+        window.onload = function() {
+            // Preloader ausblenden, wenn die Seite vollständig geladen ist
+            document.getElementById("preloader").style.display = "none";
+        }
+
 
         // Terminal ermitteln aus der URL https://host/index.html?zahl=42
         const urlParams = new URLSearchParams(window.location.search);
@@ -221,7 +232,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         if (!config.preisanpassungessen) document.getElementById("bt_mittagspreis").style = "display: none";
         
         if (config.bildschirmschoner) {
-            console.log("Bildschirmschoner vorhanden!");
             document.addEventListener('mousemove', resetTimer);
             document.addEventListener('mousedown', resetTimer);
             document.addEventListener('keypress', resetTimer);
@@ -831,7 +841,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             navbar.style.display = 'none';
             tastatur.style.display = 'none';
             statusfeld.innerText = "Information zum Kassensystem";
-            $("#datenfeld").load("info.html");
+            $("#datenfeld").load("../info.html");
 
             eingabestopp();
             Bt_manuelleBuchung.style.display = 'none';
@@ -910,7 +920,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             const csvData = "EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung\n" +
                 produkte.map(p => `${p.EAN};${p.Bezeichnung};${p.Preis};${p.MwSt};${p.Kategorie};${p.Bemerkung};${p.Sortierung}`).join("\n");
 
-            fetch('../admin/save_produkte_csv.php', {
+            fetch('save_produkte_csv.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -954,25 +964,20 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         //spezielle EAN-Nummer lösen Sonderfunktionen aus
         
         function sonderfunktionen(EANr) {
-            console.log("Sonderprüfung");
             switch (EANr) {
                 case "1111":
-                    console.log("1111");
                     tagesabrechnung();
                     eingabe="";
                     break;
                 case "2222":
-                    console.log("2222");
                     tageszusammenfassung();
                     eingabe="";
                     break;
                 case "3333":
-                    console.log("3333");
                     kundentagesübersicht();
                     eingabe="";
                     break;
                 case "4444":
-                    console.log("4444");
                     mittagspreis();
                     eingabe="";
                     break;

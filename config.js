@@ -1,6 +1,6 @@
 const config = {
     "offlinemodus": false, // zeigt am Startbildschrim an, dass das System nicht im Betrieb oder im Wartungsmodusist. 
-    "bildschirmschoner": false, // Starte den Bildschirmschoner in Minuten, "false" deaktiviert ihn
+    "bildschirmschoner": true, // Starte den Bildschirmschoner in Minuten, "false" deaktiviert ihn
     "tagesabrechnung": true, // blendet das Menu Tagesabrechung ein
     "tageszusammenfassung": true, // blendet das Menu Tageszusammenfassung ein
     "kundentagesübersicht": true, // lendet das Menu Kundenübersicht ein
