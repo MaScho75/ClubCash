@@ -1,6 +1,10 @@
-<?php
+<?php 
 session_start();
-require_once 'admin/VereinsfliegerRestInterface.php';
+require_once 'VereinsfliegerRestInterface.php';
+
+// Lese die .env-Datei
+$env = parse_ini_file('daten/.env');  // Lädt die Umgebungsvariablen aus der .env-Datei
+
 
 // Prüfen, ob der Benutzer bereits eingeloggt ist
 if (isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] === true) {
@@ -15,8 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!empty($UserName) && !empty($Password)) {
         $api = new VereinsfliegerRestInterface();
-        $AppKey = '18d628a4f80943182117f041e1c417b3';
-        $AuthSecret = ''; // Falls erforderlich
+        $AppKey = $env['APPKEY']; // AppKey aus der .env-Datei
+        $AuthSecret = $env['AUTRHSECRET']; // Falls erforderlich
 
         if ($api->SignIn($UserName, $Password, 0, $AppKey, $AuthSecret)) {
             $_SESSION['user_authenticated'] = true;

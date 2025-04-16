@@ -1,4 +1,12 @@
-<?php
+<?php 
+session_start();
+
+// Prüfen, ob der Benutzer eingeloggt ist
+if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
+    header('Location: index.php'); // Falls nicht eingeloggt, zurück zur Login-Seite
+    exit();
+}
+
 
 // Lese die .env-Datei
 $env = parse_ini_file('.env');  // Lädt die Umgebungsvariablen aus der .env-Datei
@@ -43,7 +51,7 @@ if ($restInterface->SignIn($UserName, $Password, 0, $AppKey, $AuthSecret)) {
 
     } else {
         header('Content-Type: application/json');
-        echo json_encode(["error" => "Fehler beim Abrufen der Daten aus Vereinsflieger.de", "status" => $restInterface->HttpStatusCode]);
+        echo json_encode(["error" => "Fehler beim Abrufen der Daten aus Vereinsflieger.de"]);
     }
 
 } else {

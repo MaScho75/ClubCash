@@ -29,15 +29,14 @@
 
 $backupmeldung = '';
 ob_start();  // Output Buffering aktivieren
-include('../admin/backup.php');
+include('backup.php');
 $backupmeldung = ob_get_clean();  // Ausgabe in die Variable speichern
 
 // Mitgliederdaten laden
 $jsonKundenDatei = file_get_contents("../daten/kunden.json");
 $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
 
-// csv produkte laden
-
+// Produkte laden
 $csvDatei = "../daten/produkte.csv"; 
 $produkte = [];
 
@@ -54,7 +53,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
 ?>
 
-<body style="overflow: hidden; cursor: none;">
+<body>
 
     <!-- Preloader anzeigen -->
     <div class="preloader" id="preloader">
@@ -155,13 +154,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
     </div>
     
-    <!-- Wenn die Daten in die Verkaufsliste übertragen wirde, wird dieser Kreis angezeigt -->
-    <div id="circle-timer">
-            <svg width="200" height="200">
-                <circle cx="150" cy="50" r="40"></circle>
-            </svg>
-    </div>
-
     <!-- Bildschirmschoner -->
     <div class="box_zentrieren" id="bildschirmschoner" onclick="window.location.reload(true);">
         <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" class="scaling-img">
@@ -176,10 +168,17 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
          <p><i>+49 170 5510566</i></p>
     </div>
 
-    <!-- manuelles auslösen des Screensavers 
-    <button onclick="div_Bildschirmschoner.style.display = 'flex';">Screensaver</button>
-    -->
-
+    <div id="checkmark-container" style="display: none;">
+        <svg width="200" height="200" viewBox="0 0 100 100">
+            <path id="checkmark" d="M25 50 L45 70 L75 35"
+                stroke="#4CAF50" stroke-width="8"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-dasharray="100"
+                stroke-dashoffset="100" />
+        </svg>
+    </div>
 
     <script>
 
@@ -336,11 +335,24 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                     let zeit = now.toTimeString().split(" ")[0].slice(0, 5);
 
                     for (ds of warenkorb) {
+                        /*let ds2 = {
+                            Datum: datum,
+                            Zeit: zeit,
+                            Terminal: terminal,
+                            Schlüssel: kunde.key2designation,
+                            EAN: ds.EAN,
+                            Produkt: ds.Bezeichnung,
+                            Kategorie: ds.Kategorie,
+                            Preis: ds.Preis,
+                            MwSt: ds.MwSt,
+                            Kundennummer: kunde.uid
+                        }*/
                         let ds2 = {
                             Datum: datum,
                             Zeit: zeit,
                             Terminal: terminal,
-                            Kunde: kunde.key2designation,
+                            Schlüssel: kunde.key2designation,
+                            Kundennummer: kunde.uid,
                             EAN: ds.EAN,
                             Produkt: ds.Bezeichnung,
                             Kategorie: ds.Kategorie,
@@ -358,11 +370,24 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 			            <td class="zentriert">
 			                <p style="font-size: 35px; ">Alle Produkte aus dem Warenkorb
 			                <br>wurden dem Kundenkonto von</p>
-			                <h1><b>` + kunde.lastname + `, ` + kunde.firstname + `</b></h1>
-			                <p style="margin: 30px; font-size: 35px"; >übertragen.</p>
+			                <h1><b>` + kunde.firstname + ` ` + kunde.lastname + `</b></h1>
+			                <p style="margin: 20px; font-size: 35px"; >übertragen.</p>
 			            </td>
-			        </tr>       
-			     `;
+			        </tr> 
+                    <tr>
+                        <div id="checkmark-container" style="display: none;">
+                            <svg width="200" height="200" viewBox="0 0 100 100" style="margin: -105px 0px 0px 0px;">
+                                <path id="checkmark" d="M25 50 L45 70 L75 35"
+                                    stroke="#4CAF50" stroke-width="8"
+                                    fill="none"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-dasharray="100"
+                                    stroke-dashoffset="100" />
+                            </svg>
+                        </div>
+                    </tr>
+			        `;
 
                     thead.innerHTML = "";
 
@@ -371,12 +396,15 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                     warenkorb2 = [];
                     summe = 0;
 
+                    abbruch.innerText = "zurück";
+
                     eingabestopp();
 
-                    wartekreis();
+                    zeigeHaken(); // Zeige Häkchenanimation an
+
                     setTimeout(() => {
-                        location.reload(); // Seite wird nach 5 Sekunden neu geladen
-                    }, 5000);
+                        location.reload(); // Seite wird nach 3 Sekunden neu geladen
+                    }, 3000); 
 
                 } else {
                     eingabe = "";
@@ -482,10 +510,15 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             <th class="preisspalte">Preis</th>
             </tr>
             `;
+            
+                console.log("Data: ", data.data );
+                console.log("Kunden: ", kunden);
 
                 data.data.forEach(row => {
 
-                    let kunde = kunden.find(kunden => kunden.key2designation === row.Kunde);
+                    let kunde = kunden.find(kunden => kunden.key2designation === row.Schlüssel);
+
+                    //let kunde = kunden.find(kunden => kunden.uid === row.Kundennummer);
 
                     tagessumme += parseFloat(row.Preis);
 
@@ -624,11 +657,11 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                     return;
                 }
 
-                const sortedByCustomer = data.data.sort((a, b) => a.Kunde.localeCompare(b.Kunde));
+                const sortedByCustomer = data.data.sort((a, b) => a.Kundennummer.localeCompare(b.Kundennummer));
 
                 // Produkte zählen, Einzelpreis und Gesamtsumme berechnen
                 const customerData = sortedByCustomer.reduce((acc, row) => {
-                    const customer = row.Kunde; // Kunde
+                    const customer = row.Kundennummer; // Kunde
                     const product = row.Produkt; // Produkt
                     const price = parseFloat(row.Preis); // Preis als Zahl
 
@@ -659,7 +692,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
                 for (const Kunde1 in customerData) {
 
-                    let kunde = kunden.find(kunden => kunden.key2designation === Kunde1);
+                    let kunde = kunden.find(kunden => kunden.uid === Kunde1);
 
                     let tr = document.createElement("tr");
                     tr.innerHTML = `
@@ -910,7 +943,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             };
         }
 
-
         function update_mittagspreis(neuerPreis) {
             document.getElementById('abbruch').innerText="zurück";
             const produkt = produkte.find(item => item.EAN === "1");
@@ -950,21 +982,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             clearTimeout(timeout);
             timeout = setTimeout(showScreensaver, 60000 + config.bildschirmschoner);
         }
-
-        //wartekreis
-        function wartekreis() {
-            // Start drawing the circle over 2 seconds
-            document.getElementById("circle-timer").style.display = "block";
-            document.querySelector("circle").style.transition = "stroke-dashoffset 2s linear";
-            setTimeout(() => {
-                document.querySelector("circle").style.strokeDashoffset = "0";
-            }, 100);
-
-            // After 2 seconds, make the circle disappear over 2 seconds 
-            setTimeout(() => {
-                document.querySelector("circle").style.strokeDashoffset = "-251.2"; // Negative value reverses direction
-            }, 2100);
-        }    
             
         //Sonderfunktionen
         //spezielle EAN-Nummer lösen Sonderfunktionen aus
@@ -988,6 +1005,18 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                     eingabe="";
                     break;
             }
+        }
+
+        function zeigeHaken() {
+            const container = document.getElementById("checkmark-container");
+            const check = document.getElementById("checkmark");
+
+            container.style.display = "flex";
+
+            // Leichte Verzögerung, damit Transition greift
+            setTimeout(() => {
+                check.style.strokeDashoffset = "0";
+            }, 50);
         }
         
     </script>

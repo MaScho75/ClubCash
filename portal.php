@@ -69,7 +69,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
     <script src="config.js?v=<?php echo time(); ?>"></script>
-
+	
 </head>
 <body class="portal">
 
@@ -87,7 +87,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 <nav class="navbar">
   <ul>
     <li>
-      <a href="#">Mein Konto</a>
+      <a href="#" id="MenuMeinKonto" style="display: none;">Mein Konto</a>
       <ul>
         <li><a href="" onclick="location.reload()">Programminfo</a></li>
         <li><a href="#" onclick="Meine_Käufe()">Meine Käufe</a></li>
@@ -97,23 +97,23 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     </li>   
 
     <li>
-      <a href="#">Auswertung</a>
+      <a href="#" id="MenuAuswertung" style="display: none;">Auswertung</a>
       <ul>
-        <li><a href="#" class="disabled">Tagesabrechnung heute</a></li>
-        <li><a href="#" class="disabled">Tagesabrechnung Datum</a></li>
-        <li><a href="#" class="disabled">Zusammenfassung heute</a></li>
-        <li><a href="#" class="disabled">Zusammenfassung Datum</a></li>    
+        <li><a href="#" onclick="tagesabrechnung()">Tagesabrechnung</a></li>
+        <li><a href="#" onclick="Tageszusammenfassung()">Tageszusammenfassung</a></li>
+        <li><a href="#" class="disabled">Kundentagesübersicht</a></li>     
       </ul>
     </li>
 
     <li>
-      <a href="#">Administration</a>
+      <a href="#" id="MenuAdministrator" style="display: none;">Administration</a>
       <ul>
         <li><a href="#" onclick="produktkatalog_aufrufen()">Produktkatalog</a></li>
-        <li><a href="#" onclick="verkaufsliste()">Verkaufsliste</a></li>
         <li><a href="#" onclick="Mitgliederdaten_anzeigen()">Kundenliste</a></li>
         <li><a href="#" onclick="Mitgliedsdaten_ziehen()">Kundenliste Import VF</a></li>
-        <li><a href="#" class="disabled">Gesamtabrechnung</a></li>
+        <li><a href="#" onclick="Verkaufsabrechung()">Verkaufsabrechung</a></li>
+        <li><a href="#" class="disabled">Verkaufsübersicht</a></li>
+        <li><a href="#" class="disabled">Verkaufsübersicht Kunden</a></li>
         <li><a href="#" class="disabled">Einzelabrechnung</a></li>
         <li><a href="#" class="disabled">Konten zurücksetzen</a></li>
         <li><a href="#" class="disabled">Einzelkonto zurücksetzen</a></li>
@@ -122,7 +122,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     </li>
  
     <li>
-      <a href="#">Einstellungen</a>
+      <a href="#" id="MenuEinstellungen" style="display: none;">Einstellungen</a>
       <ul>
         <li><a href="#" class="disabled">Zugriff Vereinsflieger</a></li>
         <li><a href="#" class="disabled">Farben</a></li>
@@ -131,10 +131,10 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
       </ul>
     </li>
     <li>
-      <a href="#">Download</a>
+      <a href="#" id="MenuDownload" style="display: none;">Download</a>
       <ul>
         <li><a href="daten/produkte.csv" >Produktliste CSV</a></li>
-        <li><a href="daten/kunden.json" >Kugendliste JSON</a></li>
+        <li><a href="daten/kunden.json" >Kundenliste JSON</a></li>
         <li><a href="daten/verkaufsliste.csv" >Verkaufsliste CSV</a></li>
         <li><a href="#" onclick="backupliste()">Backups</a></li>
       </ul>
@@ -150,6 +150,10 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
     <script>
 
+        // Datum mitteleuropäisch formatiert
+        let heute = new Date();
+        heute = new Date(heute.getTime() - heute.getTimezoneOffset() * 60000);
+
         //Sanduhr
         window.onload = function() {
         // Preloader ausblenden, wenn die Seite vollständig geladen ist
@@ -161,14 +165,48 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         const produkte = <?php echo json_encode($produkte); ?>;
         const verkäufe = <?php echo json_encode($verkäufe); ?>;
 
+        console.log('Produkte:', produkte); // Debug-Ausgabe der Produkte
+        console.log('Verkäufe:', verkäufe); // Debug-Ausgabe der Verkäufe
+        console.log('Kunden:', kunden); // Debug-Ausgabe der Mitgliederdaten
+
+
         const portalInhalt = document.getElementById('portal-inhalt');
         const portalMenu = document.getElementById('portal-menu');
 
         // Finde das angemeldete Mitglied anhand der Email-Adresse (case-insensitive)
         const angemeldetesMitglied = kunden.find(kunde => 
             kunde.email.toLowerCase() === '<?php echo strtolower($_SESSION['username']); ?>');
-        document.getElementById('userName').textContent = `${angemeldetesMitglied.firstname} ${angemeldetesMitglied.lastname}`;
-        console.log('Angemeldetes Mitglied:', angemeldetesMitglied);	
+        //document.getElementById('userName').textContent = `${angemeldetesMitglied.firstname} ${angemeldetesMitglied.lastname}`;
+        document.getElementById('userName').textContent = angemeldetesMitglied.firstname + " " + angemeldetesMitglied.lastname;
+        
+        console.log('Angemeldetes Mitglied:', angemeldetesMitglied);
+		
+		//Menu gemäß Rollen ein und ausblenden
+		if (angemeldetesMitglied.cc_admin === true) {
+			document.getElementById('MenuMeinKonto').style.display = 'block';
+			document.getElementById('MenuAuswertung').style.display = 'block';
+			document.getElementById('MenuAdministrator').style.display = 'block';
+			document.getElementById('MenuEinstellungen').style.display = 'block';
+			document.getElementById('MenuDownload').style.display = 'block';
+		} else if (angemeldetesMitglied.cc_seller === true) {
+		    document.getElementById('MenuMeinKonto').style.display = 'block';
+			document.getElementById('MenuAuswertung').style.display = 'block';
+			document.getElementById('MenuAdministrator').style.display = 'none';
+			document.getElementById('MenuEinstellungen').style.display = 'none';
+			document.getElementById('MenuDownload').style.display = 'none';
+		} else if (angemeldetesMitglied.cc_member === true) {
+		    document.getElementById('MenuMeinKonto').style.display = 'block';
+			document.getElementById('MenuAuswertung').style.display = 'none';
+			document.getElementById('MenuAdministrator').style.display = 'none';
+			document.getElementById('MenuEinstellungen').style.display = 'none';
+			document.getElementById('MenuDownload').style.display = 'none';
+		} else if (angemeldetesMitglied.cc_guest === true) {
+		    document.getElementById('MenuMeinKonto').style.display = 'block';
+			document.getElementById('MenuAuswertung').style.display = 'none';
+			document.getElementById('MenuAdministrator').style.display = 'none';
+			document.getElementById('MenuEinstellungen').style.display = 'none';
+			document.getElementById('MenuDownload').style.display = 'none';
+		}
 
 
     function Mitgliederdaten_anzeigen() {
@@ -188,7 +226,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                     <th class="links">Email</th>
                     <th>Schlüssel</th>
                     <th>Kasse</th>
-                    <th>CLD</th>
+                    <th>Verkäufer</th>
                     <th>Mitglied</th>
                     <th>Gast</th>                
                 </tr>`;
@@ -220,7 +258,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     function Mitgliedsdaten_ziehen() {
         portalInhalt.innerHTML = "<h2>Vereinsflieger Datenimport</h2><p>Bitte warten, die Mitgliederdaten werden aus Vereinsflieger abgerufen...</p>";
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "admin/pull_Mitgliedsdaten_Vereinsflieger.php", true); 
+        xhr.open("GET", "pull_Mitgliedsdaten_Vereinsflieger.php", true); 
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
                 portalInhalt.innerHTML = xhr.responseText;
@@ -230,12 +268,8 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     }
 
     function produktkatalog_aufrufen() {
-        portalInhalt.innerHTML = "<h2>Produktkatalog</h2><iframe src='admin/produkte.html?v=" + Date.now() + "' style='width: 100%; height: 700px'></iframe>";
+        portalInhalt.innerHTML = "<h2>Produktkatalog</h2><iframe src='produkte.php?v=" + Date.now() + "' style='width: 100%; height: 700px'></iframe>";
     }
-
-    function verkaufsliste() {
-        portalInhalt.innerHTML ="<h2>Verkaufsliste</h2><iframe src='admin/verkaeufe.html?v=" + Date.now() + "' style='width: 100%; height: 700px'></iframe>";
-    }    
 
     function Meine_Käufe() {
         let summe = 0;
@@ -255,7 +289,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         <tbody>`;
 
         verkäufe.forEach(verkauf => {
-            if (verkauf.Kunde === angemeldetesMitglied.key2designation) {
+            if (verkauf.Kundennummer === angemeldetesMitglied.uid) {
                 tabelle_html += `
                     <tr>
                         <td>${verkauf.Datum}</td>
@@ -295,15 +329,12 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 <th class="rechts">Gesamtpreis</th>
             </tr>
         <tbody>`;
-
-        console.log('Produkte:', produkte); // Debug-Ausgabe der Produkte
-        console.log('Verkäufe:', verkäufe); // Debug-Ausgabe der Verkäufe
         
         produkte.forEach(produkt => {
             produktsumme = 0;
             produktanzahl = 0;
             verkäufe.forEach(verkauf => {
-                if (verkauf.Kunde === angemeldetesMitglied.key2designation && verkauf.EAN === produkt.EAN) {
+                if (verkauf.Kundennummer === angemeldetesMitglied.uid && verkauf.EAN === produkt.EAN) {
                     if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
                         produktsumme += parseFloat(verkauf.Preis);
                     }
@@ -343,10 +374,197 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         .catch(error => console.error('Fehler beim Laden der Dateien:', error));
     }
 
+    function tagesabrechnung() {
+
+        let datum1 = heute; // Aktuelles Datum im Format YYYY-MM-DD
+
+        let summe = 0;
+        let tabelle_html = "";
+        tabelle_html = `
+            <h2 style="display: inline;">Tagesabrechnung - ${datum1.toISOString().split('T')[0]}</h2>
+        `;
+
+        tabelle_html += `
+        <table class="portal-table" style="margin-top: 20px;">
+            <tr>
+                <th>T</th>
+                <th>Zeit</th>
+                <th class="links">Kunde</th>
+                <th class="links">Produkt</th>
+                <th class="rechts">Preis</th>
+            </tr>
+        <tbody>`;
+
+        verkäufe.forEach(verkauf => {
+    
+            if (verkauf.Datum === datum1.toISOString().split('T')[0]) {
+
+                Kunde = kunden.find(kunde => kunde.uid === verkauf.Kundennummer);
+                
+                tabelle_html += `
+                    <tr>
+                        <td>${verkauf.Terminal}</td>
+                        <td>${verkauf.Zeit}</td>
+                        <td class="links">${Kunde.lastname}, ${Kunde.firstname}</td>
+                        <td class="links">${verkauf.Produkt}</td>
+                        <td class="rechts">${verkauf.Preis} €</td>
+                    </tr>`;
+                    if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
+                        summe += parseFloat(verkauf.Preis);
+                    }
+            }
+        }); 
+
+        tabelle_html += `
+            <tr>
+                <td colspan="4" class="links"></td>
+                <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
+            </tr>
+        </tbody></table>`;
+        portalInhalt.innerHTML = tabelle_html;
+  
+    }
+
+    function Verkaufsabrechung(datum1, datum2) {
+
+
+        // Wenn kein Datum angegeben ist, das aktuelle Datum verwenden
+        if (!datum1) {
+            datum1 = heute; // Aktuelles Datum im Format YYYY-MM-DD
+            datum2 = heute; // Aktuelles Datum im Format YYYY-MM-DD
+        }
+
+        let summe = 0;
+        let tabelle_html = "";
+        tabelle_html = `
+            <h2 style="display: inline;">Tagesabrechnung</h2>
+            <input class="DatumInput" type="date" id="datum_anfang" value="${datum1.toISOString().split('T')[0]}">
+            <h2 style="display: inline;"> bis </h2>
+            <input class="DatumInput" type="date" id="datum_ende" value="${datum2.toISOString().split('T')[0]}">
+            <button id="bt_aktualisierung" style="height: 40px;">aktualisieren</button>
+        `;
+
+        tabelle_html += `
+        <table class="portal-table" style="margin-top: 20px;">
+            <tr>
+                <th>T</th>
+                <th>Datum</th>
+                <th>Zeit</th>
+                <th class="links">Kunde</th>
+                <th class="links">Produkt</th>
+                <th class="rechts">Preis</th>
+            </tr>
+        <tbody>`;
+
+        verkäufe.forEach(verkauf => {
+           
+            //if (verkauf.Datum === datum1.toISOString().split('T')[0])
+
+            if (verkauf.Datum >= datum1.toISOString().split('T')[0] && verkauf.Datum <= datum2.toISOString().split('T')[0]) {
+
+                console.log('Verkauf innerhalb des Datumsbereichs:', verkauf); // Debug-Ausgabe der Verkäufe innerhalb des Datumsbereichs
+
+                Kunde = kunden.find(kunde => kunde.uid === verkauf.Kundennummer);
+                
+                tabelle_html += `
+                    <tr>
+                        <td>${verkauf.Terminal}</td>
+                        <td>${verkauf.Datum}</td>
+                        <td>${verkauf.Zeit}</td>
+                        <td class="links">${Kunde.lastname}, ${Kunde.firstname}</td>
+                        <td class="links">${verkauf.Produkt}</td>
+                        <td class="rechts">${verkauf.Preis} €</td>
+                    </tr>`;
+                    if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
+                        summe += parseFloat(verkauf.Preis);
+                    }
+            }
+        }); 
+
+        tabelle_html += `
+            <tr>
+                <td colspan="5" class="links"></td>
+                <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
+            </tr>
+        </tbody></table>`;
+        portalInhalt.innerHTML = tabelle_html;
+
+        const btn = document.getElementById("bt_aktualisierung");
+        btn.addEventListener("click", () => {
+            const datumA = document.getElementById("datum_anfang").value;
+            const datumE = document.getElementById("datum_ende").value;
+
+            Verkaufsabrechung(new Date(datumA), new Date(datumE));
+        });
+            
+
+}
+
+    function Tageszusammenfassung() {
+
+        let datum1 = heute; // Aktuelles Datum im Format YYYY-MM-DD
+        let summe = 0;
+        let produktsumme = 0;   
+        let tabelle_html = "";
+
+        tabelle_html = `
+            <h2 style="display: inline;">Tageszusammenfassung - ${datum1.toISOString().split('T')[0]}</h2>
+          
+        `;
+        tabelle_html += `
+        <table class="portal-table" style="margin-top: 20px;">
+            <tr>
+                <th>Anzahl</th>
+                <th class="links">Produkt</th>
+                <th class="rechts">Einzelpreis</th> 
+                <th class="rechts">Gesamtpreis</th>
+            </tr>
+        <tbody>`;
+
+        const VerkäufeDatumFilter = verkäufe.filter(auswahl => auswahl.Datum === datum1.toISOString().split('T')[0]);
+
+        const zusammenfassung = {};
+
+        VerkäufeDatumFilter.forEach(eintrag => {
+            const ean = eintrag.EAN;
+            const preis = parseFloat(eintrag.Preis);
+
+
+            if (!zusammenfassung[ean]) {
+                zusammenfassung[ean] = {
+                    produkt: eintrag.Produkt,
+                    einzelpreis: preis,
+                    anzahl: 0,
+                    gesamtpreis: 0
+                };
+            }
+
+            zusammenfassung[ean].anzahl += 1;
+            zusammenfassung[ean].gesamtpreis += preis;
+        });
+
+        for (const [ean, ds] of Object.entries(zusammenfassung)) {
+            
+            tabelle_html +=  `
+                <tr>
+                    <td>${ds.anzahl}</td>
+                    <td class="links">${ds.produkt}</td>
+                    <td class="rechts">${ds.einzelpreis.toFixed(2)} €</td>
+                    <td class="rechts">${ds.gesamtpreis.toFixed(2)} €</td>
+                </tr>`;
+                
+                summe += ds.gesamtpreis;}
+
+
+        tabelle_html += `
+            <tr>
+                <td colspan="3" class="links"></td>
+                <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
+            </tr>
+        </tbody></table>`;
+        portalInhalt.innerHTML = tabelle_html;
+    }
+    
     </script>
-
-
-
-
 </body>
 </html>

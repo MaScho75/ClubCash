@@ -1,3 +1,13 @@
+<?php
+session_start();
+
+// Prüfen, ob der Benutzer eingeloggt ist
+if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
+    header('Location: index.php'); // Falls nicht eingeloggt, zurück zur Login-Seite
+    exit();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -5,9 +15,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Produkte Bearbeiten & Speichern</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@latest/dist/handsontable.full.min.css">
-    <!--<link rel="stylesheet" href="../style.css?v=<?php echo time(); ?>">-->
 	<link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet">
-	<link rel="stylesheet" href="../farben.css?v=<?php echo time(); ?>">
     <style>
         #csvTable {
             width: 100%;
@@ -42,7 +50,7 @@
 
 <script>
     Handsontable.helper.licenseKey = 'non-commercial-and-evaluation';
-    const csvUrl = "../daten/produkte.csv"; 
+    const csvUrl = "daten/produkte.csv"; 
     let hot;
 
     function loadCSV() {
@@ -82,7 +90,7 @@
             delimiter: ";"  // Semikolon als Trennzeichen
         });
 
-        fetch('../kasse/save_produkte_csv.php', {
+        fetch('kasse/save_produkte_csv.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

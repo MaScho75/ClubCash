@@ -9,9 +9,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $data = json_decode(file_get_contents("php://input"), true);
 
-    // Debug: Überprüfen, ob JSON-Daten angekommen sind
-    file_put_contents("debug.log", print_r($data, true));
-
     if (isset($data['csvData'])) {
         file_put_contents("../daten/produkte.csv", $data['csvData']);
         echo "CSV erfolgreich gespeichert!";

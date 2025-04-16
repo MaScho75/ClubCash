@@ -9,7 +9,6 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
 }
 
 
-
 $folderPath = 'backup'; // Der Ordner mit den Backups
 $files = scandir($folderPath); // Listet alle Dateien im Ordner auf
 
