@@ -1,4 +1,12 @@
 
+mark {
+    color: var(--text-color-light);
+    background-color: var(--button-color);
+    margin: 5px;
+    padding: 0px 5px;
+    border-radius: 5px;
+}
+
 .portal {
     background-color: var(--background-light);
     color: var(--text-color-dark);
@@ -12,6 +20,7 @@
     margin: 0 auto;
     text-align: center;
     margin-left: 0px;
+    transition: max-height 0.5s ease-in-out; /* 0.5 Sekunden für die Animation */
 
 }
     

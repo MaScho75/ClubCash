@@ -1,6 +1,4 @@
-daten/.env
-daten/kunden.csv
-daten/kunden.json
-daten/verkaufsliste.csv
+daten/
 backup/
-```
+kasse/.htaccess
+kasse/.htpasswd
