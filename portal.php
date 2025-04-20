@@ -121,7 +121,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
       <ul>
         <li><a href="#" class="disabled">Zugriff Vereinsflieger</a></li>
         <li><a href="farben.php">Farben</a></li>
-        <li><a href="#" class="disabled" class="disabled">Porgrammeinstellungen</a></li>
+        <li><a href="#" onclick="Programmeinstellungen()">Porgrammeinstellungen</a></li>
         <li><a href="#" class="disabled">alle Daten löschen</a></li>
       </ul>
     </li>
@@ -222,6 +222,34 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 			document.getElementById('MenuEinstellungen').style.display = 'none';
 			document.getElementById('MenuDownload').style.display = 'none';
 		}
+
+    function Programmeinstellungen() {
+        fetch('config.js?v=' + Date.now()) // Browser-Caching umgehen
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Fehler beim Laden der Konfiguration');
+                }
+                return response.text();
+            })
+            .then(text => {
+                portalInhalt.innerHTML = `
+                    <h2>Programmeinstellungen (config.js)</h2>
+                    <pre style="background: #f4f4f4; padding: 10px; overflow-x: auto;">${escapeHtml(text)}</pre>
+                `;
+            })
+            .catch(error => {
+                portalInhalt.innerHTML = `<p style="color:red;">${error.message}</p>`;
+            });
+    }
+
+    function escapeHtml(text) {
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 
     function Kontoübersicht() {
             Mitgliederdaten_anzeigen(); // Nur ausgeführt, um den aktuellen Kontostand zu aktualisieren

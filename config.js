@@ -9,5 +9,20 @@ const config = {
     "cc_guest": "Gast",// Zugriffsstufe 1 - wird aus Vereinsflieger gelesen
     "cc_member":  "Mitglied", // Zugriffsstufe 2 - wird aus Vereinsflieger gelesen
     "cc_seller": "Café Lüsse", // Zugriffsstufe 3 - wird aus Vereinsflieger gelesen
-    "cc_admin": "Fridgekeeper" // Zugriffsstufe 4 (Vollzugriff) - wird aus Vereinsflieger gelesen 
+    "cc_admin": "Fridgekeeper", // Zugriffsstufe 4 (Vollzugriff) - wird aus Vereinsflieger gelesen
+    "Vereinsname": "Flugsportclub Charlottenburg Berlin e.V.", // Vereinsname
+    "VereinsnameAbk": "FCC Berlin", // Vereinsname Abkürzung
+    "Kassenwart": "Ronald Liepold", 
+    "Straße": "Lüsse 14A",
+    "PLZ": "14806",
+    "Ort": "Bad Belzig",
+    "Telefon": "+49 33841 30770",
+    "Email": "kontakt@fccberlin.de",
+    "Webseite": "fccberlin.de",
+    "Bankverbindung": "n.n.",
+    "IBAN": "n.n.",
+    "BIC": "n.n.",
+    "Kontoinhaber": "n.n.",
+    "Steuernummer": "n.n.",
+    "UStID": "n.n."
 }
