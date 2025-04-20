@@ -229,8 +229,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
 // Configutarionen
 
-        if (!config.offlinemodus) document.getElementById("offlineFenster").style = "display: none"; // Offlinemodus
-        
+        if (!config.offlinemodus) document.getElementById("offlineFenster").style = "display: none"; // Offlinemodus     
         if (!config.tagesabrechnung) document.getElementById("bt_tagesabrechnung").style = "display: none";
         if (!config.tageszusammenfassung) document.getElementById("bt_tageszusammenfassung").style = "display: none";
         if (!config.kundentagesübersicht) document.getElementById("bt_kundentagesübersicht").style = "display: none";
@@ -280,7 +279,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
         direktwahl(); // Direktwahl-Funktion aufrufen - Produkte in der Sortierung 1-8 anzeigen
 
-        //Hamburger Menu
+        //Hamburger Menu ein- und ausblenden
         function toggleMenu() {
             document.querySelector(".menu").classList.toggle("active");
         }
@@ -335,18 +334,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                     let zeit = now.toTimeString().split(" ")[0].slice(0, 5);
 
                     for (ds of warenkorb) {
-                        /*let ds2 = {
-                            Datum: datum,
-                            Zeit: zeit,
-                            Terminal: terminal,
-                            Schlüssel: kunde.key2designation,
-                            EAN: ds.EAN,
-                            Produkt: ds.Bezeichnung,
-                            Kategorie: ds.Kategorie,
-                            Preis: ds.Preis,
-                            MwSt: ds.MwSt,
-                            Kundennummer: kunde.uid
-                        }*/
+
                         let ds2 = {
                             Datum: datum,
                             Zeit: zeit,
@@ -984,8 +972,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         }
             
         //Sonderfunktionen
-        //spezielle EAN-Nummer lösen Sonderfunktionen aus
-        
+        //spezielle EAN-Nummer lösen Sonderfunktionen aus      
         function sonderfunktionen(EANr) {
             switch (EANr) {
                 case "1111":

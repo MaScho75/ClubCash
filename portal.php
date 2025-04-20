@@ -90,8 +90,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
       <a href="#" id="MenuMeinKonto" style="display: none;">Mein Konto</a>
       <ul>
         <li><a href="" onclick="location.reload()">Programminfo</a></li>
-        <li><a href="#" onclick="Meine_Käufe()">Meine Käufe</a></li>
-        <li><a href="#" onclick="Käufe_Zusammenfassung()">Käufe Zusammenfassung</a></li>
+        <li><a href="#" onclick="Kontoübersicht()">Übersicht</a></li>
         <li><a href="logout.php" >Abmelden</a></li>
       </ul>
     </li>   
@@ -99,9 +98,9 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     <li>
       <a href="#" id="MenuAuswertung" style="display: none;">Auswertung</a>
       <ul>
-        <li><a href="#" onclick="tagesabrechnung()">Tagesabrechnung</a></li>
+        <li><a href="#" onclick="Tagesumsätze()">Tagesumsätze</a></li>
         <li><a href="#" onclick="Tageszusammenfassung()">Tageszusammenfassung</a></li>
-        <li><a href="#" class="disabled">Kundentagesübersicht</a></li>     
+        <li><a href="#" onclick="Kundentagesübersicht()">Kundentagesumsätze</a></li>     
       </ul>
     </li>
 
@@ -110,7 +109,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
       <ul>
         <li><a href="#" onclick="Produkte_anzeigen()">Produktkatalog</a></li>
         <li><a href="#" onclick="Mitgliederdaten_anzeigen()">Kundenliste</a></li>
-        <li><a href="#" onclick="Verkaufsabrechung()">Verkaufsabrechung</a></li>
+        <li><a href="#" onclick="Umsätze()">Umsätze</a></li>
         <li><a href="#" onclick="Mitgliedsdaten_ziehen()">Kundenliste Import VF</a></li>
         <li><a href="#" class="disabled">Export an Vereinsflieger</a></li>
         <li><a href="#" class="disabled">Warenbestand</a></li>
@@ -121,7 +120,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
       <a href="#" id="MenuEinstellungen" style="display: none;">Einstellungen</a>
       <ul>
         <li><a href="#" class="disabled">Zugriff Vereinsflieger</a></li>
-        <li><a href="Farben.php">Farben</a></li>
+        <li><a href="farben.php">Farben</a></li>
         <li><a href="#" class="disabled" class="disabled">Porgrammeinstellungen</a></li>
         <li><a href="#" class="disabled">alle Daten löschen</a></li>
       </ul>
@@ -147,8 +146,26 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     <script>
 
         // Datum mitteleuropäisch formatiert
-        let heute = new Date();
-        heute = new Date(heute.getTime() - heute.getTimezoneOffset() * 60000);
+            let heute = new Date();
+            heute = new Date(heute.getTime() - heute.getTimezoneOffset() * 60000);
+
+        //Wochenbeginn
+            let wochenbeginn = new Date(heute);
+            let day = heute.getDay();
+            day = (day === 0) ? 7 : day; // Sonntag (0) wird zu 7
+            wochenbeginn.setDate(heute.getDate() - (day - 1)); // auf Montag zurückrechnen
+            wochenbeginn.setHours(2, 0, 0, 0); // 2 Uhr früh, Minuten/Sekunden/Millisekunden auf 0 setzen
+
+        //Monatsbeginn
+            let monatsbeginn = new Date(heute);
+            monatsbeginn.setDate(1); // Erster Tag des Monats
+            monatsbeginn.setHours(monatsbeginn.getHours() + 2); // 2 Stunden addieren
+
+        //Jahresbeginn
+            let jahresbeginn = new Date(heute);
+            jahresbeginn.setDate(1); // Erster Tag des Jahres
+            jahresbeginn.setMonth(0); // Januar
+            jahresbeginn.setHours(jahresbeginn.getHours() + 2); // 2 Stunden addieren
 
         //Sanduhr
         window.onload = function() {
@@ -166,7 +183,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         console.table(verkäufe); // Debug-Ausgabe der Verkäufe
 
         //aktuelle Kontostände der Kunden berechnen
-        kundenkontostand = Kundenkontostand(verkäufe);
+        let kundenkontostand = Kundenkontostand(verkäufe);
         console.table(kundenkontostand);
         
         const portalInhalt = document.getElementById('portal-inhalt');
@@ -206,10 +223,54 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 			document.getElementById('MenuDownload').style.display = 'none';
 		}
 
+    function Kontoübersicht() {
+            Mitgliederdaten_anzeigen(); // Nur ausgeführt, um den aktuellen Kontostand zu aktualisieren
+            Kundenübersicht(angemeldetesMitglied.uid);    
+    }
+
+    function Kundentagesübersicht() {
+        let html = "<h2>Kundentagesumsätze</h2><table class='portal-table'>";
+        kunden.forEach(kunde => {
+            let summe= 0;
+            let htmlkunde = ""
+            //htmlkunde += "<table class='portal-table'>";
+            htmlkunde += "<tr><th colspan='5' class='links'>" + kunde.firstname + " " + kunde.lastname + " - " + kunde.uid + "</th></tr>";
+
+            verkäufe.filter(verkauf => verkauf.Kundennummer == kunde.uid && verkauf.Datum == heute.toISOString().split('T')[0]).forEach(verkauf => {
+                summe += parseFloat(verkauf.Preis);
+                htmlkunde += `
+                    <tr>
+                        <td>${verkauf.Terminal}</td>
+                        <td>${verkauf.Datum}</td>
+                        <td>${verkauf.Zeit}</td>
+                        <td class="links">${verkauf.Produkt}</td>
+                        <td class="rechts">${verkauf.Preis} €</td>
+                    </tr>
+                `;
+            });
+            htmlkunde += `
+                <tr class="summenzeile">
+                    <td colspan="4" class="rechts"><b>Summe</b></td>
+                    <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
+                </tr>
+                <tr style="height: 10px;">
+                    <td colspan="5"></td>
+                </tr>
+                
+            `;
+            if (summe > 0) {
+                html += htmlkunde; // Nur anzeigen, wenn es Verkäufe gibt
+            } 
+           
+        });
+        html += '</table>';
+        portalInhalt.innerHTML = html;
+
+    }    
 
     function Produkte_anzeigen() {
         
-        let html = '<h2>Produktliste</h2><table class="portal-table" style="margin-top: 20px; max-width: none;">';
+        let html = '<h2>Produktliste</h2><table class="portal-table" >';
         html += `
         <tr>
             <th>Sort.</th>
@@ -237,7 +298,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
     function Mitgliederdaten_anzeigen() {
                 
-        let html = '<h2>Kundenliste</h2><table class="portal-table" style="max-width: none;">';
+        let html = '<h2>Kundenliste</h2><table class="portal-table">';
         html += `
         <p>Rolle: K = Kassenwart / V = Verkäufer / M = Mitglied / G = Gast </p>
         <tr>
@@ -286,7 +347,10 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     }	
 
     function Kundenübersicht(kundennummer,datum1,datum2) {
-        let html = '<h2>Kundenübersicht</h2><table class="portal-table" style="max-width: none;">';
+
+        console.log("Kundenübersicht für Kundennummer: " + kundennummer);
+
+        let html = '<h2>Kundenübersicht</h2><table class="portal-table">';
         
         const kunde = kunden.find(kunde => kunde.uid == kundennummer);
         
@@ -334,10 +398,12 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             <input class="DatumInput" type="date" id="datum_anfang" value="${datum1.toISOString().split('T')[0]}">
             <h2 style="display: inline;"> bis </h2>
             <input class="DatumInput" type="date" id="datum_ende" value="${datum2.toISOString().split('T')[0]}">
-            <button id="bt_aktualisierung" style="height: 40px;">aktualisieren</button>
-
+            <button id="bt_aktualisierung" class="kleinerBt">aktualisieren</button>
+            <button class="kleinerBt" onclick="Kundenübersicht(${kunde.uid}, monatsbeginn, heute)">Monat</button>
+            <button class="kleinerBt" onclick="Kundenübersicht(${kunde.uid}, wochenbeginn, heute)">Woche</button>
+            <button class="kleinerBt" onclick="Kundenübersicht(${kunde.uid}, heute, heute)">Tag</button>
             <hr>
-            <h2 style="display: inline;"><a id="TabellenLink1" style='text-decoration: none;' href='#' onclick='toggleTabelle("Tabelle1", "TabellenLink1")'>➡️</a> Käufe</h2>
+            <h2 style="display: inline;"><a id="TabellenLink1" style='text-decoration: none;' href='#' onclick='toggleTabelle("Tabelle1", "TabellenLink1")'>➡️</a> Umsätze</h2>
             <table id="Tabelle1" class="portal-table" style="display: none; margin-top: 20px;">
                 <tr>
                     <th>T</th>
@@ -517,100 +583,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         xhr.send();
     }
 
-    function Meine_Käufe() {
-        let summe = 0;
-        let tabelle_html = "";
-        tabelle_html = `
-            <h2>Meine Käufe</h2>
-            <p><i>vollständige Liste - nur ClubCash System</i></p>`;
-        tabelle_html += `
-        <table class="portal-table">
-            <tr>
-                <th>Datum</th>
-                <th>Zeit</th>
-                <th>Terminal</th> 
-                <th class="links">Produkt</th>
-                <th class="rechts">Preis</th>
-            </tr>
-        <tbody>`;
-
-        verkäufe.forEach(verkauf => {
-            if (verkauf.Kundennummer === angemeldetesMitglied.uid) {
-                tabelle_html += `
-                    <tr>
-                        <td>${verkauf.Datum}</td>
-                        <td>${verkauf.Zeit}</td>
-                        <td>${verkauf.Terminal}</td>
-                        <td class="links">${verkauf.Produkt}</td>
-                        <td class="rechts">${verkauf.Preis} €</td>
-                    </tr>`;
-                    if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
-                        summe += parseFloat(verkauf.Preis);
-                    }
-            }
-        }); 
-
-        tabelle_html += `
-            <tr style="border-top: 1px solid black;">
-                <td colspan="4" class="links"></td>
-                <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
-            </tr>
-        </tbody></table>`;
-        portalInhalt.innerHTML = tabelle_html;
-    }
-
-    function Käufe_Zusammenfassung() { 
-        let summe = 0;
-        let produktsumme = 0;
-        let tabelle_html = "";
-        tabelle_html = `
-            <h2>Meine Käufe - Zusammenfassung</h2>
-            <p><i>* aktueller Preis - kann sich geändert haben</i></p>`;
-        tabelle_html += `
-        <table class="portal-table">
-            <tr>
-                <th>Anzahl</th>
-                <th class="links">Produkt</th>
-                <th class="rechts">Einzelpreis*</th> 
-                <th class="rechts">Gesamtpreis</th>
-            </tr>
-        <tbody>`;
-        
-        produkte.forEach(produkt => {
-            produktsumme = 0;
-            produktanzahl = 0;
-            verkäufe.forEach(verkauf => {
-                if (verkauf.Kundennummer === angemeldetesMitglied.uid && verkauf.EAN === produkt.EAN) {
-                    if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
-                        produktsumme += parseFloat(verkauf.Preis);
-                    }
-                    produktanzahl++;
-                }
-            });
-            
-            if (produktanzahl === 0) return; // Wenn keine Verkäufe für dieses Produkt, überspringen
-            
-            summe += produktsumme;
-
-            tabelle_html += `
-                <tr>
-                    <td>${produktanzahl}</td>
-                    <td class="links">${produkt.Bezeichnung}</td>
-                    <td class="rechts">${produkt.Preis} €</td>
-                    <td class="rechts">${produktsumme.toFixed(2)} €</td>
-    
-                </tr>`;
-        });
-        tabelle_html += `
-            <tr style="border-top: 1px solid black;">
-                <td colspan="3" class="links"></td>
-                <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
-            </tr>
-            </tbody>
-            </table>`;
-        portalInhalt.innerHTML = tabelle_html;
-    }
-
     function backupliste() {
         fetch('get-backup-files.php')
         .then(response => response.text())
@@ -620,18 +592,18 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         .catch(error => console.error('Fehler beim Laden der Dateien:', error));
     }
 
-    function tagesabrechnung() {
+    function Tagesumsätze() {
 
         let datum1 = heute; // Aktuelles Datum im Format YYYY-MM-DD
 
         let summe = 0;
-        let tabelle_html = "";
-        tabelle_html = `
-            <h2 style="display: inline;">Tagesabrechnung - ${datum1.toISOString().split('T')[0]}</h2>
+        let html = "";
+        html = `
+            <h2 style="display: inline;">Tagesumsätze - ${datum1.toISOString().split('T')[0]}</h2>
         `;
 
-        tabelle_html += `
-        <table class="portal-table" style="margin-top: 20px;">
+        html += `
+        <table class="portal-table">
             <tr>
                 <th>T</th>
                 <th>Zeit</th>
@@ -647,7 +619,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
                 Kunde = kunden.find(kunde => kunde.uid === verkauf.Kundennummer);
                 
-                tabelle_html += `
+                html += `
                     <tr>
                         <td>${verkauf.Terminal}</td>
                         <td>${verkauf.Zeit}</td>
@@ -661,104 +633,215 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             }
         }); 
 
-        tabelle_html += `
+        html += `
             <tr style="border-top: 1px solid black;">
-                <td colspan="4" class="links"></td>
+                <td colspan="4" class="rechts"><b>Summe</b></td>
                 <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
             </tr>
         </tbody></table>`;
-        portalInhalt.innerHTML = tabelle_html;
+        portalInhalt.innerHTML = html;
   
     }
 
-    function Verkaufsabrechung(datum1, datum2) {
+    function Umsätze(datum1, datum2) {
 
-
-        // Wenn kein Datum angegeben ist, das aktuelle Datum verwenden
-        if (!datum1) {
-            datum1 = heute; // Aktuelles Datum im Format YYYY-MM-DD
-            datum2 = heute; // Aktuelles Datum im Format YYYY-MM-DD
-        }
-
+        // Wenn kein Datum angegeben ist, setze es auf den 1. Januar des aktuellen Jahres
+        // und das aktuelle Datum
+        if(!datum1 || !datum2) {
+            let datumjahr = heute.getFullYear();
+            datum1 = jahresbeginn
+            datum2 = heute; // Aktuelles Datum
+        } 
+        
         let summe = 0;
-        let tabelle_html = "";
-        tabelle_html = `
-            <h2 style="display: inline;">Tagesabrechnung</h2>
+        let html = "";
+        html = `
+            <h2 style="display: inline;">Umsätze</h2>
             <input class="DatumInput" type="date" id="datum_anfang" value="${datum1.toISOString().split('T')[0]}">
             <h2 style="display: inline;"> bis </h2>
             <input class="DatumInput" type="date" id="datum_ende" value="${datum2.toISOString().split('T')[0]}">
-            <button id="bt_aktualisierung" style="height: 40px;">aktualisieren</button>
+            <button class="kleinerBt" id="bt_aktualisierung">aktualisieren</button>
+            <button class="kleinerBt" onclick="Umsätze(monatsbeginn, heute)">Monat</button>
+            <button class="kleinerBt" onclick="Umsätze(wochenbeginn, heute)">Woche</button>
+            <button class="kleinerBt" onclick="Umsätze(heute, heute)">Tag</button>
+
         `;
 
-        tabelle_html += `
-        <table class="portal-table" style="margin-top: 20px;">
-            <tr>
-                <th>T</th>
-                <th>Datum</th>
-                <th>Zeit</th>
-                <th class="links">Kunde</th>
-                <th class="links">Produkt</th>
-                <th class="rechts">Preis</th>
-            </tr>
-        <tbody>`;
+        //Tabelle1 - Einzelumsätze
+            html += `
+            <hr>
+            <h2 style="display: inline;"><a id="TabellenLink1" style='text-decoration: none;' href='#' onclick='toggleTabelle("Tabelle1", "TabellenLink1")'>➡️</a> Einzelumsätze</h2>
+            <table id="Tabelle1" class="portal-table" style="display: none; margin-top: 20px;">
+                <tr>
+                    <th>T</th>
+                    <th>Datum</th>
+                    <th>Zeit</th>
+                    <th class="links">Kunde</th>
+                    <th class="links">Produkt</th>
+                    <th class="rechts">Preis</th>
+                </tr>
 
-        verkäufe.forEach(verkauf => {
-           
-            //if (verkauf.Datum === datum1.toISOString().split('T')[0])
+            <tbody>`;
 
-            if (verkauf.Datum >= datum1.toISOString().split('T')[0] && verkauf.Datum <= datum2.toISOString().split('T')[0]) {
+            verkäufe.forEach(verkauf => {
+            
+                //if (verkauf.Datum === datum1.toISOString().split('T')[0])
 
-                console.log('Verkauf innerhalb des Datumsbereichs:', verkauf); // Debug-Ausgabe der Verkäufe innerhalb des Datumsbereichs
+                if (verkauf.Datum >= datum1.toISOString().split('T')[0] && verkauf.Datum <= datum2.toISOString().split('T')[0]) {
 
-                Kunde = kunden.find(kunde => kunde.uid === verkauf.Kundennummer);
-                
-                tabelle_html += `
+                    Kunde = kunden.find(kunde => kunde.uid === verkauf.Kundennummer);
+                    
+                    html += `
+                        <tr>
+                            <td>${verkauf.Terminal}</td>
+                            <td>${verkauf.Datum}</td>
+                            <td>${verkauf.Zeit}</td>
+                            <td class="links">${Kunde.lastname}, ${Kunde.firstname}</td>
+                            <td class="links">${verkauf.Produkt}</td>
+                            <td class="rechts">${verkauf.Preis} €</td>
+                        </tr>`;
+                        if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
+                            summe += parseFloat(verkauf.Preis);
+                        }
+                }
+            }); 
+
+            html += `
+                <tr class="summenzeile">
+                    <td colspan="5" class="rechts"><b>Summe</b></td>
+                    <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
+                </tr>
+            </tbody></table>`;
+
+
+        //Tabelle2 - Übersicht nach Produkten
+            html += `<hr><h2 style="display: inline;"><a id="TabellenLink2" style='text-decoration: none;' href='#' onclick='toggleTabelle("Tabelle2", "TabellenLink2")'>➡️</a> Übersicht nach Produkten</h2>
+                <table id="Tabelle2" class="portal-table" style="display: none; margin-top: 20px;">
                     <tr>
-                        <td>${verkauf.Terminal}</td>
-                        <td>${verkauf.Datum}</td>
-                        <td>${verkauf.Zeit}</td>
-                        <td class="links">${Kunde.lastname}, ${Kunde.firstname}</td>
-                        <td class="links">${verkauf.Produkt}</td>
-                        <td class="rechts">${verkauf.Preis} €</td>
-                    </tr>`;
-                    if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
-                        summe += parseFloat(verkauf.Preis);
-                    }
-            }
-        }); 
+                        <th>Anzahl</th>
+                        <th class="links">EAN</th>
+                        <th class="links">Produkt</th>
+                        <th class="links">Kategorie</th>
+                        <th class="rechts">Einzelpreis</th> 
+                        <th class="rechts">Gesamtpreis</th>
+                    </tr>
+                <tbody>
+            `;
 
-        tabelle_html += `
-            <tr style="border-top: 1px solid black;">
-                <td colspan="5" class="links"></td>
-                <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
-            </tr>
-        </tbody></table>`;
-        portalInhalt.innerHTML = tabelle_html;
+            summe = 0;
+
+            produkte.forEach(produkt => {
+                produktsumme = 0;
+                produktanzahl = 0;
+                let html2 = ""; // HTML für die Produktübersicht
+                verkäufe.forEach(verkauf => {
+                    if (verkauf.EAN === produkt.EAN && verkauf.Datum >= datum1.toISOString().split('T')[0] && verkauf.Datum <= datum2.toISOString().split('T')[0]) {
+                        if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
+                            produktsumme += parseFloat(verkauf.Preis);
+                        }
+                        produktanzahl++;
+                    }
+                });
+
+                html2 += `
+                    <tr>
+                        <td>${produktanzahl}</td>
+                        <td class="links">${produkt.EAN}</td>
+                        <td class="links">${produkt.Bezeichnung}</td>
+                        <td class="links">${produkt.Kategorie}</td>
+                        <td class="rechts">${produkt.Preis} €</td>
+                        <td class="rechts">${produktsumme.toFixed(2)} €</td>
+                    </tr>`;
+
+                if (produktanzahl > 0) { // Nur anzeigen, wenn es Verkäufe gibt
+                    html += html2; // Nur anzeigen, wenn es Verkäufe gibt
+                }
+                    summe += produktsumme;
+            });
+            html += `
+                <tr class="summenzeile">
+                    <td colspan="5" class="rechts"><b>Summe</b></td>
+                    <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
+                </tr>
+                </table>
+                `;
+
+        //Tabelle3 - Übersicht nach Produktengruppen
+            html += `<hr><h2 style="display: inline;"><a id="TabellenLink3" style='text-decoration: none;' href='#' onclick='toggleTabelle("Tabelle3", "TabellenLink3")'>➡️</a> Übersicht nach Produktgruppen</h2>
+                <table id="Tabelle3" class="portal-table" style="display: none; margin-top: 20px;">
+                    <tr>
+                        <th>Anzahl</th>
+                        <th class="links">Produktgruppe</th>
+                        <th class="rechts">Summe</th>
+                    </tr>
+                <tbody>
+            `;
+
+            summe = 0;
+
+            let gruppensumme = 0;
+
+            let gruppenanzahl = 0;
+            let produktgruppen = [...new Set(produkte.map(produkt => produkt.Kategorie))]; // Einzigartige Produktgruppen extrahieren
+
+            console.log('Produktgruppen:', produktgruppen); // Debug-Ausgabe der Produktgruppen
+
+            produktgruppen.forEach(gruppe => {
+                gruppensumme = 0;
+                gruppenanzahl = 0;
+                
+                verkäufe.forEach(verkauf => {
+                    if (verkauf.Kategorie === gruppe && verkauf.Datum >= datum1.toISOString().split('T')[0] && verkauf.Datum <= datum2.toISOString().split('T')[0]) {
+                        if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
+                            gruppensumme += parseFloat(verkauf.Preis);
+                        }
+                        gruppenanzahl++;
+                    }
+                });
+
+                html += `
+                    <tr>
+                        <td>${gruppenanzahl}</td>
+                        <td class="links">${gruppe}</td>
+                        <td class="rechts">${gruppensumme.toFixed(2)} €</td>
+                    </tr>`;
+                
+                summe += gruppensumme;
+
+            });
+            html += `
+                <tr class="summenzeile">
+                    <td colspan="2" class="rechts"><b>Summe</b></td>
+                    <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
+                </tr>      
+            </tbody>
+
+            </table>`;
+
+        portalInhalt.innerHTML = html;
 
         const btn = document.getElementById("bt_aktualisierung");
         btn.addEventListener("click", () => {
             const datumA = document.getElementById("datum_anfang").value;
             const datumE = document.getElementById("datum_ende").value;
 
-            Verkaufsabrechung(new Date(datumA), new Date(datumE));
+            Umsätze(new Date(datumA), new Date(datumE));
         });
-            
-
-}
+    }
 
     function Tageszusammenfassung() { 
 
         let datum1 = heute; // Aktuelles Datum im Format YYYY-MM-DD
         let summe = 0;
         let produktsumme = 0;   
-        let tabelle_html = "";
+        let html = "";
 
-        tabelle_html = `
+        html = `
             <h2 style="display: inline;">Tageszusammenfassung - ${datum1.toISOString().split('T')[0]}</h2>
           
         `;
-        tabelle_html += `
-        <table class="portal-table" style="margin-top: 20px;">
+        html += `
+        <table class="portal-table">
             <tr>
                 <th>Anzahl</th>
                 <th class="links">Produkt</th>
@@ -790,7 +873,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
         for (const [ean, ds] of Object.entries(zusammenfassung)) {
             
-            tabelle_html +=  `
+            html +=  `
                 <tr>
                     <td>${ds.anzahl}</td>
                     <td class="links">${ds.produkt}</td>
@@ -801,13 +884,13 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 summe += ds.gesamtpreis;}
 
 
-        tabelle_html += `
+        html += `
             <tr style="border-top: 1px solid black;">
-                <td colspan="3" class="links"></td>
+                <td colspan="3" class="rechts"><b>Summe</b></td>
                 <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
             </tr>
         </tbody></table>`;
-        portalInhalt.innerHTML = tabelle_html;
+        portalInhalt.innerHTML = html;
     }
     
     function Kundenkontostand(daten) {

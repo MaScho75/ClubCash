@@ -20,8 +20,12 @@ mark {
     margin: 0 auto;
     text-align: center;
     margin-left: 0px;
-    transition: max-height 0.5s ease-in-out; /* 0.5 Sekunden für die Animation */
+    margin-top: 20px; 
+    max-width: none;
+}
 
+.summenzeile {
+    border-top: 1px solid black;
 }
     
 #portal-inhalt {
@@ -34,10 +38,9 @@ mark {
     text-align: left;
     overflow: auto;
     max-height: calc(100vh - 260px);
-
 }
 
-/* Für das bestimmte Div den Scrollbalken auf Standard zurücksetzen */
+/* Für das portal-inhalt den Scrollbalken auf Standard zurücksetzen */
 #portal-inhalt::-webkit-scrollbar {
     width: auto;  /* Standardgröße */
 }
@@ -57,71 +60,71 @@ mark {
 }
 
 
-    /* Navigation Container */
-    .navbar {
-        background-color: var(--background-dark);
-      }
-  
-      /* Hauptmenü */
-      .navbar > ul {
-        list-style-type: none;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        background-color: var(--background-dark);
-      }
-  
-      .navbar > ul > li {
-        position: relative;
-        z-index: 2;
-      }
-  
-      /* Hauptmenü Links */
-      .navbar > ul > li > a {
-        display: block;
-        padding: 14px 20px;
-        color: var(--text-color-light);
-        text-decoration: none;
-      }
-  
-      .navbar > ul > li > a:hover {
-        background-color: var(--text-color-dark);
-      }
-  
-      /* Dropdown-Menü */
-      .navbar li ul {
-        display: none;
-        position: absolute;
-        background-color: var(--background-dark);
-        list-style-type: none;
-        margin: 0;
-        padding: 0;
-        top: 100%;
-        left: 0;
-        min-width: 160px;
-      }
-  
-      .navbar li:hover ul {
-        display: block;
-      }
-  
-      .navbar li ul li a {
-        display: block;
-        padding: 12px 16px;
-        color: var(--text-color-light);
-        text-decoration: none;
-      }
-  
-      .navbar li ul li a:hover {
-        background-color: var(--text-color-dark);
-      }
-      
-      .navbar li ul li a.disabled {
-        pointer-events: none;
-        color: var(--error-color) !important;
-        cursor: not-allowed;
-        background-color: transparent !important;
-      }
+/* Navigation Container */
+.navbar {
+background-color: var(--background-dark);
+}
+
+/* Hauptmenü */
+.navbar > ul {
+list-style-type: none;
+margin: 0;
+padding: 0;
+display: flex;
+background-color: var(--background-dark);
+}
+
+.navbar > ul > li {
+position: relative;
+z-index: 2;
+}
+
+/* Hauptmenü Links */
+.navbar > ul > li > a {
+display: block;
+padding: 14px 20px;
+color: var(--text-color-light);
+text-decoration: none;
+}
+
+.navbar > ul > li > a:hover {
+background-color: var(--text-color-dark);
+}
+
+/* Dropdown-Menü */
+.navbar li ul {
+display: none;
+position: absolute;
+background-color: var(--background-dark);
+list-style-type: none;
+margin: 0;
+padding: 0;
+top: 100%;
+left: 0;
+min-width: 160px;
+}
+
+.navbar li:hover ul {
+display: block;
+}
+
+.navbar li ul li a {
+display: block;
+padding: 12px 16px;
+color: var(--text-color-light);
+text-decoration: none;
+}
+
+.navbar li ul li a:hover {
+background-color: var(--text-color-dark);
+}
+
+.navbar li ul li a.disabled {
+pointer-events: none;
+color: var(--error-color) !important;
+cursor: not-allowed;
+background-color: transparent !important;
+}
 
 
 .preloader {
@@ -183,6 +186,10 @@ body {
     padding: 10px 20px;
     border-radius: 5px;
     font-weight: bold;
+}
+
+.kleinerBt {
+    height: 38px;
 }
 
 .box_zentrieren {
