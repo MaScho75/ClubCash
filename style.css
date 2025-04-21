@@ -199,7 +199,46 @@ body {
     height: 100%;
 }
 
+.inputfeld {
+    background-color: var(--background-light);
+}
 
+input[type="date"] {
+    font-family: 'Carlito', sans-serif;
+    font-size: 20px;
+    background-color: var(--background-light);
+    border: none
+}
+
+.edited {
+    background-color: yellow;
+    }
+.new {
+    background-color: lightgreen;
+    }
+.deleted td {
+    background-color: #fdd;
+    }
+.deleted .text {
+    text-decoration: line-through;
+    }
+ .icon {
+    font-size: 16px; /* Beispiel für die Icons */
+    }
+a {
+    text-decoration: none;
+    cursor: pointer;
+    }
+
+select {
+    font-family: 'Carlito', sans-serif;
+    font-size: 20px;
+    border: none;
+    background-color: var(--background-light);
+    color: var(--text-color-dark);
+ 
+    border-radius: 5px;
+}
 
 .button:hover {
     background-color: var(--button-hover);
@@ -526,7 +565,8 @@ th {
     position: sticky;
     top: 0;
     z-index: 1;
-    padding: 5px;
+    padding: 3px;
+    border: 2px white solid;
 }
 
 .BT_Eingabe {

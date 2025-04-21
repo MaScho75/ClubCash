@@ -41,6 +41,21 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     fclose($handle);
 }
 
+// csv wareneingang laden
+$csvDatei3 = "daten/wareneingang.csv"; 
+$wareneingang = [];
+
+if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
+    $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
+
+    while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
+        if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
+            $wareneingang[] = array_combine($header, $row); // Header mit Werten kombinieren
+        }
+    }
+    fclose($handle);
+}
+
 //print_r($produkte); // Debug-Ausgabe der Produkte
 //print_r($verkäufe); // Debug-Ausgabe der Verkäufe
 //print_r($jsonKundenDaten); // Debug-Ausgabe der Mitgliederdaten
@@ -112,7 +127,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         <li><a href="#" onclick="Umsätze()">Umsätze</a></li>
         <li><a href="#" onclick="Mitgliedsdaten_ziehen()">Kundenliste Import VF</a></li>
         <li><a href="#" class="disabled">Export an Vereinsflieger</a></li>
-        <li><a href="#" class="disabled">Warenbestand</a></li>
+        <li><a href="#" onclick="Wareneingang()">Wareneingang</a></li>
       </ul>
     </li>
  
@@ -120,7 +135,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
       <a href="#" id="MenuEinstellungen" style="display: none;">Einstellungen</a>
       <ul>
         <li><a href="#" class="disabled">Zugriff Vereinsflieger</a></li>
-        <li><a href="farben.php">Farben</a></li>
+        <li><a href="#" onclick="Farben()">Farben</a></li>
         <li><a href="#" onclick="Programmeinstellungen()">Porgrammeinstellungen</a></li>
         <li><a href="#" class="disabled">alle Daten löschen</a></li>
       </ul>
@@ -175,16 +190,29 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         
         // PHP-Variablen in JavaScript-Variablen umwandeln
         const kunden = <?php echo json_encode($jsonKundenDaten); ?>;
-        const produkte = <?php echo json_encode($produkte); ?>;
-        const verkäufe = <?php echo json_encode($verkäufe); ?>;
+        let produkte = <?php echo json_encode($produkte); ?>;
+        let verkäufe = <?php echo json_encode($verkäufe); ?>;
+        let wareneingang = <?php echo json_encode($wareneingang); ?>;
+        // Bereinige die Schlüssel von BOM und unsichtbaren Zeichen
+            wareneingang = wareneingang.map(item => {
+                const cleanItem = {};
+                Object.entries(item).forEach(([key, value]) => {
+                    // Entferne alle unsichtbaren Zeichen am Anfang und Ende
+                    const cleanKey = key.replace(/^[\uFEFF\u200B\u0000-\u0020]+|[\u0000-\u0020]+$/g, '');
+                    cleanItem[cleanKey] = value;
+                });
+                return cleanItem;
+            });
 
-        console.table(produkte); // Debug-Ausgabe der Produkte
-        console.table(kunden); // Debug-Ausgabe der Mitgliederdaten
-        console.table(verkäufe); // Debug-Ausgabe der Verkäufe
+        //console.table(produkte); // Debug-Ausgabe der Produkte
+        //console.table(kunden); // Debug-Ausgabe der Mitgliederdaten
+        //console.table(verkäufe); // Debug-Ausgabe der Verkäufe
+        console.log('wareneingang:', wareneingang); // Debug-Ausgabe der wareneingang
+        console.table(wareneingang); // Debug-Ausgabe der wareneingang
 
         //aktuelle Kontostände der Kunden berechnen
         let kundenkontostand = Kundenkontostand(verkäufe);
-        console.table(kundenkontostand);
+        //console.table(kundenkontostand);
         
         const portalInhalt = document.getElementById('portal-inhalt');
         const portalMenu = document.getElementById('portal-menu');
@@ -194,7 +222,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             kunde.email.toLowerCase() === '<?php echo strtolower($_SESSION['username']); ?>');
         document.getElementById('userName').textContent = angemeldetesMitglied.firstname + " " + angemeldetesMitglied.lastname;
         
-        console.table('Angemeldetes Mitglied:', angemeldetesMitglied);
+        //console.table('Angemeldetes Mitglied:', angemeldetesMitglied);
 		
 		//Menu gemäß Rollen ein- und ausblenden
 		if (angemeldetesMitglied.cc_admin === true) {
@@ -222,6 +250,293 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 			document.getElementById('MenuEinstellungen').style.display = 'none';
 			document.getElementById('MenuDownload').style.display = 'none';
 		}
+
+    function Warenbestand() {
+        warenbestand = [];
+        
+        // Zuerst Wareneingang summieren
+        let tempBestand = {};
+        wareneingang.forEach(waren => {
+            if (!tempBestand[waren.EAN]) {
+                tempBestand[waren.EAN] = 0;
+            }
+            tempBestand[waren.EAN] += parseInt(waren.Menge);
+        });
+
+        // Verkäufe abziehen
+        verkäufe.forEach(verkauf => {
+            if (tempBestand[verkauf.EAN]) {
+                tempBestand[verkauf.EAN] -= 1;
+            }
+        });
+
+        // Ergebnisse in das warenbestand Array übertragen
+        warenbestand = produkte.map(produkt => ({
+            EAN: produkt.EAN,
+            Bestand: tempBestand[produkt.EAN] || 0
+        }));
+
+        console.table(warenbestand); // Debug-Ausgabe der Warenbestand
+
+        return warenbestand;
+ 
+    }
+
+    function Wareneingang() {
+
+        let html = "<h2 style='display: inline;''>Wareneingang</h2>";
+        html += `
+            <button id="addButton" class="kleinerBt" >hinzufügen</button>
+            <button id="saveButton" class="kleinerBt" >speichern</button>
+
+            <table id="dataTable" class="portal-table">
+                <thead><tr id="tableHeader"></tr></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        `;
+
+        portalInhalt.innerHTML = html;
+
+        createEditableTable(wareneingang); // Tabelle erstellen und HTML einfügen
+                
+        //Funktion zum Erstellen der Tabelle
+    
+        function createEditableTable(initialData) {
+            let data = JSON.parse(JSON.stringify(initialData)); // Kopie für Bearbeitung
+            let originalData = JSON.parse(JSON.stringify(initialData)); // Für Undo
+            let editedRows = new Set();
+            let newRows = new Set();
+            let deletedRows = new Set();
+            let keys = Object.keys(data[0] || {});
+
+            const tableHeader = document.getElementById("tableHeader");
+            const tableBody = document.getElementById("tableBody");
+            const addButton = document.getElementById("addButton");
+            const saveButton = document.getElementById("saveButton");
+
+            renderHeader();
+            renderTable();
+
+            function renderHeader() {
+                tableHeader.innerHTML = "";
+                keys.forEach(key => {
+                    const th = document.createElement("th");
+                    th.innerText = key;
+                    tableHeader.appendChild(th);
+                    if (key === "EAN") {
+                        const th1 = document.createElement("th");
+                        th1.innerText = "Bezeichnung";
+                        tableHeader.appendChild(th1);
+                        const th2 = document.createElement("th");
+                        th2.innerText = "Kategorie";
+                        tableHeader.appendChild(th2);
+                        const th3 = document.createElement("th");
+                        th3.innerText = "Preis";
+                        tableHeader.appendChild(th3);
+                    };
+                });
+         
+                const actionTh = document.createElement("th");
+                actionTh.innerText = "Aktionen";
+                tableHeader.appendChild(actionTh);
+            }
+
+            function renderTable() {
+                tableBody.innerHTML = "";
+
+                data.forEach((item, index) => {
+                    const tr = document.createElement("tr");
+
+                    tr.classList.toggle("edited", editedRows.has(index));
+                    tr.classList.toggle("new", newRows.has(index));
+                    tr.classList.toggle("deleted", deletedRows.has(index));
+
+                    keys.forEach(key => {
+                        
+                        const td = document.createElement("td");
+                        console.log("Key:", key, "Value:", item[key]); // Debug-Ausgabe der Schlüssel und Werte
+                        if (key === "Eingang") {
+                            console.log("Eingang:", item[key]); // Debug-Ausgabe der Schlüssel und Werte
+                            const datumInput = document.createElement("input"); 
+                            datumInput.type = "date";
+                            datumInput.value = item[key] || heute.toISOString().split('T')[0]; // Default to today if no value
+                            datumInput.disabled = deletedRows.has(index);
+                            datumInput.onchange = () => markAsEdited(index, key, datumInput.value, td);
+                            td.appendChild(datumInput);
+                        } else if (key === "Menge") {
+                            td.contentEditable = !deletedRows.has(index);
+                            td.className = 'inputfeld';
+                            td.innerText = item[key];
+                            td.onblur = () => {
+                                const newValue = td.innerText;
+                                if (!Number.isInteger(Number(newValue)) || newValue === "") {
+                                    td.innerText = item[key]; // Restore old value
+                                    alert("Bitte geben Sie eine ganze Zahl ein.");
+                                } else {
+                                    markAsEdited(index, key, newValue, td);
+                                }
+                            };
+                        } else {
+                            if (key === "EAN") {
+                                td.contentEditable = false;
+                            } else {
+                                td.contentEditable = !deletedRows.has(index);
+                            }
+                            if (deletedRows.has(index)) {
+                                td.classList.add("text");
+                            }
+                            td.innerText = item[key];
+                            td.onblur = () => markAsEdited(index, key, td.innerText, td);
+                        }
+                        tr.appendChild(td);
+
+                        if (key === "EAN") {
+                            const bezeichnungTd = document.createElement("td");
+                            const select = document.createElement("select");
+                            select.innerHTML = `<option value="">-- Produkt wählen --</option>
+                                ${produkte.sort((a,b) => a.Bezeichnung.localeCompare(b.Bezeichnung)).map(p => 
+                                    `<option value="${p.EAN}" ${item[key] == p.EAN ? 'selected' : ''}>${p.Bezeichnung}</option>`
+                                ).join('')}`;
+                            select.onchange = (e) => markAsEdited(index, key, e.target.value, bezeichnungTd);
+                            select.disabled = deletedRows.has(index);
+                            bezeichnungTd.appendChild(select);
+                            tr.appendChild(bezeichnungTd);
+                            
+                            const kategorieTd = document.createElement("td");
+                            kategorieTd.innerText = item[key] ? produkte.find(p => p.EAN == item[key]).Kategorie : ""; // Kategorie aus dem Produkt-Array holen;
+                            tr.appendChild(kategorieTd);
+                            
+                            const preisTd = document.createElement("td");
+                            preisTd.innerText = item[key] ? produkte.find(p => p.EAN == item[key]).Preis + " €" : " €"; // Preis aus dem Produkt-Array holen
+                            tr.appendChild(preisTd);
+                        }
+                    });
+
+                    const actionTd = document.createElement("td");
+                    const deleteBtn = document.createElement("a");
+                    deleteBtn.href = "#";
+                    deleteBtn.classList.add("icon");
+                    deleteBtn.innerHTML = deletedRows.has(index) ? "🔄" : "🗑️";
+                    deleteBtn.onclick = () => toggleDeleteRow(index);
+                    actionTd.appendChild(deleteBtn);
+
+                    if (editedRows.has(index) || deletedRows.has(index) || newRows.has(index)) {
+                        const undoBtn = document.createElement("a");
+                        undoBtn.href = "#";
+                        undoBtn.classList.add("icon");
+                        undoBtn.innerHTML = "↩️";
+                        undoBtn.onclick = () => undoChange(index);
+                        actionTd.appendChild(undoBtn);
+                    }
+
+                    tr.appendChild(actionTd);
+                    tableBody.appendChild(tr);
+                });
+            }
+
+            function markAsEdited(index, key, newValue, tdElement) {
+                if (data[index][key] !== newValue) {
+                    data[index][key] = newValue;
+                    if (!newRows.has(index)) {
+                        editedRows.add(index);
+                    }
+                    tdElement.classList.add("edited");
+                }
+                renderTable();
+            }
+
+            function addRow() {
+                const newItem = {};
+                keys.forEach(key => newItem[key] = "");
+                const newIndex = data.length;
+                data.push(newItem);
+                originalData.push(JSON.parse(JSON.stringify(newItem)));
+                newRows.add(newIndex);
+                renderTable();
+            }
+
+            function toggleDeleteRow(index) {
+                if (deletedRows.has(index)) {
+                    deletedRows.delete(index);
+                } else {
+                    deletedRows.add(index);
+                }
+                renderTable();
+            }
+
+            function undoChange(index) {
+                if (newRows.has(index)) {
+                    data.splice(index, 1);
+                    originalData.splice(index, 1);
+                    newRows.delete(index);
+                } else {
+                    data[index] = JSON.parse(JSON.stringify(originalData[index]));
+                    editedRows.delete(index);
+                    deletedRows.delete(index);
+                }
+
+                renderTable();
+        }
+
+            function saveChanges() {
+                const savedData = data.filter((_, index) => !deletedRows.has(index));
+
+                // Nach dem Speichern, neue Ausgangsdaten setzen
+                data = JSON.parse(JSON.stringify(savedData));
+                originalData = JSON.parse(JSON.stringify(savedData));
+                editedRows.clear();
+                newRows.clear();
+                deletedRows.clear();
+                renderTable();
+
+                return savedData;
+                }
+
+                addButton.onclick = addRow;
+
+                saveButton.onclick = () => {
+
+
+                    const updatedData = saveChanges();
+                    wareneingang = updatedData; // Aktualisiere die wareneingang-Variable
+
+                    fetch('csv-schreiben.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            data: wareneingang,
+                            filename: 'daten/wareneingang.csv'
+                        })
+                    })
+                    .then(response => response.text())
+                    .then(result => {
+                        alert('Wareneingangstabelle erfolgreich gespeichert:', result);
+                    })
+                    .catch(error => {
+                        alert('Fehler beim CSV erstellen:', error);
+                    });
+
+            };
+
+        } // Ende der Funktion createEditableTable
+    }
+
+    function Farben() {
+        portalInhalt.innerHTML = "<h2>Farben</h2><p>Bitte warten, die Farben werden geladen...</p>";
+        
+        console.log("Farben laden...");
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "farben.php", true); 
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                portalInhalt.innerHTML = xhr.responseText;
+            }
+        };
+        xhr.send();
+
+    }
 
     function Programmeinstellungen() {
         fetch('config.js?v=' + Date.now()) // Browser-Caching umgehen
@@ -297,6 +612,8 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     }    
 
     function Produkte_anzeigen() {
+
+        let warenbestand = Warenbestand(); // Warenbestand laden
         
         let html = '<h2>Produktliste</h2><table class="portal-table" >';
         html += `
@@ -307,6 +624,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             <th class="links">Kategorie</th>
             <th class="rechts">Preis</th>
             <th>MwSt</th>
+            <th>Bestand</th>
         </tr>`;
 
         produkte.forEach(produkt => {
@@ -317,6 +635,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 <td class="links">${produkt.Kategorie}</td>
                 <td class="rechts">${produkt.Preis}</td>
                 <td>${produkt.MwSt}</td>
+                <td>${warenbestand.find(waren => waren.EAN == produkt.EAN)?.Bestand || ""}</td>
             </tr>`;
         });
 
