@@ -1,10 +1,12 @@
 <?php
-/**
- * Schreibt ein Array in eine CSV-Datei
- * @param array $data Das zu schreibende Array
- * @param string $filename Der Name der CSV-Datei
- * @return bool True bei Erfolg, False bei Fehler
- */
+
+session_start();
+
+// Prüfen, ob der Benutzer eingeloggt ist
+if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
+    header('Location: index.php'); // Falls nicht eingeloggt, zurück zur Login-Seite
+    exit();
+}
 
 // JSON-Daten aus dem POST-Request lesen
 $jsonInput = file_get_contents('php://input');
