@@ -122,12 +122,14 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
     <li>
       <a href="#" id="MenuAdministrator" style="display: none;">Administration</a>
       <ul>
-        <li><a href="#" onclick="Produkte_anzeigen()">Produktkatalog</a></li>
+        
+        
+        <li><a href="#" onclick="Mitgliedsdaten_ziehen()">Kundenliste aktualisieren</a></li>
         <li><a href="#" onclick="Mitgliederdaten_anzeigen()">Kundenliste</a></li>
         <li><a href="#" onclick="Umsätze()">Umsätze</a></li>
-        <li><a href="#" onclick="Mitgliedsdaten_ziehen()">Kundenliste Import VF</a></li>
-        <li><a href="#" class="disabled">Export an Vereinsflieger</a></li>
+        <li><a href="#" onclick="Produkte_anzeigen()">Produktkatalog</a></li>
         <li><a href="#" onclick="Wareneingang()">Wareneingang</a></li>
+        <li><a href="#" onclick="Abrechnung()">Abrechnung</a></li>
       </ul>
     </li>
  
@@ -250,6 +252,27 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
 			document.getElementById('MenuEinstellungen').style.display = 'none';
 			document.getElementById('MenuDownload').style.display = 'none';
 		}
+
+    function Abrechnung() {
+        let html = "<h2>Abrechnung</h2>";
+        html += `
+        <h3>1. Kasse offline stellen</h3>
+        <p>Die Kasse offline stellen, um keine weiteren Verkäufe zuzulassen.</p>
+        <button id="btOffline" class="kleinerBt" disabled>offline</button>
+        <h3>2. Kontostande übertragen</h3>
+        <p>Die Kontostände der Mitglieder in die Vereinsflieger-Datenbank übertragen.</p>
+        <button id="btVFTansfer" class="kleinerBt" disabled>übertragen</button>
+        <h3>Kontostände ausgleichen</h3>
+        <p>Die Kontostände der Mitglieder in jeder Kategorie auf 0 € gesetzt.</p>
+        <button id="btKontoausgleich" class="kleinerBt" disabled>zurücksetzen</button>
+        <h3>3. Kasse online stellen</h3>
+        <p>Die Kasse online stellen, um weitere Verkäufe zuzulassen.</p>
+        <button id="btOnline" class="kleinerBt" disabled>online</button>
+
+        `;
+
+        portalInhalt.innerHTML = html;
+    }    
 
     function Warenbestand() {
         warenbestand = [];

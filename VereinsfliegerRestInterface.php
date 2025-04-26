@@ -29,6 +29,8 @@ class VereinsfliegerRestInterface
 			'cid'      		=> $Cid,
 			'appkey'   		=> $AppKey,
 			'auth_secret' 	=> $AuthSecret);
+	
+		
 		$this->SendRequest("POST", "auth/signin", $Data);
 		return (($this->HttpStatusCode) == 200);
 	}

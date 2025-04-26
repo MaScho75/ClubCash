@@ -6,26 +6,6 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
     header('Location: index.php'); // Falls nicht eingeloggt, zurück zur Login-Seite
     exit();
 }
-
-// csv produkte laden
-$csvDatei = "daten/produkte.csv"; 
-$produkte = [];
-
-if (($handle = fopen($csvDatei, "r")) !== FALSE) {
-    $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
-
-    while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
-        if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
-            $produkte[] = array_combine($header, $row); // Header mit Werten kombinieren
-        }
-    }
-    fclose($handle);
-}
-
-echo "<p>";
-echo $produkte;
-echo "</p>";
-
 ?>
 
 <!DOCTYPE html>
@@ -72,10 +52,6 @@ echo "</p>";
     Handsontable.helper.licenseKey = 'non-commercial-and-evaluation';
     const csvUrl = "daten/produkte.csv"; 
     let hot;
-    
-    let produktdaten = "<?php echo $produkte; ?>";
-    
-    console.log("Produktdaten: ", produktdaten);
 
     function loadCSV() {
         fetch(csvUrl + "?nocache=" + new Date().getTime()) // Cache umgehen
@@ -129,7 +105,7 @@ echo "</p>";
         .catch(error => console.error('Fehler:', error));
     }
 
-    //loadCSV(); // Initial CSV laden
+    loadCSV(); // Initial CSV laden
 </script>
 
 </body>

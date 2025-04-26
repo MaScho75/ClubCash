@@ -16,11 +16,12 @@ if (isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] ==
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $UserName = trim($_POST['username'] ?? '');
     $Password = trim($_POST['password'] ?? '');
+	$Authentifizier = trim($_POST['authentifizier'] ?? '');
 
     if (!empty($UserName) && !empty($Password)) {
         $api = new VereinsfliegerRestInterface();
         $AppKey = $env['APPKEY']; // AppKey aus der .env-Datei
-        $AuthSecret = $env['AUTRHSECRET']; // Falls erforderlich
+        $AuthSecret = $Authentifizier; // 2FA
 
         if ($api->SignIn($UserName, $Password, 0, $AppKey, $AuthSecret)) {
             $_SESSION['user_authenticated'] = true;
@@ -29,10 +30,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: portal.php'); // Weiterleitung zur geschützten Seite
             exit();
         } else {
-            $error_message = "Ungültiger Benutzername oder ungültiges Passwort!<br>Bitte gebe deine Zugangsdaten von Vereinsflieger.de ein.";
+            $error_message = "Ungültiger Benutzername/ungültiges Passwort/ungültige Authentifizierung!<br>Bitte gebe deine Zugangsdaten von Vereinsflieger.de ein.";
         }
     } else {
-        $error_message = "Bitte Benutzername und Passwort eingeben.";
+        $error_message = "Bitte Benutzername und Passwort und ggf. den temprären Authentifizierungscode eingeben.";
     }
 }
 ?>
@@ -68,13 +69,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form method="POST" action="">
             <div class="grid-container" style="display: grid; grid-template-columns: auto auto; gap: 10px; margin-bottom: 20px;">
             
-                <div style=" padding: 5px; text-align: right;">Email</div>
+                <div style=" padding: 5px; text-align: right; width: 250px;">Email</div>
                 
                 <div style=" padding: 5px; text-align: center;"><input type="text" name="username" id="username" required style="font-size: 20px; border: none; font-family: 'Carlito', sans-serif; width: 300px;"></div>
                 
                 <div style=" padding: 5px; text-align: right;">Passwort</div>
                 
                 <div style=" padding: 5px; text-align: center;"><input type="password" name="password" id="password" required style="font-size: 20px; border: none; font-family: 'Carlito', sans-serif; width: 300px;"></div>
+				
+				<div style=" padding: 5px; text-align: right;">Zwei-Faktor-Authentifizierung</div>
+                
+                <div style=" padding: 5px; text-align: center;"><input type="text" name="authentifizier" id="authentifizier" placeholder="optional" style="font-size: 20px; border: none; font-family: 'Carlito', sans-serif; width: 300px;"></div>
             
             </div>
             <div style="text-align: center;">
