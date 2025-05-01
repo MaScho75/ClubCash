@@ -1296,3 +1296,6 @@ Datum;Zeit;Terminal;Schlüssel;Kundennummer;EAN;Produkt;Kategorie;Preis;MwSt
 2025-05-01;09:42;A;0009854787;40488;4388810057732;"ja! Mineralwasser classic 0.5l";Wasser;0.50;19
 2025-05-01;09:43;A;0016332365;40535;2;Kaffee;Speisen;0.50;19
 2025-05-01;09:48;A;0009871926;251686;4463300210009;"ICAO Wettbewerbskarte Mitglied";Merchendise;12.00;19
+2025-05-01;15:48;X;0014252568;442234;2;Kaffee2;Speisen;0.50;19
+2025-05-01;15:48;X;0014252568;442234;2;Kaffee2;Speisen;0.50;19
+2025-05-01;15:49;X;0014252568;442234;9990000000000;Direktbuchung;Direktbuchung;5.00;19

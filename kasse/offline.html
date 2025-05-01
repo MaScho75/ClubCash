@@ -13,8 +13,20 @@
     <!-- Anweisung an Suchmaschinen, die Seite NICHT zu indexieren -->
     <meta name="robots" content="noindex, nofollow">
 
-    <link rel="stylesheet" href="../style.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="../farben.css?v=<?php echo time(); ?>">
+    <script>
+        const timestamp = new Date().getTime();
+        const stylesheets = [
+            "../style.css",
+            "../farben.css"
+        ];
+
+        stylesheets.forEach(path => {
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.href = `${path}?v=${timestamp}`;
+            document.head.appendChild(link);
+        });
+    </script>
 
     <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet">
 
@@ -22,38 +34,6 @@
     <script src="../config.js?v=<?php echo time(); ?>"></script>
 
 </head>
-
-<?php
-
-//Backup veranlassen
-
-$backupmeldung = '';
-ob_start();  // Output Buffering aktivieren
-include('backup.php');
-$backupmeldung = ob_get_clean();  // Ausgabe in die Variable speichern
-
-// Mitgliederdaten laden
-clearstatcache(true, "../daten/kunden.json"); // Clear file cache for this specific file
-$jsonKundenDatei = file_get_contents("../daten/kunden.json");
-$jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
-
-// Produkte laden
-$csvDatei = "../daten/produkte.csv";
-clearstatcache(true, $csvDatei); // Clear the file status cache for this specific file
-$produkte = [];
-
-if (($handle = fopen($csvDatei, "r")) !== FALSE) {
-    $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
-
-    while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
-        if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
-            $produkte[] = array_combine($header, $row); // Header mit Werten kombinieren
-        }
-    }
-    fclose($handle);
-}
-
-?>
 
 <body>
 
@@ -184,15 +164,11 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
     <script>
 
-        // Backupmeldung
-        console.log("Backupmeldung: " + <?php echo json_encode($backupmeldung); ?>);
-
         //Sanduhr
         window.onload = function() {
             // Preloader ausblenden, wenn die Seite vollständig geladen ist
             document.getElementById("preloader").style.display = "none";
         }
-
 
         // Terminal ermitteln aus der URL https://host/index.html?zahl=42
         const urlParams = new URLSearchParams(window.location.search);
@@ -204,8 +180,8 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
         document.getElementById("terminal").innerText = terminal;
 
-        let produkte = <?php echo json_encode($produkte); ?>;
-        let kunden = <?php echo json_encode($jsonKundenDaten); ?>;
+
+
         let warenkorb = [];
         let summe = 0.00;
         let eingabe = "";
@@ -232,7 +208,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 // Configutarionen
 
         if (!config.offlinemodus) document.getElementById("offlineFenster").style = "display: none"; // Offlinemodus
-        
         if (!config.tagesabrechnung) document.getElementById("bt_tagesabrechnung").style = "display: none";
         if (!config.tageszusammenfassung) document.getElementById("bt_tageszusammenfassung").style = "display: none";
         if (!config.kundentagesübersicht) document.getElementById("bt_kundentagesübersicht").style = "display: none";
@@ -245,7 +220,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             document.addEventListener('touchstart', resetTimer);
             document.addEventListener('scroll', resetTimer);
             resetTimer(); // aktiviert den Bildschirmschoner
-
         }
 
         let tastenkontrolle = function(event) {
@@ -278,12 +252,65 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
         document.addEventListener("keydown", tastenkontrolle);
 
-        console.table(produkte); // Tabelle der Produkte in der Konsole anzeigen
-        console.table(kunden); // Tabelle der Kunden in der Konsole anzeigen
+        // Wait for both promises to resolve before calling functions
 
-        preisliste();
+        // let produkte = loadCSV("../daten/produkte.csv"); // CSV-Datei mit den Produkten laden
+              
+        //  let kunden = loadJSON("../daten/kunden.json"); // JSON-Datei mit den Kundendaten laden
 
-        direktwahl(); // Direktwahl-Funktion aufrufen - Produkte in der Sortierung 1-8 anzeigen
+        let produkte = [];
+        let kunden = [];
+
+        Promise.all([
+                loadCSV("../daten/produkte.csv"), 
+                loadJSON("../daten/kunden.json")
+            ])
+            .then(([geladeneProdukte, geladeneKunden]) => {
+                produkte = geladeneProdukte;
+                kunden = geladeneKunden;
+                preisliste();
+                direktwahl(); 
+            })
+            .catch(error => {
+            console.error("Error loading data:", error);
+            });    
+
+        async function loadJSON(url) {
+            // Add timestamp to prevent caching
+            const timestamp = new Date().getTime();
+            const response = await fetch(`${url}?v=${timestamp}`);
+            if (!response.ok) {
+                throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+            }
+            const data = await response.json();
+            return data;
+        }
+
+        async function loadCSV(url) {
+            // Add timestamp to prevent caching
+            const timestamp = new Date().getTime();
+            const response = await fetch(`${url}?v=${timestamp}`);
+            const data = await response.text();
+
+            // Split into lines 
+            const lines = data.trim().split('\n');
+
+            // First line contains column headers
+            const headers = lines[0].split(';');
+
+            // Process remaining lines
+            const result = lines.slice(1).map(line => {
+                const values = line.split(';');
+                // Create object with column headers as keys
+                return headers.reduce((obj, header, index) => {
+                    // Filter quotes from values
+                    obj[header] = values[index] ? values[index].replace(/"/g, '') : values[index];
+                    return obj;
+                }, {});
+            });
+
+            return result;
+        }
 
         //Hamburger Menu
         function toggleMenu() {
