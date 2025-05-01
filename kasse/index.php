@@ -33,11 +33,13 @@ include('backup.php');
 $backupmeldung = ob_get_clean();  // Ausgabe in die Variable speichern
 
 // Mitgliederdaten laden
+clearstatcache(true, "../daten/kunden.json"); // Clear file cache for this specific file
 $jsonKundenDatei = file_get_contents("../daten/kunden.json");
 $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
 
 // Produkte laden
-$csvDatei = "../daten/produkte.csv"; 
+$csvDatei = "../daten/produkte.csv";
+clearstatcache(true, $csvDatei); // Clear the file status cache for this specific file
 $produkte = [];
 
 if (($handle = fopen($csvDatei, "r")) !== FALSE) {

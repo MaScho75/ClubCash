@@ -2,36 +2,49 @@ EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung
 1;Essen;6.00;19;Speisen;;1
 2;Kaffee;0.50;19;Speisen;;2
 3;Kuchen;1.00;19;Speisen;;3
-4463300320005;Kullerkasten gemischt;23.00;19;Getränke;;4
-4463300210009;ICAO Wettbewerbskarte Mitglied;12.00;19;Merchendise;;5
+4463300320005;"Kullerkasten gemischt";23.00;19;Getränke;;4
+4463300210009;"ICAO Wettbewerbskarte Mitglied";12.00;19;Merchendise;;5
 4463500000000;Gastflug;30.00;19;Flugbetrieb;;6
-87126853;Coca Cola 0.33l;1.10;19;Getränke;;20
-90357879;Cola Zero 0.33l;1.10;19;Getränke;;21
-87126860;Fanta 0,33l;1.10;19;Getränke;;22
-50112135;Sprite Zitrone Limette 0.33l;1.10;19;Getränke;;23
-4463300300809;Apfelschorle 0,5l;0.80;19;Getränke;;24
-5449000017888;CocaCola - 1l;2.00;19;Getränke;;25
-5449000017918;Fanta - 1l;2.00;19;Getränke;;26
-5449000017932;Sprite - 1l;2.00;19;Getränke;;27
-4014472280156;Bionade Eistee Pfirsich 0.33l;1.30;19;Getränke;;30
-4014472280163;Bionade Eistee Zitrone 0.33l;1.30;19;Getränke;;31
-4014472279198;Bionade Himbeer-Plaume 0.33l;1.30;19;Getränke;;32
-4014472002512;Bionade Holunder 0.33l;1.30;19;Getränke;;33
-4014472280132;Bionade Naturtrüb Blutorange 0.33l;1.30;19;Getränke;;34
-4053400201634;Bionade Schwarze Joh 0,33l;1.30;19;Getränke;;35
-4014472281719;Bionade Zitronen Bergamotte 0.33l;1.30;19;Getränke;;36
-4013256642722;Lichtenauer - medium - 0.5l;0.85;19;Wasser;;40
-4013256642012;Lichtenauer - spritzig - 0.5l;0.85;19;Wasser;;41
-4004160005338;Berliner Pilsner 0,5l;1.20;19;Getränke;;50
-4008948027000;Jever Pils 0,5l;1.30;19;Bier;;51
-4002103000013;Erdinger Weißbier 0.5l;1.50;19;Bier;;52
-4002103019107;Erdinger Alkoholfrei 0.5l;1.50;19;Bier;;53
-4260386220331;Fläminger Radler 0,33l;1.10;19;Bier;;54
-4014388001036;Radeberger Pilsender 0.5l;1.20;19;Bier;;55
-4463300220008;ICAO Wettbewerbskarte Extern;20.00;19;Merchendise;;92
-4463300200000;Jacke Hakro;100.00;19;Merchendise;;93
-4463300285007;Jacke Stargazer;85.00;19;Merchendise;;94
-4463300210092;Navy Hut;10.00;19;Merchendise;;95
+87126853;"Coca Cola 0.33l";1.10;19;Getränke;;20
+90357879;"Cola Zero 0.33l";1.10;19;Getränke;;21
+87126860;"Fanta 0.33l";1.10;19;Getränke;;22
+50112135;"Sprite Zitrone Limette 0.33l";1.10;19;Getränke;;23
+4463300300809;"Apfelschorle 0.5l";0.80;19;Getränke;;24
+5449000017888;"CocaCola - 1l";2.00;19;Getränke;;25
+5449000017918;"Fanta - 1l";2.00;19;Getränke;;26
+5449000017932;"Sprite - 1l";2.00;19;Getränke;;27
+4066600203711;"Limo Orange - Paulaner 0.33l";1.00;19;Getränke;;28
+4014472280156;"Bionade Eistee Pfirsich 0.33l";1.30;19;Getränke;;30
+4014472280163;"Bionade Eistee Zitrone 0.33l";1.30;19;Getränke;;31
+4014472279198;"Bionade Himbeer-Plaume 0.33l";1.30;19;Getränke;;32
+4014472002512;"Bionade Holunder 0.33l";1.30;19;Getränke;;33
+4014472280132;"Bionade Naturtrüb Blutorange 0.33l";1.30;19;Getränke;;34
+4053400201634;"Bionade Schwarze Joh 0.33l";1.30;19;Getränke;;35
+4014472281719;"Bionade Zitronen Bergamotte 0.33l";1.30;19;Getränke;;36
+4013256642722;"Lichtenauer - medium - 0.5l";0.85;19;Wasser;;40
+4013256642012;"Lichtenauer - spritzig - 0.5l";0.85;19;Wasser;;41
+4388840215829;"ja! Mineralwasser medium 0.5l";0.50;19;Wasser;;42
+4388810057732;"ja! Mineralwasser classic 0.5l";0.50;19;Wasser;;43
+4388810057657;"ja! Mineralwasser classic 1.5l";1.00;19;Wasser;;44
+4004160005338;"Berliner Pilsner 0.5l";1.20;19;Getränke;;50
+4008948027000;"Jever Pils 0.5l";1.30;19;Bier;;51
+4002103000013;"Erdinger Weißbier 0.5l";1.50;19;Bier;;52
+4002103019107;"Erdinger Alkoholfrei 0.5l";1.50;19;Bier;;53
+4260386220331;"Fläminger Radler 0.33l";1.10;19;Bier;;54
+4014388001036;"Radeberger Pilsender 0.5l";1.20;19;Bier;;55
+201;Cornetto-Strawberry;1.00;19;Eis;"ohne Strichcode";60
+202;Cornetto-Classico;1.00;19;Eis;"ohne Strichcode";61
+208;"BIG Sandwich";0.50;19;Eis;"ohne Strichcode";62
+203;"Snickers ice cream";1.00;19;Eis;"ohne Strichcode";63
+204;Split;1.00;19;Eis;"ohne Strichcode";64
+205;Calippo-Cola;1.00;19;Eis;"ohne Strichcode";65
+206;MAGNUM-ALMOND;2.00;19;Eis;"ohne Strichcode";66
+207;MAGNUM-CLASSIC;2.00;19;Eis;"ohne Strichcode";67
+4463300220008;"ICAO Wettbewerbskarte Extern";20.00;19;Merchendise;;92
+4463300200000;"Jacke Hakro";100.00;19;Merchendise;;93
+4463300285007;"Jacke Stargazer";85.00;19;Merchendise;;94
+4463300210092;"Navy Hut";10.00;19;Merchendise;;95
 4463300210993;Wendehut;10.00;19;Merchendise;;96
 4463300215004;T-Shirt;15.00;19;Merchendise;;97
 9990000000000;Direktbuchung;0.00;19;Direktbuchung;Platzhalter;98
+9999;Test2;100;19;Test;Test;999

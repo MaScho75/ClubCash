@@ -56,10 +56,6 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
     fclose($handle);
 }
 
-//print_r($produkte); // Debug-Ausgabe der Produkte
-//print_r($verkäufe); // Debug-Ausgabe der Verkäufe
-//print_r($jsonKundenDaten); // Debug-Ausgabe der Mitgliederdaten
-
 ?>
 
 <!DOCTYPE html>
@@ -128,6 +124,7 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         <li><a href="#" onclick="Mitgliederdaten_anzeigen()">Kundenliste</a></li>
         <li><a href="#" onclick="Umsätze()">Umsätze</a></li>
         <li><a href="#" onclick="Produkte_anzeigen()">Produktkatalog</a></li>
+        <li><a href="#" onclick="Produkte_editieren()">Produktkatalog editieren</a></li>
         <li><a href="#" onclick="Wareneingang()">Wareneingang</a></li>
         <li><a href="#" onclick="Abrechnung()">Abrechnung</a></li>
       </ul>
@@ -206,15 +203,9 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                 return cleanItem;
             });
 
-        //console.table(produkte); // Debug-Ausgabe der Produkte
-        //console.table(kunden); // Debug-Ausgabe der Mitgliederdaten
-        //console.table(verkäufe); // Debug-Ausgabe der Verkäufe
-        console.log('wareneingang:', wareneingang); // Debug-Ausgabe der wareneingang
-        console.table(wareneingang); // Debug-Ausgabe der wareneingang
 
         //aktuelle Kontostände der Kunden berechnen
         let kundenkontostand = Kundenkontostand(verkäufe);
-        //console.table(kundenkontostand);
         
         const portalInhalt = document.getElementById('portal-inhalt');
         const portalMenu = document.getElementById('portal-menu');
@@ -311,7 +302,7 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         html += `
             <button id="addButton" class="kleinerBt" >hinzufügen</button>
             <button id="saveButton" class="kleinerBt" >speichern</button>
-
+            <button onclick="location.reload();" class="kleinerBt" >abbruch</button>
             <table id="dataTable" class="portal-table">
                 <thead><tr id="tableHeader"></tr></thead>
                 <tbody id="tableBody"></tbody>
@@ -664,6 +655,207 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
 
         html += '</table>';
         portalInhalt.innerHTML = html;
+    }
+
+    function Produkte_editieren() {
+        console.log("Produkte editieren...");
+        let html = "<h2 style='display: inline;''>Produktkatalog editieren</h2>";
+         html += `
+            <button id="addButton" class="kleinerBt" >hinzufügen</button>
+            <button id="saveButton" class="kleinerBt" >speichern</button>
+            <button onclick="location.reload();" class="kleinerBt" >abbruch</button>
+            <table id="dataTable" class="portal-table">
+                <thead><tr id="tableHeader"></tr></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        `;
+
+        portalInhalt.innerHTML = html;
+
+        createEditableTable(produkte); // Tabelle erstellen und HTML einfügen
+
+        function createEditableTable(initialData) {
+            let data = JSON.parse(JSON.stringify(initialData));
+            let originalData = JSON.parse(JSON.stringify(initialData));
+            let editedRows = new Set();
+            let newRows = new Set();
+            let deletedRows = new Set();
+            let keys = Object.keys(data[0] || {});
+            let sortColumn = '';
+            let sortAscending = true;
+
+            const tableHeader = document.getElementById("tableHeader");
+            const tableBody = document.getElementById("tableBody");
+            const addButton = document.getElementById("addButton");
+            const saveButton = document.getElementById("saveButton");
+
+            function renderHeader() {
+                tableHeader.innerHTML = "";
+                keys.forEach(key => {
+                    const th = document.createElement("th");
+                    th.innerText = key;
+                    th.style.cursor = 'pointer';
+                    th.onclick = () => sortTable(key);
+                    if (key === sortColumn) {
+                        th.innerText += sortAscending ? ' ▲' : ' ▼';
+                    }
+                    tableHeader.appendChild(th);
+                });
+                const actionTh = document.createElement("th");
+                actionTh.innerText = "Aktionen";
+                tableHeader.appendChild(actionTh);
+            }
+
+            function sortTable(column) {
+                if (sortColumn === column) {
+                    sortAscending = !sortAscending;
+                } else {
+                    sortColumn = column;
+                    sortAscending = true;
+                }
+
+                data.sort((a, b) => {
+                    let valueA = a[column];
+                    let valueB = b[column];
+                    
+                    // Check if values are numbers
+                    if (!isNaN(valueA) && !isNaN(valueB)) {
+                        valueA = Number(valueA);
+                        valueB = Number(valueB);
+                    }
+                    
+                    if (valueA < valueB) return sortAscending ? -1 : 1;
+                    if (valueA > valueB) return sortAscending ? 1 : -1;
+                    return 0;
+                });
+
+                renderHeader();
+                renderTable();
+            }
+
+            function renderTable() {
+                tableBody.innerHTML = "";
+                data.forEach((item, index) => {
+                    const tr = document.createElement("tr");
+                    tr.classList.toggle("edited", editedRows.has(index));
+                    tr.classList.toggle("new", newRows.has(index));
+                    tr.classList.toggle("deleted", deletedRows.has(index));
+
+                    keys.forEach(key => {
+                        const td = document.createElement("td");
+                        td.contentEditable = !deletedRows.has(index);
+                        if (deletedRows.has(index)) {
+                            td.classList.add("text");
+                        }
+                        td.innerText = item[key];
+                        td.onblur = () => markAsEdited(index, key, td.innerText, td);
+                        tr.appendChild(td);
+                    });
+
+                    const actionTd = document.createElement("td");
+                    const deleteBtn = document.createElement("a");
+                    deleteBtn.href = "#";
+                    deleteBtn.classList.add("icon");
+                    deleteBtn.innerHTML = deletedRows.has(index) ? "🔄" : "🗑️";
+                    deleteBtn.onclick = () => toggleDeleteRow(index);
+                    actionTd.appendChild(deleteBtn);
+
+                    if (editedRows.has(index) || deletedRows.has(index) || newRows.has(index)) {
+                        const undoBtn = document.createElement("a");
+                        undoBtn.href = "#";
+                        undoBtn.classList.add("icon");
+                        undoBtn.innerHTML = "↩️";
+                        undoBtn.onclick = () => undoChange(index);
+                        actionTd.appendChild(undoBtn);
+                    }
+
+                    tr.appendChild(actionTd);
+                    tableBody.appendChild(tr);
+                });
+            }
+
+            function markAsEdited(index, key, newValue, tdElement) {
+                if (data[index][key] !== newValue) {
+                    data[index][key] = newValue;
+                    if (!newRows.has(index)) {
+                        editedRows.add(index);
+                    }
+                    tdElement.classList.add("edited");
+                }
+                renderTable();
+            }
+
+            function addRow() {
+                const newItem = {};
+                keys.forEach(key => newItem[key] = "");
+                const newIndex = data.length;
+                data.push(newItem);
+                originalData.push(JSON.parse(JSON.stringify(newItem)));
+                newRows.add(newIndex);
+                renderTable();
+            }
+
+            function toggleDeleteRow(index) {
+                if (deletedRows.has(index)) {
+                    deletedRows.delete(index);
+                } else {
+                    deletedRows.add(index);
+                }
+                renderTable();
+            }
+
+            function undoChange(index) {
+                if (newRows.has(index)) {
+                    data.splice(index, 1);
+                    originalData.splice(index, 1);
+                    newRows.delete(index);
+                } else {
+                    data[index] = JSON.parse(JSON.stringify(originalData[index]));
+                    editedRows.delete(index);
+                    deletedRows.delete(index);
+                }
+                renderTable();
+            }
+
+            function saveChanges() {
+                const savedData = data.filter((_, index) => !deletedRows.has(index));
+                data = JSON.parse(JSON.stringify(savedData));
+                originalData = JSON.parse(JSON.stringify(savedData));
+                editedRows.clear();
+                newRows.clear();
+                deletedRows.clear();
+                renderTable();
+                return savedData;
+            }
+
+            renderHeader();
+            renderTable();
+
+            addButton.onclick = addRow;
+
+            saveButton.onclick = () => {
+                const updatedData = saveChanges();
+                produkte = updatedData;
+
+                fetch('csv-schreiben.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        data: produkte,
+                        filename: 'daten/produkte.csv'
+                    })
+                })
+                .then(response => response.text())
+                .then(result => {
+                    alert('Produktkatalog erfolgreich gespeichert');
+                })
+                .catch(error => {
+                    alert('Fehler beim CSV erstellen:', error);
+                });
+            };
+        }
     }
 
     function Mitgliederdaten_anzeigen() {
