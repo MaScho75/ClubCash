@@ -111,7 +111,9 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         <li><a href="#" onclick="Tagesumsätze()">Tagesumsätze</a></li>
         <li><a href="#" onclick="Tageszusammenfassung()">Tageszusammenfassung</a></li>
         <li><a href="#" onclick="Kundentagesübersicht()">Kundentagesumsätze</a></li>     
-      </ul>
+        <li><a href="#" onclick="Preisliste_drucken()">Preisliste</a></li>
+        <li><a href="#" onclick="Preisliste_strichcode()">Strichcodeliste</a></li>
+        <li><a href="#" onclick="Preisliste_Eiskarte()">Eiskarte</a></li></ul>
     </li>
 
     <li>
@@ -123,9 +125,6 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         <li><a href="#" onclick="Produkte_editieren()">Produktkatalog editieren</a></li>
         <li><a href="#" onclick="Wareneingang()">Wareneingang</a></li>
         <li><a href="#" onclick="Abrechnung()">Abrechnung</a></li>
-        <li><a href="#" onclick="Preisliste_drucken()">Preisliste drucken</a></li>
-        <li><a href="#" onclick="Preisliste_strichcode()">Strichcode</a></li>
-        <li><a href="#" onclick="Preisliste_Eiskarte()">Eiskarte</a></li>
       </ul>
     </li>
  
