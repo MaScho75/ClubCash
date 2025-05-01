@@ -355,12 +355,32 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                 tableHeader.appendChild(actionTh);
             }
 
+            function markAsEdited(index, key, newValue, tdElement) {
+                if (data[index][key] !== newValue) {
+                    data[index][key] = newValue;
+                    if (!newRows.has(index)) {
+                        editedRows.add(index);
+                    }
+                    tdElement.classList.add("edited");
+                }
+                renderTable();
+            }
+
+            function markAsEdited(index, key, newValue, tdElement) {
+                if (data[index][key] !== newValue) {
+                    data[index][key] = newValue;
+                    if (!newRows.has(index)) {
+                        editedRows.add(index);
+                    }
+                    tdElement.classList.add("edited");
+                }
+                renderTable();
+            }
+
             function renderTable() {
                 tableBody.innerHTML = "";
-
                 data.forEach((item, index) => {
                     const tr = document.createElement("tr");
-
                     tr.classList.toggle("edited", editedRows.has(index));
                     tr.classList.toggle("new", newRows.has(index));
                     tr.classList.toggle("deleted", deletedRows.has(index));
@@ -626,35 +646,72 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
     }    
 
     function Produkte_anzeigen() {
-
         let warenbestand = Warenbestand(); // Warenbestand laden
+        let sortColumn = '';
+        let sortAscending = true;
         
-        let html = '<h2>Produktliste</h2><table class="portal-table" >';
-        html += `
-        <tr>
-            <th>Sort.</th>
-            <th>EAN</th>
-            <th class="links">Bezeichnung</th>
-            <th class="links">Kategorie</th>
-            <th class="rechts">Preis</th>
-            <th>MwSt</th>
-            <th>Bestand</th>
-        </tr>`;
+        function sortData(column) {
+            if (sortColumn === column) {
+                sortAscending = !sortAscending;
+            } else {
+                sortColumn = column;
+                sortAscending = true;
+            }
 
-        produkte.forEach(produkt => {
-            html += `<tr>
-                <td>${produkt.Sortierung}</td>
-                <td>${produkt.EAN}</td>
-                <td class="links">${produkt.Bezeichnung}</td>
-                <td class="links">${produkt.Kategorie}</td>
-                <td class="rechts">${produkt.Preis}</td>
-                <td>${produkt.MwSt}</td>
-                <td>${warenbestand.find(waren => waren.EAN == produkt.EAN)?.Bestand || ""}</td>
+            produkte.sort((a, b) => {
+                let valueA = a[column];
+                let valueB = b[column];
+                
+                // Numerische Sortierung für Preis und Sortierung
+                if (column === 'Preis' || column === 'Sortierung') {
+                    valueA = parseFloat(valueA) || 0;
+                    valueB = parseFloat(valueB) || 0;
+                }
+                
+                if (valueA < valueB) return sortAscending ? -1 : 1;
+                if (valueA > valueB) return sortAscending ? 1 : -1;
+                return 0;
+            });
+            
+            renderTable();
+        }
+
+        function renderTable() {
+            let html = '<h2>Produktliste</h2><table class="portal-table">';
+            html += `
+            <tr>
+                <th style="cursor:pointer" onclick="sortData('Sortierung')">Sort. ${sortColumn === 'Sortierung' ? (sortAscending ? '▲' : '▼') : ''}</th>
+                <th style="cursor:pointer" onclick="sortData('EAN')">EAN ${sortColumn === 'EAN' ? (sortAscending ? '▲' : '▼') : ''}</th>
+                <th style="cursor:pointer" onclick="sortData('Bezeichnung')" class="links">Bezeichnung ${sortColumn === 'Bezeichnung' ? (sortAscending ? '▲' : '▼') : ''}</th>
+                <th style="cursor:pointer" onclick="sortData('Kategorie')" class="links">Kategorie ${sortColumn === 'Kategorie' ? (sortAscending ? '▲' : '▼') : ''}</th>
+                <th style="cursor:pointer" onclick="sortData('Preis')" class="rechts">Preis ${sortColumn === 'Preis' ? (sortAscending ? '▲' : '▼') : ''}</th>
+                <th style="cursor:pointer" onclick="sortData('MwSt')">MwSt ${sortColumn === 'MwSt' ? (sortAscending ? '▲' : '▼') : ''}</th>
+                <th>Bestand</th>
             </tr>`;
-        });
 
-        html += '</table>';
-        portalInhalt.innerHTML = html;
+            produkte.forEach(produkt => {
+                html += `<tr>
+                    <td>${produkt.Sortierung}</td>
+                    <td>${produkt.EAN}</td>
+                    <td class="links">${produkt.Bezeichnung}</td>
+                    <td class="links">${produkt.Kategorie}</td>
+                    <td class="rechts">${produkt.Preis}</td>
+                    <td>${produkt.MwSt}</td>
+                    <td>${warenbestand.find(waren => waren.EAN == produkt.EAN)?.Bestand || ""}</td>
+                </tr>`;
+            });
+
+            html += '</table>';
+            portalInhalt.innerHTML = html;
+
+            // Nach dem Rendern die onclick Handler neu zuweisen
+            document.querySelectorAll('.portal-table th').forEach(th => {
+                const column = th.textContent.split(' ')[0];
+                th.onclick = () => sortData(column);
+            });
+        }
+
+        renderTable(); // Initial render
     }
 
     function Produkte_editieren() {
@@ -672,7 +729,16 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
 
         portalInhalt.innerHTML = html;
 
-        createEditableTable(produkte); // Tabelle erstellen und HTML einfügen
+        // Aktuellen Warenbestand berechnen
+        let currentWarenbestand = Warenbestand();
+
+        // Bestand als zusätzliches Feld zu Produkten hinzufügen
+        let productsWithBestand = produkte.map(produkt => {
+            let bestand = currentWarenbestand.find(w => w.EAN === produkt.EAN)?.Bestand || 0;
+            return {...produkt, Bestand: bestand};
+        });
+
+        createEditableTable(productsWithBestand);
 
         function createEditableTable(initialData) {
             let data = JSON.parse(JSON.stringify(initialData));
@@ -689,13 +755,42 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
             const addButton = document.getElementById("addButton");
             const saveButton = document.getElementById("saveButton");
 
+            function markAsEdited(index, key, newValue, tdElement) {
+                if (data[index][key] !== newValue) {
+                    data[index][key] = newValue;
+                    if (!newRows.has(index)) {
+                        editedRows.add(index);
+                    }
+                    tdElement.classList.add("edited");
+                }
+                renderTable();
+            }
+
             function renderHeader() {
                 tableHeader.innerHTML = "";
                 keys.forEach(key => {
                     const th = document.createElement("th");
                     th.innerText = key;
                     th.style.cursor = 'pointer';
-                    th.onclick = () => sortTable(key);
+                    th.onclick = () => {
+                        if (sortColumn === key) {
+                            sortAscending = !sortAscending;
+                        } else {
+                            sortColumn = key;
+                            sortAscending = true;
+                        }
+                        data.sort((a, b) => {
+                            let valueA = a[key];
+                            let valueB = b[key];
+                            if (typeof valueA === 'string') valueA = valueA.toLowerCase();
+                            if (typeof valueB === 'string') valueB = valueB.toLowerCase();
+                            if (valueA < valueB) return sortAscending ? -1 : 1;
+                            if (valueA > valueB) return sortAscending ? 1 : -1;
+                            return 0;
+                        });
+                        renderTable();
+                        renderHeader();
+                    };
                     if (key === sortColumn) {
                         th.innerText += sortAscending ? ' ▲' : ' ▼';
                     }
@@ -704,33 +799,6 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                 const actionTh = document.createElement("th");
                 actionTh.innerText = "Aktionen";
                 tableHeader.appendChild(actionTh);
-            }
-
-            function sortTable(column) {
-                if (sortColumn === column) {
-                    sortAscending = !sortAscending;
-                } else {
-                    sortColumn = column;
-                    sortAscending = true;
-                }
-
-                data.sort((a, b) => {
-                    let valueA = a[column];
-                    let valueB = b[column];
-                    
-                    // Check if values are numbers
-                    if (!isNaN(valueA) && !isNaN(valueB)) {
-                        valueA = Number(valueA);
-                        valueB = Number(valueB);
-                    }
-                    
-                    if (valueA < valueB) return sortAscending ? -1 : 1;
-                    if (valueA > valueB) return sortAscending ? 1 : -1;
-                    return 0;
-                });
-
-                renderHeader();
-                renderTable();
             }
 
             function renderTable() {
@@ -743,12 +811,33 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
 
                     keys.forEach(key => {
                         const td = document.createElement("td");
-                        td.contentEditable = !deletedRows.has(index);
+                        if (key === 'Bestand') {
+                            td.contentEditable = !deletedRows.has(index);
+                            td.innerText = item[key] || '0';
+                            td.onblur = () => {
+                                const newValue = parseInt(td.innerText) || 0;
+                                const oldValue = item[key] || 0;
+                                if (newValue !== oldValue) {
+                                    const diff = newValue - oldValue;
+                                    if (diff > 0) {
+                                        const wareneingangEntry = {
+                                            Eingang: heute.toISOString().split('T')[0],
+                                            EAN: item.EAN,
+                                            Menge: diff
+                                        };
+                                        wareneingang.push(wareneingangEntry);
+                                    }
+                                    markAsEdited(index, key, newValue, td);
+                                }
+                            };
+                        } else {
+                            td.contentEditable = !deletedRows.has(index);
+                            td.innerText = item[key];
+                            td.onblur = () => markAsEdited(index, key, td.innerText, td);
+                        }
                         if (deletedRows.has(index)) {
                             td.classList.add("text");
                         }
-                        td.innerText = item[key];
-                        td.onblur = () => markAsEdited(index, key, td.innerText, td);
                         tr.appendChild(td);
                     });
 
@@ -772,27 +861,6 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                     tr.appendChild(actionTd);
                     tableBody.appendChild(tr);
                 });
-            }
-
-            function markAsEdited(index, key, newValue, tdElement) {
-                if (data[index][key] !== newValue) {
-                    data[index][key] = newValue;
-                    if (!newRows.has(index)) {
-                        editedRows.add(index);
-                    }
-                    tdElement.classList.add("edited");
-                }
-                renderTable();
-            }
-
-            function addRow() {
-                const newItem = {};
-                keys.forEach(key => newItem[key] = "");
-                const newIndex = data.length;
-                data.push(newItem);
-                originalData.push(JSON.parse(JSON.stringify(newItem)));
-                newRows.add(newIndex);
-                renderTable();
             }
 
             function toggleDeleteRow(index) {
@@ -828,14 +896,19 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                 return savedData;
             }
 
-            renderHeader();
-            renderTable();
-
-            addButton.onclick = addRow;
+            addButton.onclick = () => {
+                const newItem = {};
+                keys.forEach(key => newItem[key] = "");
+                const newIndex = data.length;
+                data.push(newItem);
+                originalData.push(JSON.parse(JSON.stringify(newItem)));
+                newRows.add(newIndex);
+                renderTable();
+            };
 
             saveButton.onclick = () => {
                 const updatedData = saveChanges();
-                produkte = updatedData;
+                produkte = updatedData.map(({Bestand, ...rest}) => rest);
 
                 fetch('csv-schreiben.php', {
                     method: 'POST',
@@ -848,13 +921,28 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                     })
                 })
                 .then(response => response.text())
-                .then(result => {
-                    alert('Produktkatalog erfolgreich gespeichert');
+                .then(() => {
+                    return fetch('csv-schreiben.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            data: wareneingang,
+                            filename: 'daten/wareneingang.csv'
+                        })
+                    });
+                })
+                .then(() => {
+                    alert('Produktkatalog und Wareneingang erfolgreich gespeichert');
                 })
                 .catch(error => {
-                    alert('Fehler beim CSV erstellen:', error);
+                    alert('Fehler beim Speichern:', error);
                 });
             };
+
+            renderHeader();
+            renderTable();
         }
     }
 
