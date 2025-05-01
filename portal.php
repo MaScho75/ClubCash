@@ -123,6 +123,9 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         <li><a href="#" onclick="Produkte_editieren()">Produktkatalog editieren</a></li>
         <li><a href="#" onclick="Wareneingang()">Wareneingang</a></li>
         <li><a href="#" onclick="Abrechnung()">Abrechnung</a></li>
+        <li><a href="#" onclick="Preisliste_drucken()">Preisliste drucken</a></li>
+        <li><a href="#" onclick="Preisliste_strichcode()">Strichcode</a></li>
+        <li><a href="#" onclick="Preisliste_Eiskarte()">Eiskarte</a></li>
       </ul>
     </li>
  
@@ -155,8 +158,11 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
 
     <script>
 
-        console.log("Portal-Skript geladen...");
-        console.log("customer_login:", <?php echo json_encode($_SESSION['customer_login']); ?>);
+        // Lade Code 128 Font
+            let fontLink = document.createElement('link');
+            fontLink.href = "https://fonts.googleapis.com/css2?family=Libre+Barcode+128&display=swap";
+            fontLink.rel = "stylesheet";
+            document.head.appendChild(fontLink);
 
         // Datum mitteleuropäisch formatiert
             let heute = new Date();
@@ -254,6 +260,219 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
 			document.getElementById('MenuEinstellungen').style.display = 'none';
 			document.getElementById('MenuDownload').style.display = 'none';
 		}
+
+    function Preisliste_drucken() {
+        // Öffne neues Fenster mit der Preisliste
+        let printWindow = window.open('', '_blank', 'width=800,height=600');
+        
+        // HTML für die Preisliste erstellen
+        let html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Preisliste</title>
+                <link rel="stylesheet" href="style.css">
+                <style>
+                    body { padding: 20px; }
+                    @media print {
+                        button { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div style="text-align: center;">
+                    <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px;  margin: 30px;">
+                    <h1>Preisaushang</h1>
+                    <p>Stand: ${heute.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
+                </div>
+                <div class="preisliste-print">
+                    <table class="portal-table">
+                        <tbody>
+        `;
+
+        // Produkte nach Kategorie sortieren
+        const sortedProdukte = [...produkte]
+            .filter(p => p.Bezeichnung !== 'Direktbuchung' && p.Bezeichnung !== 'Essen')
+            .sort((a, b) => {
+            if (a.Kategorie === b.Kategorie) {
+            // Numerischer Vergleich der Sortierungswerte
+            return parseInt(a.Sortierung) - parseInt(b.Sortierung);
+            }
+            return a.Kategorie.localeCompare(b.Kategorie);
+            });
+
+        let currentKategorie = '';
+        sortedProdukte.forEach(produkt => {
+            if (currentKategorie !== produkt.Kategorie) {
+                
+                currentKategorie = produkt.Kategorie;
+                    html += `
+                        <tr class="kategorie-trenner" >
+                            <td class="links" colspan="2" style="padding-top: 20px;"><b><i>${produkt.Kategorie}</i></b></td>
+                        </tr>
+                    `;
+            }
+            html += `
+                <tr>
+                    <td class="links">${produkt.Bezeichnung}</td>
+                    <td class="rechts">${produkt.Preis} €</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </body>
+            </html>
+        `;
+
+        // HTML in neues Fenster schreiben
+        printWindow.document.write(html);
+        printWindow.document.close();
+    }
+
+    function Preisliste_strichcode() {
+
+        // Öffne neues Fenster mit der Preisliste
+        let printWindow = window.open('', '_blank', 'width=800,height=600');
+        
+        // HTML für die Preisliste erstellen
+        let html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Preisliste</title>
+                <link rel="stylesheet" href="style.css">
+                <style>
+                    body { padding: 20px; }
+                    @media print {
+                        button { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div style="text-align: center;">
+                    <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px;  margin: 30px;">
+                    <h1>Preisaushang</h1>
+                    <p>Stand: ${heute.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
+                </div>
+                <div class="preisliste-print">
+                    <table class="portal-table">
+                        <tbody>
+        `;
+
+        // Produkte nach Kategorie sortieren
+        const sortedProdukte = [...produkte]
+            .filter(p => p.Bezeichnung !== 'Direktbuchung' && p.Bezeichnung !== 'Essen')
+            .sort((a, b) => {
+            if (a.Kategorie === b.Kategorie) {
+            // Numerischer Vergleich der Sortierungswerte
+            return parseInt(a.Sortierung) - parseInt(b.Sortierung);
+            }
+            return a.Kategorie.localeCompare(b.Kategorie);
+            });
+
+        let currentKategorie = '';
+        sortedProdukte.forEach(produkt => {
+            if (currentKategorie !== produkt.Kategorie) {
+                
+                currentKategorie = produkt.Kategorie;
+                    html += `
+                        <tr class="kategorie-trenner" >
+                            <td class="links" colspan="3" style="padding-top: 20px;"><b><i>${produkt.Kategorie}</i></b></td>
+                        </tr>
+                    `;
+            }
+            html += `
+                <tr>
+                    <td class="links" style="vertical-align: middle; padding-right: 20px;">${produkt.Bezeichnung}</td>
+                    <td class="rechts" style="vertical-align: middle; padding-right: 20px;">${produkt.Preis} €</td>
+                    <td class="links" style="font-family: 'Libre Barcode 128'; font-size: 60px; vertical-align: middle; text-align: center;">${produkt.EAN}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </body>
+            </html>
+        `;
+
+        // HTML in neues Fenster schreiben
+        printWindow.document.write(html);
+        printWindow.document.close();
+    }
+
+    function Preisliste_Eiskarte() {
+
+        // Öffne neues Fenster mit der Preisliste
+        let printWindow = window.open('', '_blank', 'width=800,height=600');
+
+        // HTML für die Preisliste erstellen
+        let html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Eiskarte</title>
+                <link rel="stylesheet" href="style.css">
+                <style>
+                    body { padding: 20px; }
+                    @media print {
+                        button { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div style="text-align: center;">
+                    <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px;  margin: 30px;">
+                    <h1>Eiskarte</h1>
+                    <p>Stand: ${heute.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
+                </div>
+                <div class="preisliste-print">
+                    <table class="portal-table">
+                        <tbody>
+        `;
+
+        // Produkte nach Kategorie sortieren
+        const sortedProdukte = [...produkte]
+            .filter(p => p.Kategorie === 'Eis') // Only show ice cream products
+            .sort((a, b) => {
+                if (a.Kategorie === b.Kategorie) {
+                    // Numeric sort by sort value 
+                    return parseInt(a.Sortierung) - parseInt(b.Sortierung);
+                }
+                return a.Kategorie.localeCompare(b.Kategorie);
+            });
+
+        let currentKategorie = '';
+        sortedProdukte.forEach(produkt => {
+
+            html += `
+                <tr>
+                    <td class="links" style="vertical-align: middle; padding-right: 20px;">${produkt.Bezeichnung}</td>
+                    <td class="rechts" style="vertical-align: middle; padding-right: 20px;">${produkt.Preis} €</td>
+                    <td class="links" style="font-family: 'Libre Barcode 128'; font-size: 60px; vertical-align: middle; text-align: center;">${produkt.EAN}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </body>
+            </html>
+        `;
+
+        // HTML in neues Fenster schreiben
+        printWindow.document.write(html);
+        printWindow.document.close();
+        }
+
 
     function Abrechnung() {
         let html = "<h2>Abrechnung</h2>";
