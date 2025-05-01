@@ -5,6 +5,8 @@ require_once 'VereinsfliegerRestInterface.php';
 // Lese die .env-Datei
 $env = parse_ini_file('daten/.env');  // Lädt die Umgebungsvariablen aus der .env-Datei
 
+// Lade die Kunden-Daten aus der JSON-Datei
+$kundenDaten = json_decode(file_get_contents('daten/kunden.json'), true);
 
 // Prüfen, ob der Benutzer bereits eingeloggt ist
 if (isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] === true) {
@@ -14,24 +16,22 @@ if (isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] ==
 
 // Falls das Login-Formular abgeschickt wurde
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $UserName = trim($_POST['username'] ?? '');
-    $Password = trim($_POST['password'] ?? '');
-	$Authentifizier = trim($_POST['authentifizier'] ?? '');
 
-    if (!empty($UserName) && !empty($Password)) {
-        $api = new VereinsfliegerRestInterface();
-        $AppKey = $env['APPKEY']; // AppKey aus der .env-Datei
-        $AuthSecret = $Authentifizier; // 2FA
+    $KundenName = trim($_POST['kundenname'] ?? '');
+    $Schlüsselnummer = trim($_POST['schlüsselnummer'] ?? '');
 
-        if ($api->SignIn($UserName, $Password, 0, $AppKey, $AuthSecret)) {
-            $_SESSION['user_authenticated'] = true;
-            $_SESSION['username'] = $UserName; // Optional zur Anzeige im Dashboard
-
-            header('Location: portal.php'); // Weiterleitung zur geschützten Seite
-            exit();
-        } else {
-            $error_message = "Ungültiger Benutzername/ungültiges Passwort/ungültige Authentifizierung!<br>Bitte gebe deine Zugangsdaten von Vereinsflieger.de ein.";
+    if (!empty($KundenName) && !empty($Schlüsselnummer)) {
+        $found = false;
+        foreach ($kundenDaten as $kunde) {
+            if ($kunde['email'] === $KundenName && $kunde['key2designation'] === $Schlüsselnummer) {
+                $_SESSION['user_authenticated'] = true;
+                $_SESSION['username'] = $KundenName;
+                $_SESSION['customer_login'] = true;
+                header('Location: portal.php');
+                exit();
+            }
         }
+        $error_message = "Ungültige Email oder Schlüsselnummer!";
     } else {
         $error_message = "Bitte Benutzername und Passwort und ggf. den temprären Authentifizierungscode eingeben.";
     }
@@ -67,24 +67,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if (isset($error_message)) echo "<p style='text-align: center; color: var(--error-color);'>$error_message</p>"; ?>
         
         <form method="POST" action="">
-            <div class="grid-container" style="display: grid; grid-template-columns: auto auto; gap: 10px; margin-bottom: 20px;">
-            
-                <div style=" padding: 5px; text-align: right; width: 250px;">Email</div>
-                
-                <div style=" padding: 5px; text-align: center;"><input type="text" name="username" id="username" required style="font-size: 20px; border: none; font-family: 'Carlito', sans-serif; width: 300px;"></div>
-                
-                <div style=" padding: 5px; text-align: right;">Passwort</div>
-                
-                <div style=" padding: 5px; text-align: center;"><input type="password" name="password" id="password" required style="font-size: 20px; border: none; font-family: 'Carlito', sans-serif; width: 300px;"></div>
-				
-				<div style=" padding: 5px; text-align: right;">Zwei-Faktor-Authentifizierung</div>
-                
-                <div style=" padding: 5px; text-align: center;"><input type="text" name="authentifizier" id="authentifizier" placeholder="optional" style="font-size: 20px; border: none; font-family: 'Carlito', sans-serif; width: 300px;"></div>
-            
-            </div>
+
+                <div class="grid-container" style="display: grid; grid-template-columns: auto auto; gap: 10px; padding: 20px;" >
+
+                    <p></p><p style="margin: 0px; "><b>Kunden-Login</b></p>
+
+                    <div style=" padding: 5px; text-align: right; width: 250px;">Email</div>
+
+                    <div style=" padding: 5px; text-align: center;"><input type="text" name="kundenname" id="kundenname" style="font-size: 20px; border: none; font-family: 'Carlito', sans-serif; width: 300px;"></div>
+
+                    <div style=" padding: 5px; text-align: right;">Key</div>
+
+                    <div style=" padding: 5px; text-align: center;"><input type="password" name="schlüsselnummer" id="schlüsselnummer" style="font-size: 20px; border: none; font-family: 'Carlito', sans-serif; width: 300px;"></div>
+                    
+                </div>
+
             <div style="text-align: center;">
                 <input class="button" type="submit" value="Anmelden">
+                <br>
+                <button class="button" type="button" onclick="window.location.href='admin.php';">Admin-Login</button>
             </div>
+
+
+
         </form>
     </div>
 </body>

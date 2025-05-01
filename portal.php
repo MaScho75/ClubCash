@@ -94,7 +94,6 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
 	        <h1>ClubCash Portal</h1>
 	</div>
     
-
 <nav class="navbar">
   <ul>
     <li>
@@ -118,12 +117,9 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
     <li>
       <a href="#" id="MenuAdministrator" style="display: none;">Administration</a>
       <ul>
-        
-        
         <li><a href="#" onclick="Mitgliedsdaten_ziehen()">Kundenliste aktualisieren</a></li>
         <li><a href="#" onclick="Mitgliederdaten_anzeigen()">Kundenliste</a></li>
         <li><a href="#" onclick="Umsätze()">Umsätze</a></li>
-        <li><a href="#" onclick="Produkte_anzeigen()">Produktkatalog</a></li>
         <li><a href="#" onclick="Produkte_editieren()">Produktkatalog editieren</a></li>
         <li><a href="#" onclick="Wareneingang()">Wareneingang</a></li>
         <li><a href="#" onclick="Abrechnung()">Abrechnung</a></li>
@@ -159,6 +155,9 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
 
     <script>
 
+        console.log("Portal-Skript geladen...");
+        console.log("customer_login:", <?php echo json_encode($_SESSION['customer_login']); ?>);
+
         // Datum mitteleuropäisch formatiert
             let heute = new Date();
             heute = new Date(heute.getTime() - heute.getTimezoneOffset() * 60000);
@@ -192,6 +191,8 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         let produkte = <?php echo json_encode($produkte); ?>;
         let verkäufe = <?php echo json_encode($verkäufe); ?>;
         let wareneingang = <?php echo json_encode($wareneingang); ?>;
+        let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
+
         // Bereinige die Schlüssel von BOM und unsichtbaren Zeichen
             wareneingang = wareneingang.map(item => {
                 const cleanItem = {};
@@ -214,11 +215,21 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         const angemeldetesMitglied = kunden.find(kunde => 
             kunde.email.toLowerCase() === '<?php echo strtolower($_SESSION['username']); ?>');
         document.getElementById('userName').textContent = angemeldetesMitglied.firstname + " " + angemeldetesMitglied.lastname;
-        
-        //console.table('Angemeldetes Mitglied:', angemeldetesMitglied);
 		
 		//Menu gemäß Rollen ein- und ausblenden
-		if (angemeldetesMitglied.cc_admin === true) {
+		if (customer_login === true && angemeldetesMitglied.cc_seller === true) {
+            document.getElementById('MenuMeinKonto').style.display = 'block';
+			document.getElementById('MenuAuswertung').style.display = 'block';
+			document.getElementById('MenuAdministrator').style.display = 'none';
+			document.getElementById('MenuEinstellungen').style.display = 'none';
+			document.getElementById('MenuDownload').style.display = 'none';
+        } else if (customer_login === true ) {
+            document.getElementById('MenuMeinKonto').style.display = 'block';
+			document.getElementById('MenuAuswertung').style.display = 'none';
+			document.getElementById('MenuAdministrator').style.display = 'none';
+			document.getElementById('MenuEinstellungen').style.display = 'none';
+			document.getElementById('MenuDownload').style.display = 'none';
+        } else if (angemeldetesMitglied.cc_admin === true) {
 			document.getElementById('MenuMeinKonto').style.display = 'block';
 			document.getElementById('MenuAuswertung').style.display = 'block';
 			document.getElementById('MenuAdministrator').style.display = 'block';
@@ -644,75 +655,6 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         portalInhalt.innerHTML = html;
 
     }    
-
-    function Produkte_anzeigen() {
-        let warenbestand = Warenbestand(); // Warenbestand laden
-        let sortColumn = '';
-        let sortAscending = true;
-        
-        function sortData(column) {
-            if (sortColumn === column) {
-                sortAscending = !sortAscending;
-            } else {
-                sortColumn = column;
-                sortAscending = true;
-            }
-
-            produkte.sort((a, b) => {
-                let valueA = a[column];
-                let valueB = b[column];
-                
-                // Numerische Sortierung für Preis und Sortierung
-                if (column === 'Preis' || column === 'Sortierung') {
-                    valueA = parseFloat(valueA) || 0;
-                    valueB = parseFloat(valueB) || 0;
-                }
-                
-                if (valueA < valueB) return sortAscending ? -1 : 1;
-                if (valueA > valueB) return sortAscending ? 1 : -1;
-                return 0;
-            });
-            
-            renderTable();
-        }
-
-        function renderTable() {
-            let html = '<h2>Produktliste</h2><table class="portal-table">';
-            html += `
-            <tr>
-                <th style="cursor:pointer" onclick="sortData('Sortierung')">Sort. ${sortColumn === 'Sortierung' ? (sortAscending ? '▲' : '▼') : ''}</th>
-                <th style="cursor:pointer" onclick="sortData('EAN')">EAN ${sortColumn === 'EAN' ? (sortAscending ? '▲' : '▼') : ''}</th>
-                <th style="cursor:pointer" onclick="sortData('Bezeichnung')" class="links">Bezeichnung ${sortColumn === 'Bezeichnung' ? (sortAscending ? '▲' : '▼') : ''}</th>
-                <th style="cursor:pointer" onclick="sortData('Kategorie')" class="links">Kategorie ${sortColumn === 'Kategorie' ? (sortAscending ? '▲' : '▼') : ''}</th>
-                <th style="cursor:pointer" onclick="sortData('Preis')" class="rechts">Preis ${sortColumn === 'Preis' ? (sortAscending ? '▲' : '▼') : ''}</th>
-                <th style="cursor:pointer" onclick="sortData('MwSt')">MwSt ${sortColumn === 'MwSt' ? (sortAscending ? '▲' : '▼') : ''}</th>
-                <th>Bestand</th>
-            </tr>`;
-
-            produkte.forEach(produkt => {
-                html += `<tr>
-                    <td>${produkt.Sortierung}</td>
-                    <td>${produkt.EAN}</td>
-                    <td class="links">${produkt.Bezeichnung}</td>
-                    <td class="links">${produkt.Kategorie}</td>
-                    <td class="rechts">${produkt.Preis}</td>
-                    <td>${produkt.MwSt}</td>
-                    <td>${warenbestand.find(waren => waren.EAN == produkt.EAN)?.Bestand || ""}</td>
-                </tr>`;
-            });
-
-            html += '</table>';
-            portalInhalt.innerHTML = html;
-
-            // Nach dem Rendern die onclick Handler neu zuweisen
-            document.querySelectorAll('.portal-table th').forEach(th => {
-                const column = th.textContent.split(' ')[0];
-                th.onclick = () => sortData(column);
-            });
-        }
-
-        renderTable(); // Initial render
-    }
 
     function Produkte_editieren() {
         console.log("Produkte editieren...");
