@@ -74,7 +74,6 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
 	
 	<link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
 	
-	<link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -122,9 +121,10 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         <li><a href="#" onclick="Mitgliedsdaten_ziehen()">Kundenliste aktualisieren</a></li>
         <li><a href="#" onclick="Mitgliederdaten_anzeigen()">Kundenliste</a></li>
         <li><a href="#" onclick="Umsätze()">Umsätze</a></li>
-        <li><a href="#" onclick="Produkte_editieren()">Produktkatalog editieren</a></li>
+        <li><a href="#" onclick="Produkte_editieren()">Produkte</a></li>
         <li><a href="#" onclick="Wareneingang()">Wareneingang</a></li>
         <li><a href="#" onclick="Abrechnung()">Abrechnung</a></li>
+        <li><a href="#" onclick="abrechnung()">abrechnung</a></li>
       </ul>
     </li>
  
@@ -156,12 +156,6 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
 
 
     <script>
-
-        // Lade Code 128 Font
-            let fontLink = document.createElement('link');
-            fontLink.href = "https://fonts.googleapis.com/css2?family=Libre+Barcode+128&display=swap";
-            fontLink.rel = "stylesheet";
-            document.head.appendChild(fontLink);
 
         // Datum mitteleuropäisch formatiert
             let heute = new Date();
@@ -260,6 +254,68 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
 			document.getElementById('MenuDownload').style.display = 'none';
 		}
 
+    function Preisliste_Eiskarte() {
+        const heute = new Date();
+
+        // Neues Fenster öffnen
+        let printWindow = window.open('', '_blank', 'width=800,height=600');
+
+        // Produkte filtern und sortieren
+        const sortedProdukte = [...produkte]
+            .filter(p => p.Kategorie === 'Eis')
+            .sort((a, b) => parseInt(a.Sortierung) - parseInt(b.Sortierung));
+
+        // HTML zusammenbauen
+        let html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Eiskarte</title>
+	            <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+	
+	            <link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
+        
+            </head>
+            <body>
+                <div style="text-align: center;">
+                    <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px; margin: 30px;">
+                    <h1>Eiskarte</h1>
+                    <p>Stand: ${heute.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
+                </div>
+                <div class="preisliste-print">
+                    <table class="preisliste-table">
+                        <tbody>
+        `;
+
+        // Barcodezeilen hinzufügen
+        sortedProdukte.forEach(produkt => {
+            // Barcode-Text im Code 39 Format mit * am Anfang/Ende
+            const barcodeText = `*${produkt.EAN}*`;
+            html += `
+                <tr>
+                    <td class="links">${produkt.Bezeichnung}</td>
+                    <td class="rechts">${produkt.Preis} €</td>
+                </tr>
+                <tr padding-top: 20px;">
+                    <td colspan="2" class="barcode" >${barcodeText}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                        </tbody>
+                    </table>
+                    <button onclick="window.print();">drucken</button>
+                </div>
+            </body>
+            </html>
+        `;
+
+        // HTML in neues Fenster schreiben
+        printWindow.document.write(html);
+        printWindow.document.close();
+    }
+
     function Preisliste_drucken() {
         // Öffne neues Fenster mit der Preisliste
         let printWindow = window.open('', '_blank', 'width=800,height=600');
@@ -270,13 +326,8 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
             <html>
             <head>
                 <title>Preisliste</title>
-                <link rel="stylesheet" href="style.css">
-                <style>
-                    body { padding: 20px; }
-                    @media print {
-                        button { display: none; }
-                    }
-                </style>
+                <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+                <link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
             </head>
             <body>
                 <div style="text-align: center;">
@@ -285,7 +336,7 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                     <p>Stand: ${heute.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
                 </div>
                 <div class="preisliste-print">
-                    <table class="portal-table">
+                    <table class="preisliste-table">
                         <tbody>
         `;
 
@@ -307,7 +358,7 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                 currentKategorie = produkt.Kategorie;
                     html += `
                         <tr class="kategorie-trenner" >
-                            <td class="links" colspan="2" style="padding-top: 20px;"><b><i>${produkt.Kategorie}</i></b></td>
+                            <td colspan="2" style="padding-top: 20px;"><b><i>${produkt.Kategorie}</i></b></td>
                         </tr>
                     `;
             }
@@ -322,6 +373,7 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         html += `
                         </tbody>
                     </table>
+                    <button onclick="window.print();">drucken</button>
                 </div>
             </body>
             </html>
@@ -343,13 +395,9 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
             <html>
             <head>
                 <title>Preisliste</title>
-                <link rel="stylesheet" href="style.css">
-                <style>
-                    body { padding: 20px; }
-                    @media print {
-                        button { display: none; }
-                    }
-                </style>
+                <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+                <link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
+                
             </head>
             <body>
                 <div style="text-align: center;">
@@ -358,7 +406,7 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                     <p>Stand: ${heute.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
                 </div>
                 <div class="preisliste-print">
-                    <table class="portal-table">
+                    <table class="preisliste-table">
                         <tbody>
         `;
 
@@ -380,15 +428,18 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                 currentKategorie = produkt.Kategorie;
                     html += `
                         <tr class="kategorie-trenner" >
-                            <td class="links" colspan="3" style="padding-top: 20px;"><b><i>${produkt.Kategorie}</i></b></td>
+                            <td colspan="3" style="padding-top: 20px;"><b><i>${produkt.Kategorie}</i></b></td>
                         </tr>
                     `;
             }
+            const barcodeText = `*${produkt.EAN}*`;
             html += `
                 <tr>
-                    <td class="links" style="vertical-align: middle; padding-right: 20px;">${produkt.Bezeichnung}</td>
-                    <td class="rechts" style="vertical-align: middle; padding-right: 20px;">${produkt.Preis} €</td>
-                    <td class="links" style="font-family: 'Libre Barcode 128'; font-size: 60px; vertical-align: middle; text-align: center;">${produkt.EAN}</td>
+                    <td class="links">${produkt.Bezeichnung}</td>
+                    <td class="rechts">${produkt.Preis} €</td>
+                </tr>
+                <tr padding-top: 20px;">
+                    <td colspan="2" class="barcode" >${barcodeText}</td>
                 </tr>
             `;
         });
@@ -396,6 +447,7 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         html += `
                         </tbody>
                     </table>
+                    <button onclick="window.print();">drucken</button>
                 </div>
             </body>
             </html>
@@ -405,73 +457,6 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         printWindow.document.write(html);
         printWindow.document.close();
     }
-
-    function Preisliste_Eiskarte() {
-
-        // Öffne neues Fenster mit der Preisliste
-        let printWindow = window.open('', '_blank', 'width=800,height=600');
-
-        // HTML für die Preisliste erstellen
-        let html = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Eiskarte</title>
-                <link rel="stylesheet" href="style.css">
-                <style>
-                    body { padding: 20px; }
-                    @media print {
-                        button { display: none; }
-                    }
-                </style>
-            </head>
-            <body>
-                <div style="text-align: center;">
-                    <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px;  margin: 30px;">
-                    <h1>Eiskarte</h1>
-                    <p>Stand: ${heute.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
-                </div>
-                <div class="preisliste-print">
-                    <table class="portal-table">
-                        <tbody>
-        `;
-
-        // Produkte nach Kategorie sortieren
-        const sortedProdukte = [...produkte]
-            .filter(p => p.Kategorie === 'Eis') // Only show ice cream products
-            .sort((a, b) => {
-                if (a.Kategorie === b.Kategorie) {
-                    // Numeric sort by sort value 
-                    return parseInt(a.Sortierung) - parseInt(b.Sortierung);
-                }
-                return a.Kategorie.localeCompare(b.Kategorie);
-            });
-
-        let currentKategorie = '';
-        sortedProdukte.forEach(produkt => {
-
-            html += `
-                <tr>
-                    <td class="links" style="vertical-align: middle; padding-right: 20px;">${produkt.Bezeichnung}</td>
-                    <td class="rechts" style="vertical-align: middle; padding-right: 20px;">${produkt.Preis} €</td>
-                    <td class="links" style="font-family: 'Libre Barcode 128'; font-size: 60px; vertical-align: middle; text-align: center;">${produkt.EAN}</td>
-                </tr>
-            `;
-        });
-
-        html += `
-                        </tbody>
-                    </table>
-                </div>
-            </body>
-            </html>
-        `;
-
-        // HTML in neues Fenster schreiben
-        printWindow.document.write(html);
-        printWindow.document.close();
-        }
-
 
     function Abrechnung() {
         let html = "<h2>Abrechnung</h2>";
@@ -1761,6 +1746,70 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
             tabelle.style.display = 'none';
             link.textContent = '➡️';  // Symbol ändern (z.B. nach rechts)
         }
+    }
+    
+    function abrechnung() {
+        // Zeitspanne festlegen vom 1.1. bis heute
+        let startDate = jahresbeginn.toISOString().split('T')[0];
+        let endDate = heute.toISOString().split('T')[0];
+
+        // Array für die Abrechnung erstellen
+        let Abrechnung = [];
+
+        // Für jeden Kunden...
+        kunden.forEach(kunde => {
+            // Verkäufe des Kunden im Zeitraum filtern
+            let kundenVerkäufe = verkäufe.filter(v => 
+                v.Kundennummer === kunde.uid &&
+                v.Datum >= startDate && 
+                v.Datum <= endDate
+            );
+
+            // Nach Produktgruppen gruppieren
+            let gruppenSummen = {};
+            kundenVerkäufe.forEach(verkauf => {
+                if (!gruppenSummen[verkauf.Kategorie]) {
+                    gruppenSummen[verkauf.Kategorie] = 0;
+                }
+                gruppenSummen[verkauf.Kategorie] += parseFloat(verkauf.Preis);
+            });
+
+            // Abrechnungstext erstellen
+            let abrechnungsText = Object.entries(gruppenSummen)
+                .map(([gruppe, summe]) => `${gruppe}: ${summe.toFixed(2)}€`)
+                .join(', ');
+
+            // Zur Abrechnung hinzufügen
+            Abrechnung.push({
+                Kundennummer: kunde.uid,
+                Vorname: kunde.firstname,
+                Nachname: kunde.lastname,
+                Abrechnung: abrechnungsText
+            });
+        });
+
+        console.table(Abrechnung); // Debug-Ausgabe der Abrechnung
+
+        // HTML für die Abrechnung erstellen
+        let html = '<h2>Abrechnung</h2><table class="portal-table">';
+        html += `
+            <tr>
+                <th>Kundennummer</th>
+                <th class="links">Vorname</th>
+                <th class="links">Nachname</th>
+                <th class="links">Abrechnung</th>
+            </tr>`;
+        Abrechnung.forEach(eintrag => {
+            html += `<tr>
+                <td>${eintrag.Kundennummer}</td>
+                <td class="links">${eintrag.Vorname}</td>
+                <td class="links">${eintrag.Nachname}</td>
+                <td class="links">${eintrag.Abrechnung}</td>
+            </tr>`;
+        });
+        html += '</table>';
+        portalInhalt.innerHTML = html;
+        
     }
     
     </script>

@@ -1,3 +1,48 @@
+@font-face {
+    font-family: 'Carlito';
+    src: url('grafik/Carlito-Regular.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: '3-of-9';
+    /* Mehrere Quellen für bessere Kompatibilität */
+    src: url('grafik/LibreBarcode39-Regular.ttf') format('truetype');
+    font-display: swap; /* Verhindert FOIT (Flash of Invisible Text) */
+}
+
+.barcode {
+    font-family: '3-of-9', 'Courier New', monospace;
+    font-size: 2em;
+}
+
+.preisliste-table {
+    width: 100%;
+    max-width: 900px;
+    border-collapse: collapse;
+    margin: 0 auto;
+    text-align: center;
+    margin-left: 0px;
+    margin-top: 20px; 
+    max-width: none;
+    font-size: 30px;
+}
+
+.preisliste-table tr {
+    vertical-align: top;
+    height: 50px;
+}
+
+.preisliste-print button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+@media print {
+    .preisliste-print button {
+        display: none;
+    }
+}
 
 mark {
     color: var(--text-color-light);
