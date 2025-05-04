@@ -7,7 +7,7 @@ header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
 // Pfad zur CSV-Datei
-$file = "../daten/verkaufsliste.csv";
+$file = "../daten/umsatz.csv";
 
 $kundennummer = json_decode(file_get_contents("php://input"), true);
 
@@ -42,7 +42,7 @@ if (($handle = fopen($file, "r")) !== FALSE) {
     ]);
     
 } else {
-    echo json_encode(["status" => "error", "message" => "Die Verkaufsliste konnte nicht geöffnet werden!"]);
+    echo json_encode(["status" => "error", "message" => "Die umsatz konnte nicht geöffnet werden!"]);
 }
 
 ?>

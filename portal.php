@@ -11,23 +11,17 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
 $jsonKundenDatei = file_get_contents("daten/kunden.json");
 $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
 
-// csv produkte laden
-$csvDatei = "daten/produkte.csv"; 
-$produkte = [];
+// Produkte laden
+$jsonProdukteDatei = file_get_contents("daten/produkte.json");
+$jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
 
-if (($handle = fopen($csvDatei, "r")) !== FALSE) {
-    $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
+// Wareneingang laden
+$jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
+$jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
 
-    while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
-        if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
-            $produkte[] = array_combine($header, $row); // Header mit Werten kombinieren
-        }
-    }
-    fclose($handle);
-}
 
-// csv verkaufsliste laden
-$csvDatei2 = "daten/verkaufsliste.csv"; 
+// csv umsatz laden
+$csvDatei2 = "daten/umsatz.csv"; 
 $verkäufe = [];
 
 if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
@@ -36,21 +30,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
         if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
             $verkäufe[] = array_combine($header, $row); // Header mit Werten kombinieren
-        }
-    }
-    fclose($handle);
-}
-
-// csv wareneingang laden
-$csvDatei3 = "daten/wareneingang.csv"; 
-$wareneingang = [];
-
-if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
-    $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
-
-    while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
-        if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
-            $wareneingang[] = array_combine($header, $row); // Header mit Werten kombinieren
         }
     }
     fclose($handle);
@@ -142,7 +121,7 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
       <ul>
         <li><a href="daten/produkte.csv" >Produktliste CSV</a></li>
         <li><a href="daten/kunden.json" >Kundenliste JSON</a></li>
-        <li><a href="daten/verkaufsliste.csv" >Verkaufsliste CSV</a></li>
+        <li><a href="daten/umsatz.csv" >umsatz CSV</a></li>
         <li><a href="#" onclick="backupliste()">Backups</a></li>
       </ul>
     </li>
@@ -187,9 +166,9 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         
         // PHP-Variablen in JavaScript-Variablen umwandeln
         const kunden = <?php echo json_encode($jsonKundenDaten); ?>;
-        let produkte = <?php echo json_encode($produkte); ?>;
+        let produkte = <?php echo json_encode($jsonProdukteDaten); ?>;
         let verkäufe = <?php echo json_encode($verkäufe); ?>;
-        let wareneingang = <?php echo json_encode($wareneingang); ?>;
+        let wareneingang = <?php echo json_encode($jsonWareneingangDaten); ?>;
         let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
 
         // Bereinige die Schlüssel von BOM und unsichtbaren Zeichen
@@ -650,12 +629,25 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                             bezeichnungTd.appendChild(select);
                             tr.appendChild(bezeichnungTd);
                             
+                            // Kategorie und Preis nur anzeigen, wenn ein Produkt ausgewählt ist
                             const kategorieTd = document.createElement("td");
-                            kategorieTd.innerText = item[key] ? produkte.find(p => p.EAN == item[key]).Kategorie : ""; // Kategorie aus dem Produkt-Array holen;
-                            tr.appendChild(kategorieTd);
-                            
                             const preisTd = document.createElement("td");
-                            preisTd.innerText = item[key] ? produkte.find(p => p.EAN == item[key]).Preis + " €" : " €"; // Preis aus dem Produkt-Array holen
+                            
+                            if (item[key]) {
+                                const produkt = produkte.find(p => p.EAN == item[key]);
+                                if (produkt) {
+                                    kategorieTd.innerText = produkt.Kategorie;
+                                    preisTd.innerText = produkt.Preis + " €";
+                                } else {
+                                    kategorieTd.innerText = "";
+                                    preisTd.innerText = " €";
+                                }
+                            } else {
+                                kategorieTd.innerText = "";
+                                preisTd.innerText = " €";
+                            }
+                            
+                            tr.appendChild(kategorieTd);
                             tr.appendChild(preisTd);
                         }
                     });
@@ -748,14 +740,15 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                     const updatedData = saveChanges();
                     wareneingang = updatedData; // Aktualisiere die wareneingang-Variable
 
-                    fetch('csv-schreiben.php', {
+                    fetch('json-schreiben.php', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
                         },
                         body: JSON.stringify({
                             data: wareneingang,
-                            filename: 'daten/wareneingang.csv'
+                            filename: 'daten/wareneingang.json'
                         })
                     })
                     .then(response => response.text())
@@ -763,7 +756,7 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                         alert('Wareneingangstabelle erfolgreich gespeichert:', result);
                     })
                     .catch(error => {
-                        alert('Fehler beim CSV erstellen:', error);
+                        alert('Fehler beim JSON erstellen:', error);
                     });
 
             };
@@ -1055,10 +1048,11 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                 const updatedData = saveChanges();
                 produkte = updatedData.map(({Bestand, ...rest}) => rest);
 
-                fetch('csv-schreiben.php', {
+                fetch('JSON-schreiben.php', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({
                         data: produkte,
@@ -1067,10 +1061,11 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                 })
                 .then(response => response.text())
                 .then(() => {
-                    return fetch('csv-schreiben.php', {
+                    return fetch('JSON-schreiben.php', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
                         },
                         body: JSON.stringify({
                             data: wareneingang,

@@ -6,7 +6,7 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
 header("Content-Type: application/json");
 
-$file = "../daten/verkaufsliste.csv";
+$file = "../daten/umsatz.csv";
 $input = file_get_contents("php://input");
 
 if (!$input) {

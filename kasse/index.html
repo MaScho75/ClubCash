@@ -262,7 +262,7 @@
         let kunden = [];
 
         Promise.all([
-                loadCSV("../daten/produkte.csv"), 
+                loadJSON("../daten/produkte.json"), 
                 loadJSON("../daten/kunden.json")
             ])
             .then(([geladeneProdukte, geladeneKunden]) => {
@@ -324,6 +324,8 @@
 
         function direktwahl() {
 
+            console.log("ProdukteX: ", produkte);
+         
             produkte.forEach(produkt => {
                 if (produkt.Sortierung > 0 && produkt.Sortierung < 11) {
                     let button = document.createElement("button");
@@ -367,18 +369,6 @@
                     let zeit = now.toTimeString().split(" ")[0].slice(0, 5);
 
                     for (ds of warenkorb) {
-                        /*let ds2 = {
-                            Datum: datum,
-                            Zeit: zeit,
-                            Terminal: terminal,
-                            Schlüssel: kunde.key2designation,
-                            EAN: ds.EAN,
-                            Produkt: ds.Bezeichnung,
-                            Kategorie: ds.Kategorie,
-                            Preis: ds.Preis,
-                            MwSt: ds.MwSt,
-                            Kundennummer: kunde.uid
-                        }*/
                         let ds2 = {
                             Datum: datum,
                             Zeit: zeit,
@@ -394,7 +384,7 @@
                         warenkorb2.push(ds2);
                     }
 
-                    übertragung_verkaufsliste(warenkorb2);
+                    übertragung_umsatz(warenkorb2);
 
                     statusfeld.innerText = "Prokukte bezahlt!";
                     tbody.innerHTML = `
@@ -804,8 +794,8 @@
             }, 300);
         }
 
-        async function übertragung_verkaufsliste(data) {
-            fetch("verkaufsliste-api.php", {
+        async function übertragung_umsatz(data) {
+            fetch("umsatz-api.php", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -964,12 +954,6 @@
             document.getElementById('BT_Abbruch').onclick = function() {window.location.reload(true);}
         
             document.getElementById('BT_EingabeBestätigt').onclick = function() {
-                datenfeld.innerHTML = `
-                <p><p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Der Preis wurde geändert!<b></p>
-                <p class="zentriert" style="font-size: 30px;">Der neue Preis für das heutige Essen beträgt jetzt: </p>
-                <h1 class="zentriert" style="color: var(--success-color);">` + zifferneingabefeld.firstChild.nodeValue + ` €</h1>
-                `;
-                tastatur.style.display = 'none';
                 let preisNum = parseFloat(zifferneingabefeld.firstChild.nodeValue);
                 update_mittagspreis(preisNum);
             };
@@ -986,23 +970,43 @@
 
             produkt.Preis = neuerPreis.toFixed(2); // Preis aktualisieren
 
-            // CSV-Daten aus Array generieren (Annahme: Kopfzeile bleibt gleich)
-            const csvData = "EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung\n" +
-                produkte.map(p => `${p.EAN};${p.Bezeichnung};${p.Preis};${p.MwSt};${p.Kategorie};${p.Bemerkung};${p.Sortierung}`).join("\n");
-
-            fetch('save_produkte_csv.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        csvData
-                    }) // Jetzt im richtigen JSON-Format
+            console.log("Neuer Preis für Produkt mit EAN 1:", produkt.Preis);
+            console.log("Produktdaten:", produkt);
+            console.table(produkte);
+        
+            fetch('json-schreiben.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    data: produkte,
+                    filename: '../daten/produkte.json'
                 })
-                .then(response => response.text()) // PHP gibt eine Textmeldung zurück
-                .then(data => statusbar.innerHTML = 'Antwort vom Server: ' + data)
-                .catch(error => statusbar.innerHTML = 'Fehler: ' + error);
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    console.log('JSON erfolgreich gespeichert');
+                    datenfeld.innerHTML = `
+                        <p><p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Der Preis wurde geändert!<b></p>
+                        <p class="zentriert" style="font-size: 30px;">Der neue Preis für das heutige Essen beträgt jetzt: </p>
+                        <h1 class="zentriert" style="color: var(--success-color);">` + zifferneingabefeld.firstChild.nodeValue + ` €</h1>
+                        `;
+                    tastatur.style.display = 'none';
+                } else {
+                    console.error('Fehler:', result.error);
+                    datenfeld.innerHTML = '<p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Preis konnte nicht angepasst werden weil: ' + result.error;
+                }
+            })
+            .catch(error => {
+                console.error('Fehler:', error)
+                datenfeld.innerHTML = '<p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Preis konnte nicht angepasst werden weil: ' + error;
+            });
         }
+
+
 
         // Funktion zum Anzeigen des Bildschirm-Schoners
         function showScreensaver() {
