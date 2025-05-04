@@ -38,6 +38,12 @@ $jsonKundenDatei = file_get_contents("../daten/kunden.json");
 $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
 
 // Produkte laden
+clearstatcache(true, "daten/produkte.json"); // Clear file cache for this specific file
+$jsonProdukteDatei = file_get_contents("daten/produkte.json");
+$jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
+
+
+/* // Produkte laden
 $csvDatei = "../daten/produkte.csv";
 clearstatcache(true, $csvDatei); // Clear the file status cache for this specific file
 $produkte = [];
@@ -51,7 +57,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         }
     }
     fclose($handle);
-}
+} */
 
 ?>
 

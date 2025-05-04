@@ -8,19 +8,23 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
 }
 
 // Mitgliederdaten laden
-clearstatcache(true, "daten/kunden.json"); // Clear file cache for this specific file
 $jsonKundenDatei = file_get_contents("daten/kunden.json");
 $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
 
-// Produkte laden
-clearstatcache(true, "daten/produkte.json"); // Clear file cache for this specific file
-$jsonProdukteDatei = file_get_contents("daten/produkte.json");
-$jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
+// csv produkte laden
+$csvDatei = "daten/produkte.csv"; 
+$produkte = [];
 
-// wareneingang laden
-clearstatcache(true, "daten/wareneingang.json"); // Clear file cache for this specific file
-$jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
-$jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
+if (($handle = fopen($csvDatei, "r")) !== FALSE) {
+    $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
+
+    while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
+        if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
+            $produkte[] = array_combine($header, $row); // Header mit Werten kombinieren
+        }
+    }
+    fclose($handle);
+}
 
 // csv verkaufsliste laden
 $csvDatei2 = "daten/verkaufsliste.csv"; 
@@ -32,6 +36,21 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
         if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
             $verkäufe[] = array_combine($header, $row); // Header mit Werten kombinieren
+        }
+    }
+    fclose($handle);
+}
+
+// csv wareneingang laden
+$csvDatei3 = "daten/wareneingang.csv"; 
+$wareneingang = [];
+
+if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
+    $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
+
+    while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
+        if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
+            $wareneingang[] = array_combine($header, $row); // Header mit Werten kombinieren
         }
     }
     fclose($handle);
@@ -121,7 +140,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     <li>
       <a href="#" id="MenuDownload" style="display: none;">Download</a>
       <ul>
-        <li><a href="daten/produkte.json" >Produktliste CSV</a></li>
+        <li><a href="daten/produkte.csv" >Produktliste CSV</a></li>
         <li><a href="daten/kunden.json" >Kundenliste JSON</a></li>
         <li><a href="daten/verkaufsliste.csv" >Verkaufsliste CSV</a></li>
         <li><a href="#" onclick="backupliste()">Backups</a></li>
@@ -168,17 +187,10 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         
         // PHP-Variablen in JavaScript-Variablen umwandeln
         const kunden = <?php echo json_encode($jsonKundenDaten); ?>;
-        let produkte = <?php echo json_encode($jsonProdukteDaten); ?>;
+        let produkte = <?php echo json_encode($produkte); ?>;
         let verkäufe = <?php echo json_encode($verkäufe); ?>;
-        let wareneingang = <?php echo json_encode($jsonWareneingangDaten); ?>;
+        let wareneingang = <?php echo json_encode($wareneingang); ?>;
         let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
-
-        console.log("Überprüfung der Variablen:"); // Debug-Ausgabe
-        console.table("Kunden:", kunden); // Debug-Ausgabe der Kunden
-        console.table("Produkte:", produkte); // Debug-Ausgabe der Produkte
-        console.table("Verkäufe:", verkäufe); // Debug-Ausgabe der Verkäufe
-        console.table("Wareneingang:", wareneingang); // Debug-Ausgabe der Wareneingang
-
 
         // Bereinige die Schlüssel von BOM und unsichtbaren Zeichen
             wareneingang = wareneingang.map(item => {
@@ -492,7 +504,10 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             Bestand: tempBestand[produkt.EAN] || 0
         }));
 
+        console.table(warenbestand); // Debug-Ausgabe der Warenbestand
+
         return warenbestand;
+ 
     }
 
     function Wareneingang() {
@@ -587,9 +602,9 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                     keys.forEach(key => {
                         
                         const td = document.createElement("td");
-                        
+                        console.log("Key:", key, "Value:", item[key]); // Debug-Ausgabe der Schlüssel und Werte
                         if (key === "Eingang") {
-                            
+                            console.log("Eingang:", item[key]); // Debug-Ausgabe der Schlüssel und Werte
                             const datumInput = document.createElement("input"); 
                             datumInput.type = "date";
                             datumInput.value = item[key] || heute.toISOString().split('T')[0]; // Default to today if no value
@@ -729,19 +744,18 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
                 saveButton.onclick = () => {
 
+
                     const updatedData = saveChanges();
                     wareneingang = updatedData; // Aktualisiere die wareneingang-Variable
 
-                    console.log("Aktualisierte Wareneingangsdaten:", wareneingang); // Debug-Ausgabe der aktualisierten Daten
-                    
-                    fetch('json-schreiben.php', {
+                    fetch('csv-schreiben.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
                             data: wareneingang,
-                            filename: 'daten/wareneingang.json'
+                            filename: 'daten/wareneingang.csv'
                         })
                     })
                     .then(response => response.text())
@@ -749,12 +763,12 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                         alert('Wareneingangstabelle erfolgreich gespeichert:', result);
                     })
                     .catch(error => {
-                        alert('Fehler beim speichern:', error);
+                        alert('Fehler beim CSV erstellen:', error);
                     });
 
             };
 
-        } 
+        } // Ende der Funktion createEditableTable
     }
 
     function Farben() {
@@ -1041,26 +1055,26 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 const updatedData = saveChanges();
                 produkte = updatedData.map(({Bestand, ...rest}) => rest);
 
-                fetch('json-schreiben.php', {
+                fetch('csv-schreiben.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         data: produkte,
-                        filename: 'daten/produkte.json'
+                        filename: 'daten/produkte.csv'
                     })
                 })
                 .then(response => response.text())
                 .then(() => {
-                    return fetch('json-schreiben.php', {
+                    return fetch('csv-schreiben.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
                             data: wareneingang,
-                            filename: 'daten/wareneingang.json'
+                            filename: 'daten/wareneingang.csv'
                         })
                     });
                 })
