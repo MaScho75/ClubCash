@@ -164,6 +164,18 @@
 
     <script>
 
+        //Backup der umsatz.csv
+        fetch("backup.php")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.text();
+            })
+            .then(result => console.log(result))
+            .catch(error => console.error("Error:", error));
+
+
         //Sanduhr
         window.onload = function() {
             // Preloader ausblenden, wenn die Seite vollständig geladen ist
