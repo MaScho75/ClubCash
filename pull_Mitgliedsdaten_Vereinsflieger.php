@@ -28,8 +28,6 @@ if (!$config) {
     die("<pre>❌ Fehler beim Laden der Konfigurationsdatei: " . json_last_error_msg() . "</pre>");
 }
 
-echo "<h2>Vereinsflieger Datenimport</h2>";
-
 echo "<p>✅ Konfigurationsdatei erfolgreich geladen.</p>";
 
 // Lese die .env-Datei

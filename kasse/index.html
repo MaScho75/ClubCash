@@ -635,7 +635,7 @@
 
                     let tr = document.createElement("tr");
 
-                    if (product == "Direktbuchung") {
+                    if (product == "manuelle Buchung") {
                         tr.innerHTML = `
                 <td class="zentriert"> ${details.count} </td>
                 <td> ${product} </td>
@@ -747,7 +747,7 @@
 
                         let tr = document.createElement("tr");
 
-                        if (product == "Direktbuchung") {
+                        if (product == "manuelle Buchung") {
                             tr.innerHTML = `
                     <td class="zentriert">` + details.count + `</td>
                     <td class="links">` + product + `</td>
@@ -849,10 +849,10 @@
                 }
                 let manuelles_Produkt = {
                     EAN: 9990000000000,
-                    Bezeichnung: "Direktbuchung",
+                    Bezeichnung: "manuelle Buchung",
                     Preis: (eingabestring / 100).toFixed(2),
                     MwSt: 19,
-                    Kategorie: "Direktbuchung"
+                    Kategorie: "manuelle Buchung"
                 }
 
                 tastatur.style.display = "none";
