@@ -2,27 +2,30 @@
 session_start();
 
 // Prüfen, ob der Benutzer eingeloggt ist
-if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: index.php'); // Falls nicht eingeloggt, zurück zur Login-Seite
-    exit();
-}
+    if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
+        header('Location: index.php'); // Falls nicht eingeloggt, zurück zur Login-Seite
+        exit();
+    }
 
+// Configurationsdatei einbinden
+    $jsonConfigDatei = file_get_contents("daten/config.json");
+    $jsonConfigDaten = json_decode($jsonConfigDatei, true); // true gibt ein assoziatives Array zurück
+    
 // Mitgliederdaten laden
-$jsonKundenDatei = file_get_contents("daten/kunden.json");
-$jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
+    $jsonKundenDatei = file_get_contents("daten/kunden.json");
+    $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
 
 // Produkte laden
-$jsonProdukteDatei = file_get_contents("daten/produkte.json");
-$jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
+    $jsonProdukteDatei = file_get_contents("daten/produkte.json");
+    $jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
 
 // Wareneingang laden
-$jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
-$jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
-
+    $jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
+    $jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
 
 // csv umsatz laden
-$csvDatei2 = "daten/umsatz.csv"; 
-$verkäufe = [];
+    $csvDatei2 = "daten/umsatz.csv"; 
+    $verkäufe = [];
 
 if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
@@ -46,7 +49,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     <!-- Skalierbarkeit für mobile Geräte sicherstellen -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Cafè Lüsse Portal</title>
+    <title>ClubCash Portal</title>
 
     <!-- Anweisung an Suchmaschinen, die Seite NICHT zu indexieren -->
     <meta name="robots" content="noindex, nofollow">
@@ -56,8 +59,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 	<link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
-    <script src="config.js?v=<?php echo time(); ?>"></script>
 	
 </head>
 <body class="portal">
@@ -164,17 +165,19 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             jahresbeginn.setHours(jahresbeginn.getHours() + 2); // 2 Stunden addieren
 
         //Sanduhr
-        window.onload = function() {
-        // Preloader ausblenden, wenn die Seite vollständig geladen ist
-        document.getElementById("preloader").style.display = "none";
-        }
+            window.onload = function() {
+            // Preloader ausblenden, wenn die Seite vollständig geladen ist
+            document.getElementById("preloader").style.display = "none";
+            }
         
         // PHP-Variablen in JavaScript-Variablen umwandeln
-        const kunden = <?php echo json_encode($jsonKundenDaten); ?>;
-        let produkte = <?php echo json_encode($jsonProdukteDaten); ?>;
-        let verkäufe = <?php echo json_encode($verkäufe); ?>;
-        let wareneingang = <?php echo json_encode($jsonWareneingangDaten); ?>;
-        let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
+            const kunden = <?php echo json_encode($jsonKundenDaten); ?>;
+            let produkte = <?php echo json_encode($jsonProdukteDaten); ?>;
+            let verkäufe = <?php echo json_encode($verkäufe); ?>;
+            let wareneingang = <?php echo json_encode($jsonWareneingangDaten); ?>;
+            let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
+            let config = <?php echo json_encode($jsonConfigDaten); ?>;
+            console.log("config:", config); // Debug-Ausgabe der Konfiguration
 
         // Bereinige die Schlüssel von BOM und unsichtbaren Zeichen
             wareneingang = wareneingang.map(item => {
@@ -189,54 +192,53 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
 
         //aktuelle Kontostände der Kunden berechnen
-        let kundenkontostand = Kundenkontostand(verkäufe);
-        
-        const portalInhalt = document.getElementById('portal-inhalt');
-        const portalMenu = document.getElementById('portal-menu');
+            let kundenkontostand = Kundenkontostand(verkäufe);
+            const portalInhalt = document.getElementById('portal-inhalt');
+            const portalMenu = document.getElementById('portal-menu');
 
         // Finde das angemeldete Mitglied anhand der Email-Adresse (case-insensitive)
-        const angemeldetesMitglied = kunden.find(kunde => 
-            kunde.email.toLowerCase() === '<?php echo strtolower($_SESSION['username']); ?>');
-        document.getElementById('userName').textContent = angemeldetesMitglied.firstname + " " + angemeldetesMitglied.lastname;
+            const angemeldetesMitglied = kunden.find(kunde => 
+                kunde.email.toLowerCase() === '<?php echo strtolower($_SESSION['username']); ?>');
+            document.getElementById('userName').textContent = angemeldetesMitglied.firstname + " " + angemeldetesMitglied.lastname;
 		
 		//Menu gemäß Rollen ein- und ausblenden
-		if (customer_login === true && angemeldetesMitglied.cc_seller === true) {
-            document.getElementById('MenuMeinKonto').style.display = 'block';
-			document.getElementById('MenuAuswertung').style.display = 'block';
-			document.getElementById('MenuAdministrator').style.display = 'none';
-			document.getElementById('MenuEinstellungen').style.display = 'none';
-			document.getElementById('MenuDownload').style.display = 'none';
-        } else if (customer_login === true ) {
-            document.getElementById('MenuMeinKonto').style.display = 'block';
-			document.getElementById('MenuAuswertung').style.display = 'none';
-			document.getElementById('MenuAdministrator').style.display = 'none';
-			document.getElementById('MenuEinstellungen').style.display = 'none';
-			document.getElementById('MenuDownload').style.display = 'none';
-        } else if (angemeldetesMitglied.cc_admin === true) {
-			document.getElementById('MenuMeinKonto').style.display = 'block';
-			document.getElementById('MenuAuswertung').style.display = 'block';
-			document.getElementById('MenuAdministrator').style.display = 'block';
-			document.getElementById('MenuEinstellungen').style.display = 'block';
-			document.getElementById('MenuDownload').style.display = 'block';
-		} else if (angemeldetesMitglied.cc_seller === true) {
-		    document.getElementById('MenuMeinKonto').style.display = 'block';
-			document.getElementById('MenuAuswertung').style.display = 'block';
-			document.getElementById('MenuAdministrator').style.display = 'none';
-			document.getElementById('MenuEinstellungen').style.display = 'none';
-			document.getElementById('MenuDownload').style.display = 'none';
-		} else if (angemeldetesMitglied.cc_member === true) {
-		    document.getElementById('MenuMeinKonto').style.display = 'block';
-			document.getElementById('MenuAuswertung').style.display = 'none';
-			document.getElementById('MenuAdministrator').style.display = 'none';
-			document.getElementById('MenuEinstellungen').style.display = 'none';
-			document.getElementById('MenuDownload').style.display = 'none';
-		} else if (angemeldetesMitglied.cc_guest === true) {
-		    document.getElementById('MenuMeinKonto').style.display = 'block';
-			document.getElementById('MenuAuswertung').style.display = 'none';
-			document.getElementById('MenuAdministrator').style.display = 'none';
-			document.getElementById('MenuEinstellungen').style.display = 'none';
-			document.getElementById('MenuDownload').style.display = 'none';
-		}
+            if (customer_login === true && angemeldetesMitglied.cc_seller === true) {
+                document.getElementById('MenuMeinKonto').style.display = 'block';
+                document.getElementById('MenuAuswertung').style.display = 'block';
+                document.getElementById('MenuAdministrator').style.display = 'none';
+                document.getElementById('MenuEinstellungen').style.display = 'none';
+                document.getElementById('MenuDownload').style.display = 'none';
+            } else if (customer_login === true ) {
+                document.getElementById('MenuMeinKonto').style.display = 'block';
+                document.getElementById('MenuAuswertung').style.display = 'none';
+                document.getElementById('MenuAdministrator').style.display = 'none';
+                document.getElementById('MenuEinstellungen').style.display = 'none';
+                document.getElementById('MenuDownload').style.display = 'none';
+            } else if (angemeldetesMitglied.cc_admin === true) {
+                document.getElementById('MenuMeinKonto').style.display = 'block';
+                document.getElementById('MenuAuswertung').style.display = 'block';
+                document.getElementById('MenuAdministrator').style.display = 'block';
+                document.getElementById('MenuEinstellungen').style.display = 'block';
+                document.getElementById('MenuDownload').style.display = 'block';
+            } else if (angemeldetesMitglied.cc_seller === true) {
+                document.getElementById('MenuMeinKonto').style.display = 'block';
+                document.getElementById('MenuAuswertung').style.display = 'block';
+                document.getElementById('MenuAdministrator').style.display = 'none';
+                document.getElementById('MenuEinstellungen').style.display = 'none';
+                document.getElementById('MenuDownload').style.display = 'none';
+            } else if (angemeldetesMitglied.cc_member === true) {
+                document.getElementById('MenuMeinKonto').style.display = 'block';
+                document.getElementById('MenuAuswertung').style.display = 'none';
+                document.getElementById('MenuAdministrator').style.display = 'none';
+                document.getElementById('MenuEinstellungen').style.display = 'none';
+                document.getElementById('MenuDownload').style.display = 'none';
+            } else if (angemeldetesMitglied.cc_guest === true) {
+                document.getElementById('MenuMeinKonto').style.display = 'block';
+                document.getElementById('MenuAuswertung').style.display = 'none';
+                document.getElementById('MenuAdministrator').style.display = 'none';
+                document.getElementById('MenuEinstellungen').style.display = 'none';
+                document.getElementById('MenuDownload').style.display = 'none';
+            }
 
     function Preisliste_Eiskarte() {
         const heute = new Date();
@@ -797,23 +799,87 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     }
 
     function Programmeinstellungen() {
-        fetch('config.js?v=' + Date.now()) // Browser-Caching umgehen
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Fehler beim Laden der Konfiguration');
-                }
-                return response.text();
-            })
-            .then(text => {
+        console.log("Programmeinstellungen andeshen und...");
 
-                portalmenu2.innerHTML = "<h2 style='display: inline;'>Programmeinstellungen (config.js)</h2>";
-                portalInhalt.innerHTML = `
-                    <pre padding: 10px; overflow-x: auto;">${escapeHtml(text)}</pre>
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>Konfiguration</h2>";
+        
+        let menu2 = "<h2 style='display: inline;'>Konfiguration</h2>";
+        menu2 += `
+            <button id="saveButton" class="kleinerBt">speichern</button>
+            <button onclick="location.reload();" class="kleinerBt">abbruch</button>
+        `;
+
+        portalInhalt.innerHTML = `
+            <table id="configTable" class="portal-table">
+                <thead>
+                    <tr>
+                        <th class="links">Schlüssel</th>
+                        <th class="links">Wert</th>
+                    </tr>
+                </thead>
+                <tbody id="configTableBody">
+                </tbody>
+            </table>
+        `;
+
+        portalmenu2.innerHTML = menu2;
+
+        const configTableBody = document.getElementById('configTableBody');
+        const addButton = document.getElementById('addButton');
+        const saveButton = document.getElementById('saveButton');
+
+        // Hilfsfunktion zum Rendern der Tabelle
+        function renderConfigTable() {
+            configTableBody.innerHTML = '';
+            Object.entries(config).forEach(([key, value]) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="links">${key}</td>
+                    <td class="links" contenteditable="true">${value}</td>
                 `;
+                configTableBody.appendChild(tr);
+            });
+        }
+
+        // Speichern der Konfiguration
+        saveButton.onclick = () => {
+            // Neues Config-Objekt erstellen
+            const newConfig = {};
+            document.querySelectorAll('#configTableBody tr').forEach(row => {
+                const key = row.cells[0].textContent.trim();
+                const value = row.cells[1].textContent.trim();
+                if (key && value) {
+                    newConfig[key] = value;
+                }
+            });
+
+            // Config-Objekt aktualisieren
+            config = newConfig;
+
+            // An Server senden
+            fetch('json-schreiben.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    data: config,
+                    filename: 'daten/config.json'
+                })
+            })
+            .then(response => response.text())
+            .then(result => {
+                alert('Konfiguration erfolgreich gespeichert');
             })
             .catch(error => {
-                portalInhalt.innerHTML = `<p style="color:red;">${error.message}</p>`;
+                alert('Fehler beim Speichern der Konfiguration: ' + error);
             });
+        };
+
+        // Initial render
+        renderConfigTable();
+
     }
 
     function escapeHtml(text) {
@@ -978,6 +1044,8 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             function renderTable() {
                 tableBody.innerHTML = "";
                 data.forEach((item, index) => {
+                    if (item.EAN == 1 || item.EAN == 9990000000000) {return;} // Essen und manuelle Buchung nicht anzeigen
+
                     const tr = document.createElement("tr");
                     tr.classList.toggle("edited", editedRows.has(index));
                     tr.classList.toggle("new", newRows.has(index));
@@ -1000,6 +1068,11 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                                 td.style.backgroundColor = '#ffcccc';
                             }
                             td.onblur = () => {
+                                if (isNaN(parseFloat(td.innerText)) && td.innerText !== '') {
+                                    alert('Bitte geben Sie eine gültige Zahl ein.');
+                                    td.innerText = item[key] || '';
+                                    return;
+                                }
                                 const newValue = td.innerText === '' ? 0 : parseInt(td.innerText);
                                 const oldValue = item[key] || 0;
                                 if (newValue !== oldValue) {
@@ -1019,6 +1092,30 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                                     td.style.backgroundColor = '#ffcccc';
                                 } else {
                                     td.style.backgroundColor = '';
+                                }
+                            };
+                        } else if (['Preis', 'Sortierung', 'MwSt', 'EAN', 'Min'].includes(key)) {
+                            td.contentEditable = !deletedRows.has(index);
+                            td.innerText = item[key];
+                            td.onblur = () => {
+                                if (isNaN(parseFloat(td.innerText)) && td.innerText !== '') {
+                                    alert(`Bitte geben Sie eine gültige Zahl für ${key} ein.`);
+                                    td.innerText = item[key];
+                                    return;
+                                }
+                                if (key === 'EAN') {
+                                    const newEAN = td.innerText;
+                                    const isDuplicate = data.some((dataItem, dataIndex) => 
+                                        dataIndex !== index && dataItem.EAN === newEAN
+                                    );
+                                    if (isDuplicate || newEAN === '1' || newEAN === '9990000000000') {
+                                        alert('Diese EAN existiert bereits! Auch 1 und 9990000000000 sind nicht erlaubt. Bitte wählen Sie eine andere EAN.');
+                                        td.innerText = item[key];
+                                    } else {
+                                        markAsEdited(index, key, newEAN, td);
+                                    }
+                                } else {
+                                    markAsEdited(index, key, td.innerText, td);
                                 }
                             };
                         } else {

@@ -12,21 +12,16 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Lade die Datei config.js
-$configJs = file_get_contents('config.js');
-
-// Entferne "const config =" und Semikolon
-$configJs = preg_replace('/const config =|;/', '', $configJs);
-
-// Entferne JavaScript-Kommentare (einzeilig & mehrzeilig)
-$configJs = preg_replace('/\/\/[^\n]*|\/\*.*?\*\//s', '', $configJs);
-
-// JSON korrekt parsen (Kommentare sind jetzt weg)
-$config = json_decode(trim($configJs), true);
-
+// Lade die Datei config.json
+    $configFile = 'daten/config.json';
+if (!file_exists($configFile)) {
+    die("<pre>❌ Konfigurationsdatei nicht gefunden: $configFile</pre>");
+}
+$config = json_decode(file_get_contents($configFile), true);
 if (!$config) {
     die("<pre>❌ Fehler beim Laden der Konfigurationsdatei: " . json_last_error_msg() . "</pre>");
 }
+
 
 echo "<p>✅ Konfigurationsdatei erfolgreich geladen.</p>";
 
@@ -67,7 +62,7 @@ if ($restInterface->SignIn($UserName, $Password, 0, $AppKey, $AuthSecret)) {
                 if (!is_array($roles)) {
                     $roles = [];
                 }
-        
+
                 return [
                     'uid' => $user['uid'] ?? null,
                     'firstname' => $user['firstname'] ?? null,

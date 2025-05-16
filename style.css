@@ -556,9 +556,13 @@ button:hover {
     overflow: auto;
     border: 1px solid var(--border-color);
     padding: 5px;
-    margin: 10px;
+    margin: 10px 10px 0px 10px;
     background-color: var(--text-color-light);
     border-radius: 5px;
+}
+
+#copyright {
+    font-size: .8em;
 }
 
 #summenkasten {

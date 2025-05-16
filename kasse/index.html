@@ -29,9 +29,7 @@
     </script>
 
     <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet">
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="../config.js"></script>
     <link rel="manifest" href="manifest.json">
 
 </head>
@@ -98,6 +96,9 @@
 
             </div>
 
+            <div id="copyright">
+                <p class="zentriert" style="margin: 0px;">&copy; 2025 Marcel Schommer - Version: 0.4.0</p>
+            </div>
         </div>
 
         <div id="rechteSpalte">
@@ -166,131 +167,167 @@
         </svg>
     </div>
 
-        
-
+    
     <script>
 
         //Backup der umsatz.csv
-        fetch("backup.php")
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Network response was not ok");
-                }
-                return response.text();
-            })
-            .then(result => console.log(result))
-            .catch(error => console.error("Error:", error));
-
+            fetch("backup.php")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.text();
+                })
+                .then(result => console.log(result))
+                .catch(error => console.error("Error:", error));
 
         //Sanduhr
-        window.onload = function() {
-            // Preloader ausblenden, wenn die Seite vollständig geladen ist
-            document.getElementById("preloader").style.display = "none";
-        }
+            window.onload = function() {
+                // Preloader ausblenden, wenn die Seite vollständig geladen ist
+                document.getElementById("preloader").style.display = "none";
+            }
 
         // Terminal ermitteln aus der URL https://host/index.html?zahl=42
-        const urlParams = new URLSearchParams(window.location.search);
-        let terminal = urlParams.get("terminal"); // Holt den Wert von "terminal" aus der URL
+            const urlParams = new URLSearchParams(window.location.search);
+            let terminal = urlParams.get("terminal"); // Holt den Wert von "terminal" aus der URL
 
-        if (terminal == null) {
-            terminal = "X"; // Wenn kein "Terminal" in der URL, dann X
-        }
+        // Anzeigen der akteullen Terminalnummer
+            if (terminal == null) {
+                terminal = "X"; // Wenn kein "Terminal" in der URL, dann X
+            }
+            document.getElementById("terminal").innerText = terminal;
 
-        document.getElementById("terminal").innerText = terminal;
+        // Variablen
+            let warenkorb = [];
+            let summe = 0.00;
+            let eingabe = "";
+            let eingabestring = "";
+            let timeout; //Bildschirmschone Timer
+            let produkte = [];
+            let kunden = [];
+            let config = [];
 
-        let warenkorb = [];
-        let summe = 0.00;
-        let eingabe = "";
-        let eingabestring = "";
-        let timeout; //Bildschirmschone Timer
-
-        const datenfeld = document.getElementById("datenfeld");
-        const warenkorbtabelle = document.getElementById("warenkorbtabelle");
-        const tbody = document.querySelector("#warenkorbtabelle tbody");
-        const statusfeld = document.getElementById("statusfeld");
-        const summenfeld = document.getElementById("summenfeld");
-        const menubar = document.getElementById("menubar");
-        const thead = document.querySelector("#warenkorbtabelle thead");
-        const preisfenster = document.getElementById("preisfenster");
-        const tastatur = document.getElementById("tastatur");
-        const navbar = document.getElementById("navbar");
-        const div_Bildschirmschoner = document.getElementById("bildschirmschoner");
-        const Bt_manuelleBuchung = document.getElementById("Bt_manuelleBuchung");
-        const preislisten_tbody = document.querySelector("#preislistentabelle tbody");
-        const statusbar = document.getElementById("statusfeld");
-        const zifferneingabefeld = document.getElementById("zifferneingabefeld");
+            const datenfeld = document.getElementById("datenfeld");
+            const warenkorbtabelle = document.getElementById("warenkorbtabelle");
+            const tbody = document.querySelector("#warenkorbtabelle tbody");
+            const statusfeld = document.getElementById("statusfeld");
+            const summenfeld = document.getElementById("summenfeld");
+            const menubar = document.getElementById("menubar");
+            const thead = document.querySelector("#warenkorbtabelle thead");
+            const preisfenster = document.getElementById("preisfenster");
+            const tastatur = document.getElementById("tastatur");
+            const navbar = document.getElementById("navbar");
+            const div_Bildschirmschoner = document.getElementById("bildschirmschoner");
+            const Bt_manuelleBuchung = document.getElementById("Bt_manuelleBuchung");
+            const preislisten_tbody = document.querySelector("#preislistentabelle tbody");
+            const statusbar = document.getElementById("statusfeld");
+            const zifferneingabefeld = document.getElementById("zifferneingabefeld");
 
 
-// Configutarionen
+        // Eingabekontrolle - Eventhandler
+            let tastenkontrolle = function(event) {
 
-        if (!config.wartungsmodus) document.getElementById("Wartungsfenster").style = "display: none"; // Offlinemodus
-        if (!config.tagesabrechnung) document.getElementById("bt_tagesabrechnung").style = "display: none";
-        if (!config.tageszusammenfassung) document.getElementById("bt_tageszusammenfassung").style = "display: none";
-        if (!config.kundentagesübersicht) document.getElementById("bt_kundentagesübersicht").style = "display: none";
-        if (!config.preisanpassungessen) document.getElementById("bt_mittagspreis").style = "display: none";
-        
-        if (config.bildschirmschoner) {
-            document.addEventListener('mousemove', resetTimer);
-            document.addEventListener('mousedown', resetTimer);
-            document.addEventListener('keypress', resetTimer);
-            document.addEventListener('touchstart', resetTimer);
-            document.addEventListener('scroll', resetTimer);
-            resetTimer(); // aktiviert den Bildschirmschoner
-        }
+                if (event.key === "Enter" && eingabe !== "") { //Sollte nur Enter gedrückt worden sein, wird der folgende Code nicht ausgeführt. 
 
-        let tastenkontrolle = function(event) {
+                    tastatur.style.display = 'none'; //soltte die Tastatur noch offen sein, wird sie geschlossen
+                    preisfenster.style.display = 'none'; //sollte das Preisfenster noch offen sein, wird es geschlossen
+                    document.activeElement.blur(); // ist notwendig, damit nicht ein Button fokussiert bleibt und nach dem Enter eine Aktion auslöst
 
-            if (event.key === "Enter" && eingabe !== "") { //Sollte nur Enter gedrückt worden sein, wird der folgende Code nicht ausgeführt. 
+                    produktprüfung(eingabe);
 
-                tastatur.style.display = 'none'; //soltte die Tastatur noch offen sein, wird sie geschlossen
-                preisfenster.style.display = 'none'; //sollte das Preisfenster noch offen sein, wird es geschlossen
-                document.activeElement.blur(); // ist notwendig, damit nicht ein Button fokussiert bleibt und nach dem Enter eine Aktion auslöst
+                    kundenprüfung(eingabe);
+                    
+                    sonderfunktionen(eingabe);
 
-                produktprüfung(eingabe);
+                    if (eingabe) {
+                        statusfeld.innerText = "Kein Produkt und kein Kunde erkannt."
+                        Fehlerton();
+                        eingabe = "";
+                    }
+                }
 
-                kundenprüfung(eingabe);
-                
-                sonderfunktionen(eingabe);
-
-                if (eingabe) {
-                    statusfeld.innerText = "Kein Produkt und kein Kunde erkannt."
-                    Fehlerton();
-                    eingabe = "";
+                if (event.key.length === 1) {
+                    eingabe += event.key;
+                    console.log("Eingabe hat den Wert: " + eingabe);
+                    preisfenster.style.display = 'none';
                 }
             }
 
-            if (event.key.length === 1) {
-                eingabe += event.key;
-                console.log("Eingabe hat den Wert: " + eingabe);
-                preisfenster.style.display = 'none';
+            document.addEventListener("keydown", tastenkontrolle);
+
+        // Daten laden
+            // Lade die JSON-Dateien mit den Produkten und Kunden
+            // und aktualisiere die Preisliste und die Direktwahl
+            Promise.all([
+                    loadJSON("../daten/produkte.json"), 
+                    loadJSON("../daten/kunden.json"),
+                    loadJSON("../daten/config.json")
+                ])
+                .then(([geladeneProdukte, geladeneKunden, geladeneConfig]) => {
+                    produkte = geladeneProdukte;
+                    kunden = geladeneKunden;
+                    config = geladeneConfig;
+                    console.table("Config: ", config);
+                    configuration();
+                    preisliste();
+                    direktwahl(); 
+                })
+                .catch(error => {
+                console.error("Error loading data:", error);
+                });    
+
+        // Service Worker registrieren
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js')
+                .then(registration => {
+                    console.log('ServiceWorker registriert');
+                })
+                .catch(err => {
+                    console.log('ServiceWorker Fehler: ', err);
+                });
+            }
+
+        // Offline-Funktionalität
+            let isOnline = navigator.onLine;
+            const offlineFenster = document.getElementById('offlineFenster');
+
+        // Check initial online status
+            if (!navigator.onLine) {
+                isOnline = false;
+                offlineFenster.style.visibility = 'visible';
+                let oV = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
+                document.getElementById('offlineDS').innerText = oV.length; 
+            }
+
+            window.addEventListener('online', () => {
+                isOnline = true;
+                offlineFenster.style.visibility = 'hidden';
+                syncOfflineData();
+            });
+
+            window.addEventListener('offline', () => {
+                isOnline = false;
+                offlineFenster.style.visibility = 'visible';
+            });
+        
+        function configuration() {
+            // Konfigutarionen - Ansicht anpassen je nach Benutzergruppe
+            if (config.wartungsmodus == "false") document.getElementById("Wartungsfenster").style = "display: none"; // Offlinemodus
+            if (config.tagesabrechnung == "false") document.getElementById("bt_tagesabrechnung").style = "display: none";
+            if (config.tageszusammenfassung == "false") document.getElementById("bt_tageszusammenfassung").style = "display: none";
+            if (config.kundentagesübersicht == "false") document.getElementById("bt_kundentagesübersicht").style = "display: none";
+            if (config.preisanpassungessen == "false") document.getElementById("bt_mittagspreis").style = "display: none";
+            
+            if (config.bildschirmschoner>0) {
+                document.addEventListener('mousemove', resetTimer);
+                document.addEventListener('mousedown', resetTimer);
+                document.addEventListener('keypress', resetTimer);
+                document.addEventListener('touchstart', resetTimer);
+                document.addEventListener('scroll', resetTimer);
+                resetTimer(); // aktiviert den Bildschirmschoner
             }
         }
-
-        document.addEventListener("keydown", tastenkontrolle);
-
-        // Wait for both promises to resolve before calling functions
-
-        // let produkte = loadCSV("../daten/produkte.csv"); // CSV-Datei mit den Produkten laden
-              
-        //  let kunden = loadJSON("../daten/kunden.json"); // JSON-Datei mit den Kundendaten laden
-
-        let produkte = [];
-        let kunden = [];
-
-        Promise.all([
-                loadJSON("../daten/produkte.json"), 
-                loadJSON("../daten/kunden.json")
-            ])
-            .then(([geladeneProdukte, geladeneKunden]) => {
-                produkte = geladeneProdukte;
-                kunden = geladeneKunden;
-                preisliste();
-                direktwahl(); 
-            })
-            .catch(error => {
-            console.error("Error loading data:", error);
-            });    
-
+            
         async function loadJSON(url) {
             // Add timestamp to prevent caching
             const timestamp = new Date().getTime();
@@ -1027,12 +1064,10 @@
         // Funktion, die den Inaktivitäts-Timer zurücksetzt
         function resetTimer() {
             clearTimeout(timeout);
-            timeout = setTimeout(showScreensaver, 60000 + config.bildschirmschoner);
+            timeout = setTimeout(showScreensaver, 60000 * config.bildschirmschoner);
         }
             
-        //Sonderfunktionen
         //spezielle EAN-Nummer lösen Sonderfunktionen aus
-        
         function sonderfunktionen(EANr) {
             switch (EANr) {
                 case "1111":
@@ -1066,101 +1101,67 @@
             }, 50);
         }
         
-    // Service Worker registrieren
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-        .then(registration => {
-            console.log('ServiceWorker registriert');
-        })
-        .catch(err => {
-            console.log('ServiceWorker Fehler: ', err);
-        });
-    }
-
-    // Offline-Funktionalität
-    let isOnline = navigator.onLine;
-    const offlineFenster = document.getElementById('offlineFenster');
-
-    // Check initial online status
-    if (!navigator.onLine) {
-        isOnline = false;
-        offlineFenster.style.visibility = 'visible';
-        let oV = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
-        document.getElementById('offlineDS').innerText = oV.length; 
-    }
-
-    window.addEventListener('online', () => {
-        isOnline = true;
-        offlineFenster.style.visibility = 'hidden';
-        syncOfflineData();
-    });
-
-    window.addEventListener('offline', () => {
-        isOnline = false;
-        offlineFenster.style.visibility = 'visible';
-    });
-
     // Offline-Daten im localStorage speichern
-    function speichereOfflineVerkauf(verkaufsdaten) {
-        console.log("Speichere Verkauf offline:", verkaufsdaten);
-        let offlineVerkäufe = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
-        offlineVerkäufe.push(verkaufsdaten);
-        localStorage.setItem('offlineVerkäufe', JSON.stringify(offlineVerkäufe));
-    }
-
-    // Überarbeitung der übertragung_umsatz Funktion
-    async function übertragung_umsatz(data) {
-        if (!isOnline) {
-            speichereOfflineVerkauf(data);
-            statusfeld.innerText = "Verkauf offline gespeichert";
-            console.log("Verkauf offline gespeichert");
-            return;
+        function speichereOfflineVerkauf(verkaufsdaten) {
+            console.log("Speichere Verkauf offline:", verkaufsdaten);
+            let offlineVerkäufe = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
+            offlineVerkäufe.push(verkaufsdaten);
+            localStorage.setItem('offlineVerkäufe', JSON.stringify(offlineVerkäufe));
         }
 
-        try {
-            const response = await fetch("umsatz-api.php", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-            });
-
-            if (!response.ok) {
-                throw new Error(`Server-Fehler: ${response.status}`);
+        // Überarbeitung der übertragung_umsatz Funktion
+        async function übertragung_umsatz(data) {
+            if (!isOnline) {
+                speichereOfflineVerkauf(data);
+                statusfeld.innerText = "Verkauf offline gespeichert";
+                console.log("Verkauf offline gespeichert");
+                return;
             }
 
-            const result = await response.json();
-            console.log(result);
-            statusfeld.innerText = "Verkauf online gespeichert";
-            console.log("Verkauf online gespeichert");
-        } catch (error) {
-            console.error("Fehler:", error);
-            speichereOfflineVerkauf(data);
-            statusfeld.innerText = "Fehler - Verkauf offline gespeichert";
-            console.log("Fehler - Verkauf offline gespeichert");
-        }
-    }
+            try {
+                const response = await fetch("umsatz-api.php", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
 
-    // Offline-Daten synchronisieren
-    async function syncOfflineData() {
-        const offlineVerkäufe = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
-        if (offlineVerkäufe.length === 0) return;
+                if (!response.ok) {
+                    throw new Error(`Server-Fehler: ${response.status}`);
+                }
 
-        try {
-            for (const verkauf of offlineVerkäufe) {
-                await übertragung_umsatz(verkauf);
+                const result = await response.json();
+                console.log(result);
+                statusfeld.innerText = "Verkauf online gespeichert";
+                console.log("Verkauf online gespeichert");
+            } catch (error) {
+                console.error("Fehler:", error);
+                speichereOfflineVerkauf(data);
+                statusfeld.innerText = "Fehler - Verkauf offline gespeichert";
+                console.log("Fehler - Verkauf offline gespeichert");
             }
-            localStorage.removeItem('offlineVerkäufe');
-            statusfeld.innerText = "Offline-Daten synchronisiert";
-            console.log("Offline-Daten synchronisiert");
-        } catch (error) {
-            console.error("Sync-Fehler:", error);
-            statusfeld.innerText = "Fehler bei der Synchronisation";
-            console.log("Fehler bei der Synchronisation");
         }
-    }
-        
+
+        // Offline-Daten synchronisieren
+        async function syncOfflineData() {
+            const offlineVerkäufe = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
+            if (offlineVerkäufe.length === 0) return;
+
+            try {
+                for (const verkauf of offlineVerkäufe) {
+                    await übertragung_umsatz(verkauf);
+                }
+                localStorage.removeItem('offlineVerkäufe');
+                statusfeld.innerText = "Offline-Daten synchronisiert";
+                console.log("Offline-Daten synchronisiert");
+            } catch (error) {
+                console.error("Sync-Fehler:", error);
+                statusfeld.innerText = "Fehler bei der Synchronisation";
+                console.log("Fehler bei der Synchronisation");
+            }
+        }
+            
     </script>
 
 </body>
