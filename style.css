@@ -767,7 +767,7 @@ th {
 }
 
 
-#offlineFenster {
+#Wartungsfenster {
     display: block;
     background-color: var(--background-dark);
     color: var(--text-color-light);

@@ -8,7 +8,7 @@
     <!-- Skalierbarkeit für mobile Geräte sicherstellen -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Cafè Lüsse Kasse</title>
+    <title>ClubCash</title>
 
     <!-- Anweisung an Suchmaschinen, die Seite NICHT zu indexieren -->
     <meta name="robots" content="noindex, nofollow">
@@ -31,7 +31,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet">
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="../config.js?v=<?php echo time(); ?>"></script>
+    <script src="../config.js"></script>
+    <link rel="manifest" href="manifest.json">
 
 </head>
 
@@ -106,7 +107,10 @@
             </div>
 
             <div id="menubar">
-                <p class="zentriert"><b>Terminal <span id=terminal>X</span></b></p>
+                <p class="zentriert" style="margin: 0px;"><b>Terminal <span id=terminal>X</span></b></p>
+                    <div id="offlineFenster" style="visibility: hidden;">
+                        <p class="zentriert" style="padding: 10px; margin: 0px; color: var(--warning-color);"><b>System offline!</b> (<span id="offlineDS">0</span>)</p>
+                    </div>
                 <button id="Bt_preisfenster" onclick="preisfenster_öffnen()">Preisliste</button>
                 <button id="Bt_manuelleBuchung" onclick="manuell();">manuelle Buchung</button>
                 <button id="abbruch" onclick="window.location.reload(true);">Abbruch</button>                
@@ -142,8 +146,8 @@
         
     </div>
 
-    <!-- offline Bildschrim  -->
-    <div id="offlineFenster">
+    <!-- Wartungs Bildschrim  -->
+    <div id="Wartungsfenster">
             <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" style="margin: 50px ; height: 200px;">
          <h1>System ist im Wartungsmodus!</h1>
          <p>marcel@schommer.berlin</p>
@@ -161,6 +165,8 @@
                 stroke-dashoffset="100" />
         </svg>
     </div>
+
+        
 
     <script>
 
@@ -192,8 +198,6 @@
 
         document.getElementById("terminal").innerText = terminal;
 
-
-
         let warenkorb = [];
         let summe = 0.00;
         let eingabe = "";
@@ -219,7 +223,7 @@
 
 // Configutarionen
 
-        if (!config.offlinemodus) document.getElementById("offlineFenster").style = "display: none"; // Offlinemodus
+        if (!config.wartungsmodus) document.getElementById("Wartungsfenster").style = "display: none"; // Offlinemodus
         if (!config.tagesabrechnung) document.getElementById("bt_tagesabrechnung").style = "display: none";
         if (!config.tageszusammenfassung) document.getElementById("bt_tageszusammenfassung").style = "display: none";
         if (!config.kundentagesübersicht) document.getElementById("bt_kundentagesübersicht").style = "display: none";
@@ -398,7 +402,7 @@
 
                     übertragung_umsatz(warenkorb2);
 
-                    statusfeld.innerText = "Prokukte bezahlt!";
+                    //statusfeld.innerText = "Prokukte bezahlt!";
                     tbody.innerHTML = `
 			        <tr>
 			            <td class="zentriert">
@@ -451,6 +455,12 @@
         async function kundenkontoübersicht(KundenNr) {
             document.getElementById('abbruch').innerText="zurück";
             eingabestopp();
+
+            if (!isOnline) {    
+                datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, deine Umsätze anzugezeigen. Bitte warte, bis das System wieder online ist, oder logge dich in das Onlineportal ein.</h1></div>`;
+                return;
+            }
+
 
             let kontosumme = 0.0;
 
@@ -511,12 +521,17 @@
                 console.error("Fehler beim Laden der Daten:", error);
             }
         }
-
+        
         async function tagesabrechnung() {
             document.getElementById('abbruch').innerText="zurück";
             tastatur.style.display = 'none';
 
             eingabestopp();
+
+            if (!isOnline) {    
+                datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, die Tagesumsätze anzugezeigen. Bitte warte, bis das System wieder online ist, oder logge dich in das Onlineportal ein.</h1></div>`;
+                return;
+            }
 
             let tagessumme = 0.0;
 
@@ -585,6 +600,11 @@
             document.getElementById('abbruch').innerText="zurück";
             eingabestopp();
             tastatur.style.display = 'none';
+
+            if (!isOnline) {    
+                datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, die Tagesumsätze anzugezeigen. Bitte warte, bis das System wieder online ist, oder logge dich in das Onlineportal ein.</h1></div>`;
+                return;
+            }
 
             let tagessumme = 0.0;
 
@@ -675,6 +695,11 @@
             document.getElementById('abbruch').innerText="zurück";
             eingabestopp();
             tastatur.style.display = 'none';
+
+            if (!isOnline) {    
+                datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, die Tagesumsätze anzugezeigen. Bitte warte, bis das System wieder online ist, oder logge dich in das Onlineportal ein.</h1></div>`;
+                return;
+            }
 
             let tagessumme = 0.0;
 
@@ -806,31 +831,6 @@
             }, 300);
         }
 
-        async function übertragung_umsatz(data) {
-            fetch("umsatz-api.php", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Server-Fehler: ${response.status}`);
-                    }
-                    return response.text(); // Erst als Text lesen
-                })
-                .then(text => {
-                    try {
-                        return JSON.parse(text); // Dann als JSON parsen
-                    } catch (error) {
-                        throw new Error("Ungültige JSON-Antwort: " + text);
-                    }
-                })
-                .then(result => console.log(result))
-                .catch(error => console.error("Fehler:", error));
-        }
-
         function manuell() {
             tastatur.style.display = "block";
             statusfeld.innerText = "Direkte Buchung";
@@ -950,6 +950,7 @@
 
         //Mittagessenpreis
         function mittagspreis() {
+           
             eingabestopp();
             statusfeld.innerText = "Preisänderung für das Essen";
             Bt_preisfenster.style.display = 'none';
@@ -958,6 +959,11 @@
 
             summenfeld.innerText = "0.00";
             eingabestring = "";
+
+            if (!isOnline) {    
+                datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, den Preis anzupassen. Bitte warte, bis das System wieder online ist, oder buche das Essen als <br> *manuelle Buchung*.</h1></div>`;
+                return;
+            }
 
             tastatur.style.display = 'block';
 
@@ -975,16 +981,11 @@
             document.getElementById('abbruch').innerText="zurück";
             const produkt = produkte.find(item => item.EAN === "1");
             if (!produkt) {
-                console.error("Fehler: Produkt mit EAN 1 nicht gefunden.");
                 statusbar.innerHTML = "Fehler in der Produktdatenbank!";
                 return;
             }
 
             produkt.Preis = neuerPreis.toFixed(2); // Preis aktualisieren
-
-            console.log("Neuer Preis für Produkt mit EAN 1:", produkt.Preis);
-            console.log("Produktdaten:", produkt);
-            console.table(produkte);
         
             fetch('json-schreiben.php', {
                 method: 'POST',
@@ -1017,8 +1018,6 @@
                 datenfeld.innerHTML = '<p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Preis konnte nicht angepasst werden weil: ' + error;
             });
         }
-
-
 
         // Funktion zum Anzeigen des Bildschirm-Schoners
         function showScreensaver() {
@@ -1066,6 +1065,101 @@
                 check.style.strokeDashoffset = "0";
             }, 50);
         }
+        
+    // Service Worker registrieren
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+        .then(registration => {
+            console.log('ServiceWorker registriert');
+        })
+        .catch(err => {
+            console.log('ServiceWorker Fehler: ', err);
+        });
+    }
+
+    // Offline-Funktionalität
+    let isOnline = navigator.onLine;
+    const offlineFenster = document.getElementById('offlineFenster');
+
+    // Check initial online status
+    if (!navigator.onLine) {
+        isOnline = false;
+        offlineFenster.style.visibility = 'visible';
+        let oV = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
+        document.getElementById('offlineDS').innerText = oV.length; 
+    }
+
+    window.addEventListener('online', () => {
+        isOnline = true;
+        offlineFenster.style.visibility = 'hidden';
+        syncOfflineData();
+    });
+
+    window.addEventListener('offline', () => {
+        isOnline = false;
+        offlineFenster.style.visibility = 'visible';
+    });
+
+    // Offline-Daten im localStorage speichern
+    function speichereOfflineVerkauf(verkaufsdaten) {
+        console.log("Speichere Verkauf offline:", verkaufsdaten);
+        let offlineVerkäufe = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
+        offlineVerkäufe.push(verkaufsdaten);
+        localStorage.setItem('offlineVerkäufe', JSON.stringify(offlineVerkäufe));
+    }
+
+    // Überarbeitung der übertragung_umsatz Funktion
+    async function übertragung_umsatz(data) {
+        if (!isOnline) {
+            speichereOfflineVerkauf(data);
+            statusfeld.innerText = "Verkauf offline gespeichert";
+            console.log("Verkauf offline gespeichert");
+            return;
+        }
+
+        try {
+            const response = await fetch("umsatz-api.php", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server-Fehler: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log(result);
+            statusfeld.innerText = "Verkauf online gespeichert";
+            console.log("Verkauf online gespeichert");
+        } catch (error) {
+            console.error("Fehler:", error);
+            speichereOfflineVerkauf(data);
+            statusfeld.innerText = "Fehler - Verkauf offline gespeichert";
+            console.log("Fehler - Verkauf offline gespeichert");
+        }
+    }
+
+    // Offline-Daten synchronisieren
+    async function syncOfflineData() {
+        const offlineVerkäufe = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
+        if (offlineVerkäufe.length === 0) return;
+
+        try {
+            for (const verkauf of offlineVerkäufe) {
+                await übertragung_umsatz(verkauf);
+            }
+            localStorage.removeItem('offlineVerkäufe');
+            statusfeld.innerText = "Offline-Daten synchronisiert";
+            console.log("Offline-Daten synchronisiert");
+        } catch (error) {
+            console.error("Sync-Fehler:", error);
+            statusfeld.innerText = "Fehler bei der Synchronisation";
+            console.log("Fehler bei der Synchronisation");
+        }
+    }
         
     </script>
 

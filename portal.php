@@ -448,18 +448,18 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
         let html = "";
         html += `
-        <h3>1. Kasse offline stellen</h3>
-        <p>Die Kasse offline stellen, um keine weiteren Verkäufe zuzulassen.</p>
-        <button id="btOffline" class="kleinerBt" disabled>offline</button>
+        <h3>1. Kasse aus Wartungsmodus stellen</h3>
+        <p>Die Kasse auf Wartungsmodus stellen, um keine weiteren Verkäufe zuzulassen.</p>
+        <button id="btOffline" class="kleinerBt" disabled>Wartungsmodus</button>
         <h3>2. Kontostande übertragen</h3>
         <p>Die Kontostände der Mitglieder in die Vereinsflieger-Datenbank übertragen.</p>
         <button id="btVFTansfer" class="kleinerBt" disabled>übertragen</button>
         <h3>Kontostände ausgleichen</h3>
         <p>Die Kontostände der Mitglieder in jeder Kategorie auf 0 € gesetzt.</p>
         <button id="btKontoausgleich" class="kleinerBt" disabled>zurücksetzen</button>
-        <h3>3. Kasse online stellen</h3>
-        <p>Die Kasse online stellen, um weitere Verkäufe zuzulassen.</p>
-        <button id="btOnline" class="kleinerBt" disabled>online</button>
+        <h3>3. Wartungsmodus aufgeben</h3>
+        <p>Den Wartungsmodus aufheben, um weitere Verkäufe zuzulassen.</p>
+        <button id="btOnline" class="kleinerBt" disabled>Wartung aufheben</button>
 
         `;
 
