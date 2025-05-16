@@ -8,52 +8,33 @@
     <!-- Skalierbarkeit für mobile Geräte sicherstellen -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Cafè Lüsse Kasse</title>
+    <title>ClubCash</title>
 
     <!-- Anweisung an Suchmaschinen, die Seite NICHT zu indexieren -->
     <meta name="robots" content="noindex, nofollow">
 
-    <link rel="stylesheet" href="../style.css?v=<?php echo time(); ?>">
-    <link rel="stylesheet" href="../farben.css?v=<?php echo time(); ?>">
+    <script>
+        const timestamp = new Date().getTime();
+        const stylesheets = [
+            "../style.css",
+            "../farben.css"
+        ];
+
+        stylesheets.forEach(path => {
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.href = `${path}?v=${timestamp}`;
+            document.head.appendChild(link);
+        });
+    </script>
 
     <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet">
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="../config.js?v=<?php echo time(); ?>"></script>
+    <script src="../config.js"></script>
+    <link rel="manifest" href="manifest.json">
 
 </head>
-
-<?php
-
-//Backup veranlassen
-
-$backupmeldung = '';
-ob_start();  // Output Buffering aktivieren
-include('backup.php');
-$backupmeldung = ob_get_clean();  // Ausgabe in die Variable speichern
-
-// Mitgliederdaten laden
-clearstatcache(true, "../daten/kunden.json"); // Clear file cache for this specific file
-$jsonKundenDatei = file_get_contents("../daten/kunden.json");
-$jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
-
-// Produkte laden
-$csvDatei = "../daten/produkte.csv";
-clearstatcache(true, $csvDatei); // Clear the file status cache for this specific file
-$produkte = [];
-
-if (($handle = fopen($csvDatei, "r")) !== FALSE) {
-    $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
-
-    while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
-        if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
-            $produkte[] = array_combine($header, $row); // Header mit Werten kombinieren
-        }
-    }
-    fclose($handle);
-}
-
-?>
 
 <body>
 
@@ -126,9 +107,12 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             </div>
 
             <div id="menubar">
-                <p class="zentriert"><b>Terminal <span id=terminal>X</span></b></p>
+                <p class="zentriert" style="margin: 0px;"><b>Terminal <span id=terminal>X</span></b></p>
+                    <div id="offlineFenster" style="visibility: hidden;">
+                        <p class="zentriert" style="padding: 10px; margin: 0px; color: var(--warning-color);"><b>System offline!</b> (<span id="offlineDS">0</span>)</p>
+                    </div>
                 <button id="Bt_preisfenster" onclick="preisfenster_öffnen()">Preisliste</button>
-                <button id="Bt_manuelleBuchung" onclick="manuell();">Direktbuchung</button>
+                <button id="Bt_manuelleBuchung" onclick="manuell();">manuelle Buchung</button>
                 <button id="abbruch" onclick="window.location.reload(true);">Abbruch</button>                
             </div>
 
@@ -162,8 +146,8 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         
     </div>
 
-    <!-- offline Bildschrim  -->
-    <div id="offlineFenster">
+    <!-- Wartungs Bildschrim  -->
+    <div id="Wartungsfenster">
             <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" style="margin: 50px ; height: 200px;">
          <h1>System ist im Wartungsmodus!</h1>
          <p>marcel@schommer.berlin</p>
@@ -182,17 +166,27 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         </svg>
     </div>
 
+        
+
     <script>
 
-        // Backupmeldung
-        console.log("Backupmeldung: " + <?php echo json_encode($backupmeldung); ?>);
+        //Backup der umsatz.csv
+        fetch("backup.php")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.text();
+            })
+            .then(result => console.log(result))
+            .catch(error => console.error("Error:", error));
+
 
         //Sanduhr
         window.onload = function() {
             // Preloader ausblenden, wenn die Seite vollständig geladen ist
             document.getElementById("preloader").style.display = "none";
         }
-
 
         // Terminal ermitteln aus der URL https://host/index.html?zahl=42
         const urlParams = new URLSearchParams(window.location.search);
@@ -204,8 +198,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
         document.getElementById("terminal").innerText = terminal;
 
-        let produkte = <?php echo json_encode($produkte); ?>;
-        let kunden = <?php echo json_encode($jsonKundenDaten); ?>;
         let warenkorb = [];
         let summe = 0.00;
         let eingabe = "";
@@ -231,8 +223,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
 // Configutarionen
 
-        if (!config.offlinemodus) document.getElementById("offlineFenster").style = "display: none"; // Offlinemodus
-        
+        if (!config.wartungsmodus) document.getElementById("Wartungsfenster").style = "display: none"; // Offlinemodus
         if (!config.tagesabrechnung) document.getElementById("bt_tagesabrechnung").style = "display: none";
         if (!config.tageszusammenfassung) document.getElementById("bt_tageszusammenfassung").style = "display: none";
         if (!config.kundentagesübersicht) document.getElementById("bt_kundentagesübersicht").style = "display: none";
@@ -245,7 +236,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             document.addEventListener('touchstart', resetTimer);
             document.addEventListener('scroll', resetTimer);
             resetTimer(); // aktiviert den Bildschirmschoner
-
         }
 
         let tastenkontrolle = function(event) {
@@ -278,12 +268,65 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
         document.addEventListener("keydown", tastenkontrolle);
 
-        console.table(produkte); // Tabelle der Produkte in der Konsole anzeigen
-        console.table(kunden); // Tabelle der Kunden in der Konsole anzeigen
+        // Wait for both promises to resolve before calling functions
 
-        preisliste();
+        // let produkte = loadCSV("../daten/produkte.csv"); // CSV-Datei mit den Produkten laden
+              
+        //  let kunden = loadJSON("../daten/kunden.json"); // JSON-Datei mit den Kundendaten laden
 
-        direktwahl(); // Direktwahl-Funktion aufrufen - Produkte in der Sortierung 1-8 anzeigen
+        let produkte = [];
+        let kunden = [];
+
+        Promise.all([
+                loadJSON("../daten/produkte.json"), 
+                loadJSON("../daten/kunden.json")
+            ])
+            .then(([geladeneProdukte, geladeneKunden]) => {
+                produkte = geladeneProdukte;
+                kunden = geladeneKunden;
+                preisliste();
+                direktwahl(); 
+            })
+            .catch(error => {
+            console.error("Error loading data:", error);
+            });    
+
+        async function loadJSON(url) {
+            // Add timestamp to prevent caching
+            const timestamp = new Date().getTime();
+            const response = await fetch(`${url}?v=${timestamp}`);
+            if (!response.ok) {
+                throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+            }
+            const data = await response.json();
+            return data;
+        }
+
+        async function loadCSV(url) {
+            // Add timestamp to prevent caching
+            const timestamp = new Date().getTime();
+            const response = await fetch(`${url}?v=${timestamp}`);
+            const data = await response.text();
+
+            // Split into lines 
+            const lines = data.trim().split('\n');
+
+            // First line contains column headers
+            const headers = lines[0].split(';');
+
+            // Process remaining lines
+            const result = lines.slice(1).map(line => {
+                const values = line.split(';');
+                // Create object with column headers as keys
+                return headers.reduce((obj, header, index) => {
+                    // Filter quotes from values
+                    obj[header] = values[index] ? values[index].replace(/"/g, '') : values[index];
+                    return obj;
+                }, {});
+            });
+
+            return result;
+        }
 
         //Hamburger Menu
         function toggleMenu() {
@@ -297,6 +340,8 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
         function direktwahl() {
 
+            console.log("ProdukteX: ", produkte);
+         
             produkte.forEach(produkt => {
                 if (produkt.Sortierung > 0 && produkt.Sortierung < 11) {
                     let button = document.createElement("button");
@@ -340,18 +385,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                     let zeit = now.toTimeString().split(" ")[0].slice(0, 5);
 
                     for (ds of warenkorb) {
-                        /*let ds2 = {
-                            Datum: datum,
-                            Zeit: zeit,
-                            Terminal: terminal,
-                            Schlüssel: kunde.key2designation,
-                            EAN: ds.EAN,
-                            Produkt: ds.Bezeichnung,
-                            Kategorie: ds.Kategorie,
-                            Preis: ds.Preis,
-                            MwSt: ds.MwSt,
-                            Kundennummer: kunde.uid
-                        }*/
                         let ds2 = {
                             Datum: datum,
                             Zeit: zeit,
@@ -367,9 +400,9 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                         warenkorb2.push(ds2);
                     }
 
-                    übertragung_verkaufsliste(warenkorb2);
+                    übertragung_umsatz(warenkorb2);
 
-                    statusfeld.innerText = "Prokukte bezahlt!";
+                    //statusfeld.innerText = "Prokukte bezahlt!";
                     tbody.innerHTML = `
 			        <tr>
 			            <td class="zentriert">
@@ -422,6 +455,12 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         async function kundenkontoübersicht(KundenNr) {
             document.getElementById('abbruch').innerText="zurück";
             eingabestopp();
+
+            if (!isOnline) {    
+                datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, deine Umsätze anzugezeigen. Bitte warte, bis das System wieder online ist, oder logge dich in das Onlineportal ein.</h1></div>`;
+                return;
+            }
+
 
             let kontosumme = 0.0;
 
@@ -482,12 +521,17 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                 console.error("Fehler beim Laden der Daten:", error);
             }
         }
-
+        
         async function tagesabrechnung() {
             document.getElementById('abbruch').innerText="zurück";
             tastatur.style.display = 'none';
 
             eingabestopp();
+
+            if (!isOnline) {    
+                datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, die Tagesumsätze anzugezeigen. Bitte warte, bis das System wieder online ist, oder logge dich in das Onlineportal ein.</h1></div>`;
+                return;
+            }
 
             let tagessumme = 0.0;
 
@@ -557,6 +601,11 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             eingabestopp();
             tastatur.style.display = 'none';
 
+            if (!isOnline) {    
+                datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, die Tagesumsätze anzugezeigen. Bitte warte, bis das System wieder online ist, oder logge dich in das Onlineportal ein.</h1></div>`;
+                return;
+            }
+
             let tagessumme = 0.0;
 
             try {
@@ -606,7 +655,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
                     let tr = document.createElement("tr");
 
-                    if (product == "Direktbuchung") {
+                    if (product == "manuelle Buchung") {
                         tr.innerHTML = `
                 <td class="zentriert"> ${details.count} </td>
                 <td> ${product} </td>
@@ -646,6 +695,11 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             document.getElementById('abbruch').innerText="zurück";
             eingabestopp();
             tastatur.style.display = 'none';
+
+            if (!isOnline) {    
+                datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, die Tagesumsätze anzugezeigen. Bitte warte, bis das System wieder online ist, oder logge dich in das Onlineportal ein.</h1></div>`;
+                return;
+            }
 
             let tagessumme = 0.0;
 
@@ -718,7 +772,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
                         let tr = document.createElement("tr");
 
-                        if (product == "Direktbuchung") {
+                        if (product == "manuelle Buchung") {
                             tr.innerHTML = `
                     <td class="zentriert">` + details.count + `</td>
                     <td class="links">` + product + `</td>
@@ -777,31 +831,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             }, 300);
         }
 
-        async function übertragung_verkaufsliste(data) {
-            fetch("verkaufsliste-api.php", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Server-Fehler: ${response.status}`);
-                    }
-                    return response.text(); // Erst als Text lesen
-                })
-                .then(text => {
-                    try {
-                        return JSON.parse(text); // Dann als JSON parsen
-                    } catch (error) {
-                        throw new Error("Ungültige JSON-Antwort: " + text);
-                    }
-                })
-                .then(result => console.log(result))
-                .catch(error => console.error("Fehler:", error));
-        }
-
         function manuell() {
             tastatur.style.display = "block";
             statusfeld.innerText = "Direkte Buchung";
@@ -820,10 +849,10 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                 }
                 let manuelles_Produkt = {
                     EAN: 9990000000000,
-                    Bezeichnung: "Direktbuchung",
+                    Bezeichnung: "manuelle Buchung",
                     Preis: (eingabestring / 100).toFixed(2),
                     MwSt: 19,
-                    Kategorie: "Direktbuchung"
+                    Kategorie: "manuelle Buchung"
                 }
 
                 tastatur.style.display = "none";
@@ -921,6 +950,7 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
         //Mittagessenpreis
         function mittagspreis() {
+           
             eingabestopp();
             statusfeld.innerText = "Preisänderung für das Essen";
             Bt_preisfenster.style.display = 'none';
@@ -930,6 +960,11 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             summenfeld.innerText = "0.00";
             eingabestring = "";
 
+            if (!isOnline) {    
+                datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, den Preis anzupassen. Bitte warte, bis das System wieder online ist, oder buche das Essen als <br> *manuelle Buchung*.</h1></div>`;
+                return;
+            }
+
             tastatur.style.display = 'block';
 
             datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Bitte gebe den neuen Preis für das Essen ein.</h1></div>`;
@@ -937,12 +972,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             document.getElementById('BT_Abbruch').onclick = function() {window.location.reload(true);}
         
             document.getElementById('BT_EingabeBestätigt').onclick = function() {
-                datenfeld.innerHTML = `
-                <p><p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Der Preis wurde geändert!<b></p>
-                <p class="zentriert" style="font-size: 30px;">Der neue Preis für das heutige Essen beträgt jetzt: </p>
-                <h1 class="zentriert" style="color: var(--success-color);">` + zifferneingabefeld.firstChild.nodeValue + ` €</h1>
-                `;
-                tastatur.style.display = 'none';
                 let preisNum = parseFloat(zifferneingabefeld.firstChild.nodeValue);
                 update_mittagspreis(preisNum);
             };
@@ -952,29 +981,42 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             document.getElementById('abbruch').innerText="zurück";
             const produkt = produkte.find(item => item.EAN === "1");
             if (!produkt) {
-                console.error("Fehler: Produkt mit EAN 1 nicht gefunden.");
                 statusbar.innerHTML = "Fehler in der Produktdatenbank!";
                 return;
             }
 
             produkt.Preis = neuerPreis.toFixed(2); // Preis aktualisieren
-
-            // CSV-Daten aus Array generieren (Annahme: Kopfzeile bleibt gleich)
-            const csvData = "EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung\n" +
-                produkte.map(p => `${p.EAN};${p.Bezeichnung};${p.Preis};${p.MwSt};${p.Kategorie};${p.Bemerkung};${p.Sortierung}`).join("\n");
-
-            fetch('save_produkte_csv.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        csvData
-                    }) // Jetzt im richtigen JSON-Format
+        
+            fetch('json-schreiben.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    data: produkte,
+                    filename: '../daten/produkte.json'
                 })
-                .then(response => response.text()) // PHP gibt eine Textmeldung zurück
-                .then(data => statusbar.innerHTML = 'Antwort vom Server: ' + data)
-                .catch(error => statusbar.innerHTML = 'Fehler: ' + error);
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    console.log('JSON erfolgreich gespeichert');
+                    datenfeld.innerHTML = `
+                        <p><p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Der Preis wurde geändert!<b></p>
+                        <p class="zentriert" style="font-size: 30px;">Der neue Preis für das heutige Essen beträgt jetzt: </p>
+                        <h1 class="zentriert" style="color: var(--success-color);">` + zifferneingabefeld.firstChild.nodeValue + ` €</h1>
+                        `;
+                    tastatur.style.display = 'none';
+                } else {
+                    console.error('Fehler:', result.error);
+                    datenfeld.innerHTML = '<p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Preis konnte nicht angepasst werden weil: ' + result.error;
+                }
+            })
+            .catch(error => {
+                console.error('Fehler:', error)
+                datenfeld.innerHTML = '<p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Preis konnte nicht angepasst werden weil: ' + error;
+            });
         }
 
         // Funktion zum Anzeigen des Bildschirm-Schoners
@@ -1023,6 +1065,101 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                 check.style.strokeDashoffset = "0";
             }, 50);
         }
+        
+    // Service Worker registrieren
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+        .then(registration => {
+            console.log('ServiceWorker registriert');
+        })
+        .catch(err => {
+            console.log('ServiceWorker Fehler: ', err);
+        });
+    }
+
+    // Offline-Funktionalität
+    let isOnline = navigator.onLine;
+    const offlineFenster = document.getElementById('offlineFenster');
+
+    // Check initial online status
+    if (!navigator.onLine) {
+        isOnline = false;
+        offlineFenster.style.visibility = 'visible';
+        let oV = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
+        document.getElementById('offlineDS').innerText = oV.length; 
+    }
+
+    window.addEventListener('online', () => {
+        isOnline = true;
+        offlineFenster.style.visibility = 'hidden';
+        syncOfflineData();
+    });
+
+    window.addEventListener('offline', () => {
+        isOnline = false;
+        offlineFenster.style.visibility = 'visible';
+    });
+
+    // Offline-Daten im localStorage speichern
+    function speichereOfflineVerkauf(verkaufsdaten) {
+        console.log("Speichere Verkauf offline:", verkaufsdaten);
+        let offlineVerkäufe = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
+        offlineVerkäufe.push(verkaufsdaten);
+        localStorage.setItem('offlineVerkäufe', JSON.stringify(offlineVerkäufe));
+    }
+
+    // Überarbeitung der übertragung_umsatz Funktion
+    async function übertragung_umsatz(data) {
+        if (!isOnline) {
+            speichereOfflineVerkauf(data);
+            statusfeld.innerText = "Verkauf offline gespeichert";
+            console.log("Verkauf offline gespeichert");
+            return;
+        }
+
+        try {
+            const response = await fetch("umsatz-api.php", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server-Fehler: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log(result);
+            statusfeld.innerText = "Verkauf online gespeichert";
+            console.log("Verkauf online gespeichert");
+        } catch (error) {
+            console.error("Fehler:", error);
+            speichereOfflineVerkauf(data);
+            statusfeld.innerText = "Fehler - Verkauf offline gespeichert";
+            console.log("Fehler - Verkauf offline gespeichert");
+        }
+    }
+
+    // Offline-Daten synchronisieren
+    async function syncOfflineData() {
+        const offlineVerkäufe = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
+        if (offlineVerkäufe.length === 0) return;
+
+        try {
+            for (const verkauf of offlineVerkäufe) {
+                await übertragung_umsatz(verkauf);
+            }
+            localStorage.removeItem('offlineVerkäufe');
+            statusfeld.innerText = "Offline-Daten synchronisiert";
+            console.log("Offline-Daten synchronisiert");
+        } catch (error) {
+            console.error("Sync-Fehler:", error);
+            statusfeld.innerText = "Fehler bei der Synchronisation";
+            console.log("Fehler bei der Synchronisation");
+        }
+    }
         
     </script>
 

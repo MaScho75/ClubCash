@@ -11,23 +11,17 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
 $jsonKundenDatei = file_get_contents("daten/kunden.json");
 $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
 
-// csv produkte laden
-$csvDatei = "daten/produkte.csv"; 
-$produkte = [];
+// Produkte laden
+$jsonProdukteDatei = file_get_contents("daten/produkte.json");
+$jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
 
-if (($handle = fopen($csvDatei, "r")) !== FALSE) {
-    $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
+// Wareneingang laden
+$jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
+$jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
 
-    while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
-        if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
-            $produkte[] = array_combine($header, $row); // Header mit Werten kombinieren
-        }
-    }
-    fclose($handle);
-}
 
-// csv verkaufsliste laden
-$csvDatei2 = "daten/verkaufsliste.csv"; 
+// csv umsatz laden
+$csvDatei2 = "daten/umsatz.csv"; 
 $verkäufe = [];
 
 if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
@@ -36,21 +30,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
         if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
             $verkäufe[] = array_combine($header, $row); // Header mit Werten kombinieren
-        }
-    }
-    fclose($handle);
-}
-
-// csv wareneingang laden
-$csvDatei3 = "daten/wareneingang.csv"; 
-$wareneingang = [];
-
-if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
-    $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
-
-    while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
-        if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
-            $wareneingang[] = array_combine($header, $row); // Header mit Werten kombinieren
         }
     }
     fclose($handle);
@@ -140,22 +119,27 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
     <li>
       <a href="#" id="MenuDownload" style="display: none;">Download</a>
       <ul>
-        <li><a href="daten/produkte.csv" >Produktliste CSV</a></li>
+        <li><a href="daten/produkte.json" >Produktliste CSV</a></li>
         <li><a href="daten/kunden.json" >Kundenliste JSON</a></li>
-        <li><a href="daten/verkaufsliste.csv" >Verkaufsliste CSV</a></li>
+        <li><a href="daten/umsatz.csv" >umsatz CSV</a></li>
         <li><a href="#" onclick="backupliste()">Backups</a></li>
       </ul>
     </li>
   </ul>
 </nav>
-       
+
+<div id="portalmenu2">
+    <h2>Hallo <span id="userName"></span>, willkommen im Portal!</h2>
+</div>
+
 <div id="portal-inhalt">
-    <p>Hallo <span id="userName"></span>, willkommen im Portal!</p>
     <?php include('info.html'); ?>
 </div>
 
 
     <script>
+
+        let portalmenu2 = document.getElementById('portalmenu2'); 
 
         // Datum mitteleuropäisch formatiert
             let heute = new Date();
@@ -187,9 +171,9 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         
         // PHP-Variablen in JavaScript-Variablen umwandeln
         const kunden = <?php echo json_encode($jsonKundenDaten); ?>;
-        let produkte = <?php echo json_encode($produkte); ?>;
+        let produkte = <?php echo json_encode($jsonProdukteDaten); ?>;
         let verkäufe = <?php echo json_encode($verkäufe); ?>;
-        let wareneingang = <?php echo json_encode($wareneingang); ?>;
+        let wareneingang = <?php echo json_encode($jsonWareneingangDaten); ?>;
         let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
 
         // Bereinige die Schlüssel von BOM und unsichtbaren Zeichen
@@ -459,20 +443,23 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
     }
 
     function Abrechnung() {
-        let html = "<h2>Abrechnung</h2>";
+
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>Abrechnung</h2>";
+
+        let html = "";
         html += `
-        <h3>1. Kasse offline stellen</h3>
-        <p>Die Kasse offline stellen, um keine weiteren Verkäufe zuzulassen.</p>
-        <button id="btOffline" class="kleinerBt" disabled>offline</button>
+        <h3>1. Kasse aus Wartungsmodus stellen</h3>
+        <p>Die Kasse auf Wartungsmodus stellen, um keine weiteren Verkäufe zuzulassen.</p>
+        <button id="btOffline" class="kleinerBt" disabled>Wartungsmodus</button>
         <h3>2. Kontostande übertragen</h3>
         <p>Die Kontostände der Mitglieder in die Vereinsflieger-Datenbank übertragen.</p>
         <button id="btVFTansfer" class="kleinerBt" disabled>übertragen</button>
         <h3>Kontostände ausgleichen</h3>
         <p>Die Kontostände der Mitglieder in jeder Kategorie auf 0 € gesetzt.</p>
         <button id="btKontoausgleich" class="kleinerBt" disabled>zurücksetzen</button>
-        <h3>3. Kasse online stellen</h3>
-        <p>Die Kasse online stellen, um weitere Verkäufe zuzulassen.</p>
-        <button id="btOnline" class="kleinerBt" disabled>online</button>
+        <h3>3. Wartungsmodus aufgeben</h3>
+        <p>Den Wartungsmodus aufheben, um weitere Verkäufe zuzulassen.</p>
+        <button id="btOnline" class="kleinerBt" disabled>Wartung aufheben</button>
 
         `;
 
@@ -496,6 +483,9 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
             if (tempBestand[verkauf.EAN]) {
                 tempBestand[verkauf.EAN] -= 1;
             }
+            else {
+                tempBestand[verkauf.EAN] = -1;
+            }
         });
 
         // Ergebnisse in das warenbestand Array übertragen
@@ -512,17 +502,21 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
 
     function Wareneingang() {
 
-        let html = "<h2 style='display: inline;''>Wareneingang</h2>";
-        html += `
+        let menu2 = "<h2 style='display: inline;' >Wareneingang</h2>";
+        menu2 += `
             <button id="addButton" class="kleinerBt" >hinzufügen</button>
             <button id="saveButton" class="kleinerBt" >speichern</button>
             <button onclick="location.reload();" class="kleinerBt" >abbruch</button>
+        `;
+        let html = "";
+        html += `
             <table id="dataTable" class="portal-table">
                 <thead><tr id="tableHeader"></tr></thead>
                 <tbody id="tableBody"></tbody>
             </table>
         `;
 
+        portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
 
         createEditableTable(wareneingang); // Tabelle erstellen und HTML einfügen
@@ -650,12 +644,25 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                             bezeichnungTd.appendChild(select);
                             tr.appendChild(bezeichnungTd);
                             
+                            // Kategorie und Preis nur anzeigen, wenn ein Produkt ausgewählt ist
                             const kategorieTd = document.createElement("td");
-                            kategorieTd.innerText = item[key] ? produkte.find(p => p.EAN == item[key]).Kategorie : ""; // Kategorie aus dem Produkt-Array holen;
-                            tr.appendChild(kategorieTd);
-                            
                             const preisTd = document.createElement("td");
-                            preisTd.innerText = item[key] ? produkte.find(p => p.EAN == item[key]).Preis + " €" : " €"; // Preis aus dem Produkt-Array holen
+                            
+                            if (item[key]) {
+                                const produkt = produkte.find(p => p.EAN == item[key]);
+                                if (produkt) {
+                                    kategorieTd.innerText = produkt.Kategorie;
+                                    preisTd.innerText = produkt.Preis + " €";
+                                } else {
+                                    kategorieTd.innerText = "";
+                                    preisTd.innerText = " €";
+                                }
+                            } else {
+                                kategorieTd.innerText = "";
+                                preisTd.innerText = " €";
+                            }
+                            
+                            tr.appendChild(kategorieTd);
                             tr.appendChild(preisTd);
                         }
                     });
@@ -748,14 +755,15 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                     const updatedData = saveChanges();
                     wareneingang = updatedData; // Aktualisiere die wareneingang-Variable
 
-                    fetch('csv-schreiben.php', {
+                    fetch('json-schreiben.php', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
                         },
                         body: JSON.stringify({
                             data: wareneingang,
-                            filename: 'daten/wareneingang.csv'
+                            filename: 'daten/wareneingang.json'
                         })
                     })
                     .then(response => response.text())
@@ -763,7 +771,7 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                         alert('Wareneingangstabelle erfolgreich gespeichert:', result);
                     })
                     .catch(error => {
-                        alert('Fehler beim CSV erstellen:', error);
+                        alert('Fehler beim JSON erstellen:', error);
                     });
 
             };
@@ -772,7 +780,9 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
     }
 
     function Farben() {
-        portalInhalt.innerHTML = "<h2>Farben</h2><p>Bitte warten, die Farben werden geladen...</p>";
+
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>verwendete Farbpalette</h2>";
+        portalInhalt.innerHTML = "<p>Bitte warten, die Farben werden geladen...</p>";
         
         console.log("Farben laden...");
         var xhr = new XMLHttpRequest();
@@ -795,9 +805,10 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                 return response.text();
             })
             .then(text => {
+
+                portalmenu2.innerHTML = "<h2 style='display: inline;'>Programmeinstellungen (config.js)</h2>";
                 portalInhalt.innerHTML = `
-                    <h2>Programmeinstellungen (config.js)</h2>
-                    <pre style="background: #f4f4f4; padding: 10px; overflow-x: auto;">${escapeHtml(text)}</pre>
+                    <pre padding: 10px; overflow-x: auto;">${escapeHtml(text)}</pre>
                 `;
             })
             .catch(error => {
@@ -820,7 +831,9 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
     }
 
     function Kundentagesübersicht() {
-        let html = "<h2>Kundentagesumsätze</h2><table class='portal-table'>";
+
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>Kundentagesübersicht</h2>";
+        let html = "<table class='portal-table'>";
         kunden.forEach(kunde => {
             let summe= 0;
             let htmlkunde = ""
@@ -860,18 +873,23 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
     }    
 
     function Produkte_editieren() {
-        console.log("Produkte editieren...");
-        let html = "<h2 style='display: inline;''>Produktkatalog editieren</h2>";
-         html += `
+       
+        let menu2 = "<h2 style='display: inline;''>Produktkatalog editieren</h2>";
+        menu2 += `
             <button id="addButton" class="kleinerBt" >hinzufügen</button>
             <button id="saveButton" class="kleinerBt" >speichern</button>
             <button onclick="location.reload();" class="kleinerBt" >abbruch</button>
+        `;
+        
+        let html = "";
+         html += `
             <table id="dataTable" class="portal-table">
                 <thead><tr id="tableHeader"></tr></thead>
                 <tbody id="tableBody"></tbody>
             </table>
         `;
 
+        portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
 
         // Aktuellen Warenbestand berechnen
@@ -910,7 +928,7 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                 }
                 renderTable();
             }
-
+            
             function renderHeader() {
                 tableHeader.innerHTML = "";
                 keys.forEach(key => {
@@ -927,11 +945,22 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                         data.sort((a, b) => {
                             let valueA = a[key];
                             let valueB = b[key];
-                            if (typeof valueA === 'string') valueA = valueA.toLowerCase();
-                            if (typeof valueB === 'string') valueB = valueB.toLowerCase();
-                            if (valueA < valueB) return sortAscending ? -1 : 1;
-                            if (valueA > valueB) return sortAscending ? 1 : -1;
-                            return 0;
+                            
+                            // Check if values can be converted to numbers
+                            const numA = Number(valueA);
+                            const numB = Number(valueB);
+                            
+                            if (!isNaN(numA) && !isNaN(numB)) {
+                                // Numeric sorting
+                                return sortAscending ? numA - numB : numB - numA;
+                            } else {
+                                // String sorting
+                                if (typeof valueA === 'string') valueA = valueA.toLowerCase();
+                                if (typeof valueB === 'string') valueB = valueB.toLowerCase();
+                                if (valueA < valueB) return sortAscending ? -1 : 1;
+                                if (valueA > valueB) return sortAscending ? 1 : -1;
+                                return 0;
+                            }
                         });
                         renderTable();
                         renderHeader();
@@ -956,15 +985,26 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
 
                     keys.forEach(key => {
                         const td = document.createElement("td");
+                        // Zahlenfelder rechts ausrichten
+                        if (['Bestand', 'Preis', 'Sortierung', 'MwSt', 'EAN', 'Min'].includes(key)) {
+                            td.classList.add('rechts');
+                        } else {
+                            td.classList.add('links'); 
+                        }
+
                         if (key === 'Bestand') {
                             td.contentEditable = !deletedRows.has(index);
-                            td.innerText = item[key] || '0';
+                            td.innerText = item[key] || '';
+                            // Prüfe ob Bestand unter Mindestbestand
+                            if (item['Min'] && parseInt(item[key] || 0) < parseInt(item['Min'])) {
+                                td.style.backgroundColor = '#ffcccc';
+                            }
                             td.onblur = () => {
-                                const newValue = parseInt(td.innerText) || 0;
+                                const newValue = td.innerText === '' ? 0 : parseInt(td.innerText);
                                 const oldValue = item[key] || 0;
                                 if (newValue !== oldValue) {
                                     const diff = newValue - oldValue;
-                                    if (diff > 0) {
+                                    if (diff !== 0) {
                                         const wareneingangEntry = {
                                             Eingang: heute.toISOString().split('T')[0],
                                             EAN: item.EAN,
@@ -973,6 +1013,12 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                                         wareneingang.push(wareneingangEntry);
                                     }
                                     markAsEdited(index, key, newValue, td);
+                                }
+                                // Update Hintergrundfarbe nach Änderung
+                                if (item['Min'] && newValue < parseInt(item['Min'])) {
+                                    td.style.backgroundColor = '#ffcccc';
+                                } else {
+                                    td.style.backgroundColor = '';
                                 }
                             };
                         } else {
@@ -1055,26 +1101,28 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                 const updatedData = saveChanges();
                 produkte = updatedData.map(({Bestand, ...rest}) => rest);
 
-                fetch('csv-schreiben.php', {
+                fetch('JSON-schreiben.php', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({
                         data: produkte,
-                        filename: 'daten/produkte.csv'
+                        filename: 'daten/produkte.json'
                     })
                 })
                 .then(response => response.text())
                 .then(() => {
-                    return fetch('csv-schreiben.php', {
+                    return fetch('JSON-schreiben.php', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
                         },
                         body: JSON.stringify({
                             data: wareneingang,
-                            filename: 'daten/wareneingang.csv'
+                            filename: 'daten/wareneingang.json'
                         })
                     });
                 })
@@ -1093,9 +1141,11 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
 
     function Mitgliederdaten_anzeigen() {
                 
-        let html = '<h2>Kundenliste</h2><table class="portal-table">';
+
+        let menu2 = "<h2 style='display: inline;'>Kundenliste</h2> Rolle: K = Kassenwart / V = Verkäufer / M = Mitglied / G = Gast";
+
+        let html = '<table class="portal-table">';
         html += `
-        <p>Rolle: K = Kassenwart / V = Verkäufer / M = Mitglied / G = Gast </p>
         <tr>
             <th>ID</th>
             <th class="links">Vorname</th>
@@ -1137,15 +1187,17 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         });
 
         html += '</table>';
-                portalInhalt.innerHTML = html;
+
+        portalmenu2.innerHTML = menu2;
+        portalInhalt.innerHTML = html;
 
     }	
 
     function Kundenübersicht(kundennummer,datum1,datum2) {
 
-        console.log("Kundenübersicht für Kundennummer: " + kundennummer);
-
-        let html = '<h2>Kundenübersicht</h2><table class="portal-table">';
+        let menu2 = "<h2 style='display: inline;'>Übersicht</h2>";
+        
+        let html = '';
         
         const kunde = kunden.find(kunde => kunde.uid == kundennummer);
         
@@ -1160,6 +1212,17 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         KäufeFilter = verkäufe.filter(auswahl => auswahl.Kundennummer == kundennummer && auswahl.Datum >= datum1.toISOString().split('T')[0] && auswahl.Datum <= datum2.toISOString().split('T')[0]);
 
         let summe = 0;        
+
+        menu2 += `
+            <input class="DatumInput" type="date" id="datum_anfang" value="${datum1.toISOString().split('T')[0]}">
+            <h2 style="display: inline;"> bis </h2>
+            <input class="DatumInput" type="date" id="datum_ende" value="${datum2.toISOString().split('T')[0]}">
+            <button id="bt_aktualisierung" class="kleinerBt">aktualisieren</button>
+            <button class="kleinerBt" onclick="Kundenübersicht(${kunde.uid}, monatsbeginn, heute)">Monat</button>
+            <button class="kleinerBt" onclick="Kundenübersicht(${kunde.uid}, wochenbeginn, heute)">Woche</button>
+            <button class="kleinerBt" onclick="Kundenübersicht(${kunde.uid}, heute, heute)">Tag</button>
+        `;
+
 
         html += `
             <table style="border-spacing: 10px;">
@@ -1189,15 +1252,10 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                 </tr>
             </table>
             <hr>
-            <h2 style="display: inline;">Auswertung</h2>
-            <input class="DatumInput" type="date" id="datum_anfang" value="${datum1.toISOString().split('T')[0]}">
-            <h2 style="display: inline;"> bis </h2>
-            <input class="DatumInput" type="date" id="datum_ende" value="${datum2.toISOString().split('T')[0]}">
-            <button id="bt_aktualisierung" class="kleinerBt">aktualisieren</button>
-            <button class="kleinerBt" onclick="Kundenübersicht(${kunde.uid}, monatsbeginn, heute)">Monat</button>
-            <button class="kleinerBt" onclick="Kundenübersicht(${kunde.uid}, wochenbeginn, heute)">Woche</button>
-            <button class="kleinerBt" onclick="Kundenübersicht(${kunde.uid}, heute, heute)">Tag</button>
-            <hr>
+
+  
+           
+
             <h2 style="display: inline;"><a id="TabellenLink1" style='text-decoration: none;' href='#' onclick='toggleTabelle("Tabelle1", "TabellenLink1")'>➡️</a> Umsätze</h2>
             <table id="Tabelle1" class="portal-table" style="display: none; margin-top: 20px;">
                 <tr>
@@ -1353,6 +1411,7 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         </tbody></table>`;
         
 
+        portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html 
 
         const btn = document.getElementById("bt_aktualisierung");
@@ -1367,7 +1426,8 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
     }
 
     function Mitgliedsdaten_ziehen() {
-        portalInhalt.innerHTML = "<h2>Vereinsflieger Datenimport</h2><p>Bitte warten, die Mitgliederdaten werden aus Vereinsflieger abgerufen...</p>";
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>Vereinsflieger Datenimport</h2>";
+        portalInhalt.innerHTML = "<p>Bitte warten, die Mitgliederdaten werden aus Vereinsflieger abgerufen...</p>";
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "pull_Mitgliedsdaten_Vereinsflieger.php", true); 
         xhr.onreadystatechange = function () {
@@ -1392,10 +1452,13 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         let datum1 = heute; // Aktuelles Datum im Format YYYY-MM-DD
 
         let summe = 0;
-        let html = "";
-        html = `
+
+        let menu2 = "";
+        menu2 += `
             <h2 style="display: inline;">Tagesumsätze - ${datum1.toISOString().split('T')[0]}</h2>
         `;
+
+        let html = "";
 
         html += `
         <table class="portal-table">
@@ -1434,6 +1497,8 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                 <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
             </tr>
         </tbody></table>`;
+
+        portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
   
     }
@@ -1449,8 +1514,12 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         } 
         
         let summe = 0;
+
+        let menu2 = "";
+
+
         let html = "";
-        html = `
+        menu2 += `
             <h2 style="display: inline;">Umsätze</h2>
             <input class="DatumInput" type="date" id="datum_anfang" value="${datum1.toISOString().split('T')[0]}">
             <h2 style="display: inline;"> bis </h2>
@@ -1459,12 +1528,11 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
             <button class="kleinerBt" onclick="Umsätze(monatsbeginn, heute)">Monat</button>
             <button class="kleinerBt" onclick="Umsätze(wochenbeginn, heute)">Woche</button>
             <button class="kleinerBt" onclick="Umsätze(heute, heute)">Tag</button>
-
         `;
 
         //Tabelle1 - Einzelumsätze
             html += `
-            <hr>
+  
             <h2 style="display: inline;"><a id="TabellenLink1" style='text-decoration: none;' href='#' onclick='toggleTabelle("Tabelle1", "TabellenLink1")'>➡️</a> Einzelumsätze</h2>
             <table id="Tabelle1" class="portal-table" style="display: none; margin-top: 20px;">
                 <tr>
@@ -1613,7 +1681,9 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
 
             </table>`;
 
+        portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
+
 
         const btn = document.getElementById("bt_aktualisierung");
         btn.addEventListener("click", () => {
@@ -1631,10 +1701,11 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
         let produktsumme = 0;   
         let html = "";
 
-        html = `
+        let menu2 = "";
+        menu2 += `
             <h2 style="display: inline;">Tageszusammenfassung - ${datum1.toISOString().split('T')[0]}</h2>
-          
         `;
+
         html += `
         <table class="portal-table">
             <tr>
@@ -1685,6 +1756,7 @@ if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
                 <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
             </tr>
         </tbody></table>`;
+        portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
     }
     
