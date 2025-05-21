@@ -2,52 +2,33 @@
 session_start();
 
 // Prüfen, ob der Benutzer eingeloggt ist
-<<<<<<< HEAD
-    if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-        header('Location: index.php'); // Falls nicht eingeloggt, zurück zur Login-Seite
-        exit();
-    }
-=======
 if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
     header('Location: index.php'); // Falls nicht eingeloggt, zurück zur Login-Seite
     exit();
 }
 
 // Mitgliederdaten laden
-clearstatcache(true, "daten/kunden.json"); // Clear file cache for this specific file
 $jsonKundenDatei = file_get_contents("daten/kunden.json");
 $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
 
-// Produkte laden
-clearstatcache(true, "daten/produkte.json"); // Clear file cache for this specific file
-$jsonProdukteDatei = file_get_contents("daten/produkte.json");
-$jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
+// csv produkte laden
+$csvDatei = "daten/produkte.csv"; 
+$produkte = [];
 
-// wareneingang laden
-clearstatcache(true, "daten/wareneingang.json"); // Clear file cache for this specific file
-$jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
-$jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
->>>>>>> main
+if (($handle = fopen($csvDatei, "r")) !== FALSE) {
+    $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
 
-// Configurationsdatei einbinden
-    $jsonConfigDatei = file_get_contents("daten/config.json");
-    $jsonConfigDaten = json_decode($jsonConfigDatei, true); // true gibt ein assoziatives Array zurück
-    
-// Mitgliederdaten laden
-    $jsonKundenDatei = file_get_contents("daten/kunden.json");
-    $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
+    while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
+        if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
+            $produkte[] = array_combine($header, $row); // Header mit Werten kombinieren
+        }
+    }
+    fclose($handle);
+}
 
-// Produkte laden
-    $jsonProdukteDatei = file_get_contents("daten/produkte.json");
-    $jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
-
-// Wareneingang laden
-    $jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
-    $jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
-
-// csv umsatz laden
-    $csvDatei2 = "daten/umsatz.csv"; 
-    $verkäufe = [];
+// csv verkaufsliste laden
+$csvDatei2 = "daten/verkaufsliste.csv"; 
+$verkäufe = [];
 
 if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
@@ -55,6 +36,21 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
         if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
             $verkäufe[] = array_combine($header, $row); // Header mit Werten kombinieren
+        }
+    }
+    fclose($handle);
+}
+
+// csv wareneingang laden
+$csvDatei3 = "daten/wareneingang.csv"; 
+$wareneingang = [];
+
+if (($handle = fopen($csvDatei3, "r")) !== FALSE) {
+    $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
+
+    while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
+        if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
+            $wareneingang[] = array_combine($header, $row); // Header mit Werten kombinieren
         }
     }
     fclose($handle);
@@ -71,7 +67,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     <!-- Skalierbarkeit für mobile Geräte sicherstellen -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>ClubCash Portal</title>
+    <title>Cafè Lüsse Portal</title>
 
     <!-- Anweisung an Suchmaschinen, die Seite NICHT zu indexieren -->
     <meta name="robots" content="noindex, nofollow">
@@ -81,6 +77,8 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 	<link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script src="config.js?v=<?php echo time(); ?>"></script>
 	
 </head>
 <body class="portal">
@@ -126,7 +124,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         <li><a href="#" onclick="Produkte_editieren()">Produkte</a></li>
         <li><a href="#" onclick="Wareneingang()">Wareneingang</a></li>
         <li><a href="#" onclick="Abrechnung()">Abrechnung</a></li>
-
+        <li><a href="#" onclick="abrechnung()">abrechnung</a></li>
       </ul>
     </li>
  
@@ -142,27 +140,22 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     <li>
       <a href="#" id="MenuDownload" style="display: none;">Download</a>
       <ul>
-        <li><a href="daten/produkte.json" >Produktliste CSV</a></li>
+        <li><a href="daten/produkte.csv" >Produktliste CSV</a></li>
         <li><a href="daten/kunden.json" >Kundenliste JSON</a></li>
-        <li><a href="daten/umsatz.csv" >umsatz CSV</a></li>
+        <li><a href="daten/verkaufsliste.csv" >Verkaufsliste CSV</a></li>
         <li><a href="#" onclick="backupliste()">Backups</a></li>
       </ul>
     </li>
   </ul>
 </nav>
-
-<div id="portalmenu2">
-    <h2>Hallo <span id="userName"></span>, willkommen im Portal!</h2>
-</div>
-
+       
 <div id="portal-inhalt">
+    <p>Hallo <span id="userName"></span>, willkommen im Portal!</p>
     <?php include('info.html'); ?>
 </div>
 
 
     <script>
-
-        let portalmenu2 = document.getElementById('portalmenu2'); 
 
         // Datum mitteleuropäisch formatiert
             let heute = new Date();
@@ -187,34 +180,17 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             jahresbeginn.setHours(jahresbeginn.getHours() + 2); // 2 Stunden addieren
 
         //Sanduhr
-            window.onload = function() {
-            // Preloader ausblenden, wenn die Seite vollständig geladen ist
-            document.getElementById("preloader").style.display = "none";
-            }
+        window.onload = function() {
+        // Preloader ausblenden, wenn die Seite vollständig geladen ist
+        document.getElementById("preloader").style.display = "none";
+        }
         
         // PHP-Variablen in JavaScript-Variablen umwandeln
-<<<<<<< HEAD
-            const kunden = <?php echo json_encode($jsonKundenDaten); ?>;
-            let produkte = <?php echo json_encode($jsonProdukteDaten); ?>;
-            let verkäufe = <?php echo json_encode($verkäufe); ?>;
-            let wareneingang = <?php echo json_encode($jsonWareneingangDaten); ?>;
-            let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
-            let config = <?php echo json_encode($jsonConfigDaten); ?>;
-            console.log("config:", config); // Debug-Ausgabe der Konfiguration
-=======
         const kunden = <?php echo json_encode($jsonKundenDaten); ?>;
-        let produkte = <?php echo json_encode($jsonProdukteDaten); ?>;
+        let produkte = <?php echo json_encode($produkte); ?>;
         let verkäufe = <?php echo json_encode($verkäufe); ?>;
-        let wareneingang = <?php echo json_encode($jsonWareneingangDaten); ?>;
+        let wareneingang = <?php echo json_encode($wareneingang); ?>;
         let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
->>>>>>> main
-
-        console.log("Überprüfung der Variablen:"); // Debug-Ausgabe
-        console.table("Kunden:", kunden); // Debug-Ausgabe der Kunden
-        console.table("Produkte:", produkte); // Debug-Ausgabe der Produkte
-        console.table("Verkäufe:", verkäufe); // Debug-Ausgabe der Verkäufe
-        console.table("Wareneingang:", wareneingang); // Debug-Ausgabe der Wareneingang
-
 
         // Bereinige die Schlüssel von BOM und unsichtbaren Zeichen
             wareneingang = wareneingang.map(item => {
@@ -229,53 +205,54 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
 
         //aktuelle Kontostände der Kunden berechnen
-            let kundenkontostand = Kundenkontostand(verkäufe);
-            const portalInhalt = document.getElementById('portal-inhalt');
-            const portalMenu = document.getElementById('portal-menu');
+        let kundenkontostand = Kundenkontostand(verkäufe);
+        
+        const portalInhalt = document.getElementById('portal-inhalt');
+        const portalMenu = document.getElementById('portal-menu');
 
         // Finde das angemeldete Mitglied anhand der Email-Adresse (case-insensitive)
-            const angemeldetesMitglied = kunden.find(kunde => 
-                kunde.email.toLowerCase() === '<?php echo strtolower($_SESSION['username']); ?>');
-            document.getElementById('userName').textContent = angemeldetesMitglied.firstname + " " + angemeldetesMitglied.lastname;
+        const angemeldetesMitglied = kunden.find(kunde => 
+            kunde.email.toLowerCase() === '<?php echo strtolower($_SESSION['username']); ?>');
+        document.getElementById('userName').textContent = angemeldetesMitglied.firstname + " " + angemeldetesMitglied.lastname;
 		
 		//Menu gemäß Rollen ein- und ausblenden
-            if (customer_login === true && angemeldetesMitglied.cc_seller === true) {
-                document.getElementById('MenuMeinKonto').style.display = 'block';
-                document.getElementById('MenuAuswertung').style.display = 'block';
-                document.getElementById('MenuAdministrator').style.display = 'none';
-                document.getElementById('MenuEinstellungen').style.display = 'none';
-                document.getElementById('MenuDownload').style.display = 'none';
-            } else if (customer_login === true ) {
-                document.getElementById('MenuMeinKonto').style.display = 'block';
-                document.getElementById('MenuAuswertung').style.display = 'none';
-                document.getElementById('MenuAdministrator').style.display = 'none';
-                document.getElementById('MenuEinstellungen').style.display = 'none';
-                document.getElementById('MenuDownload').style.display = 'none';
-            } else if (angemeldetesMitglied.cc_admin === true) {
-                document.getElementById('MenuMeinKonto').style.display = 'block';
-                document.getElementById('MenuAuswertung').style.display = 'block';
-                document.getElementById('MenuAdministrator').style.display = 'block';
-                document.getElementById('MenuEinstellungen').style.display = 'block';
-                document.getElementById('MenuDownload').style.display = 'block';
-            } else if (angemeldetesMitglied.cc_seller === true) {
-                document.getElementById('MenuMeinKonto').style.display = 'block';
-                document.getElementById('MenuAuswertung').style.display = 'block';
-                document.getElementById('MenuAdministrator').style.display = 'none';
-                document.getElementById('MenuEinstellungen').style.display = 'none';
-                document.getElementById('MenuDownload').style.display = 'none';
-            } else if (angemeldetesMitglied.cc_member === true) {
-                document.getElementById('MenuMeinKonto').style.display = 'block';
-                document.getElementById('MenuAuswertung').style.display = 'none';
-                document.getElementById('MenuAdministrator').style.display = 'none';
-                document.getElementById('MenuEinstellungen').style.display = 'none';
-                document.getElementById('MenuDownload').style.display = 'none';
-            } else if (angemeldetesMitglied.cc_guest === true) {
-                document.getElementById('MenuMeinKonto').style.display = 'block';
-                document.getElementById('MenuAuswertung').style.display = 'none';
-                document.getElementById('MenuAdministrator').style.display = 'none';
-                document.getElementById('MenuEinstellungen').style.display = 'none';
-                document.getElementById('MenuDownload').style.display = 'none';
-            }
+		if (customer_login === true && angemeldetesMitglied.cc_seller === true) {
+            document.getElementById('MenuMeinKonto').style.display = 'block';
+			document.getElementById('MenuAuswertung').style.display = 'block';
+			document.getElementById('MenuAdministrator').style.display = 'none';
+			document.getElementById('MenuEinstellungen').style.display = 'none';
+			document.getElementById('MenuDownload').style.display = 'none';
+        } else if (customer_login === true ) {
+            document.getElementById('MenuMeinKonto').style.display = 'block';
+			document.getElementById('MenuAuswertung').style.display = 'none';
+			document.getElementById('MenuAdministrator').style.display = 'none';
+			document.getElementById('MenuEinstellungen').style.display = 'none';
+			document.getElementById('MenuDownload').style.display = 'none';
+        } else if (angemeldetesMitglied.cc_admin === true) {
+			document.getElementById('MenuMeinKonto').style.display = 'block';
+			document.getElementById('MenuAuswertung').style.display = 'block';
+			document.getElementById('MenuAdministrator').style.display = 'block';
+			document.getElementById('MenuEinstellungen').style.display = 'block';
+			document.getElementById('MenuDownload').style.display = 'block';
+		} else if (angemeldetesMitglied.cc_seller === true) {
+		    document.getElementById('MenuMeinKonto').style.display = 'block';
+			document.getElementById('MenuAuswertung').style.display = 'block';
+			document.getElementById('MenuAdministrator').style.display = 'none';
+			document.getElementById('MenuEinstellungen').style.display = 'none';
+			document.getElementById('MenuDownload').style.display = 'none';
+		} else if (angemeldetesMitglied.cc_member === true) {
+		    document.getElementById('MenuMeinKonto').style.display = 'block';
+			document.getElementById('MenuAuswertung').style.display = 'none';
+			document.getElementById('MenuAdministrator').style.display = 'none';
+			document.getElementById('MenuEinstellungen').style.display = 'none';
+			document.getElementById('MenuDownload').style.display = 'none';
+		} else if (angemeldetesMitglied.cc_guest === true) {
+		    document.getElementById('MenuMeinKonto').style.display = 'block';
+			document.getElementById('MenuAuswertung').style.display = 'none';
+			document.getElementById('MenuAdministrator').style.display = 'none';
+			document.getElementById('MenuEinstellungen').style.display = 'none';
+			document.getElementById('MenuDownload').style.display = 'none';
+		}
 
     function Preisliste_Eiskarte() {
         const heute = new Date();
@@ -479,7 +456,28 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         // HTML in neues Fenster schreiben
         printWindow.document.write(html);
         printWindow.document.close();
-    }   
+    }
+
+    function Abrechnung() {
+        let html = "<h2>Abrechnung</h2>";
+        html += `
+        <h3>1. Kasse offline stellen</h3>
+        <p>Die Kasse offline stellen, um keine weiteren Verkäufe zuzulassen.</p>
+        <button id="btOffline" class="kleinerBt" disabled>offline</button>
+        <h3>2. Kontostande übertragen</h3>
+        <p>Die Kontostände der Mitglieder in die Vereinsflieger-Datenbank übertragen.</p>
+        <button id="btVFTansfer" class="kleinerBt" disabled>übertragen</button>
+        <h3>Kontostände ausgleichen</h3>
+        <p>Die Kontostände der Mitglieder in jeder Kategorie auf 0 € gesetzt.</p>
+        <button id="btKontoausgleich" class="kleinerBt" disabled>zurücksetzen</button>
+        <h3>3. Kasse online stellen</h3>
+        <p>Die Kasse online stellen, um weitere Verkäufe zuzulassen.</p>
+        <button id="btOnline" class="kleinerBt" disabled>online</button>
+
+        `;
+
+        portalInhalt.innerHTML = html;
+    }    
 
     function Warenbestand() {
         warenbestand = [];
@@ -498,9 +496,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             if (tempBestand[verkauf.EAN]) {
                 tempBestand[verkauf.EAN] -= 1;
             }
-            else {
-                tempBestand[verkauf.EAN] = -1;
-            }
         });
 
         // Ergebnisse in das warenbestand Array übertragen
@@ -509,26 +504,25 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             Bestand: tempBestand[produkt.EAN] || 0
         }));
 
+        console.table(warenbestand); // Debug-Ausgabe der Warenbestand
+
         return warenbestand;
+ 
     }
 
     function Wareneingang() {
 
-        let menu2 = "<h2 style='display: inline;' >Wareneingang</h2>";
-        menu2 += `
+        let html = "<h2 style='display: inline;''>Wareneingang</h2>";
+        html += `
             <button id="addButton" class="kleinerBt" >hinzufügen</button>
             <button id="saveButton" class="kleinerBt" >speichern</button>
             <button onclick="location.reload();" class="kleinerBt" >abbruch</button>
-        `;
-        let html = "";
-        html += `
             <table id="dataTable" class="portal-table">
                 <thead><tr id="tableHeader"></tr></thead>
                 <tbody id="tableBody"></tbody>
             </table>
         `;
 
-        portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
 
         createEditableTable(wareneingang); // Tabelle erstellen und HTML einfügen
@@ -608,9 +602,9 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                     keys.forEach(key => {
                         
                         const td = document.createElement("td");
-                        
+                        console.log("Key:", key, "Value:", item[key]); // Debug-Ausgabe der Schlüssel und Werte
                         if (key === "Eingang") {
-                            
+                            console.log("Eingang:", item[key]); // Debug-Ausgabe der Schlüssel und Werte
                             const datumInput = document.createElement("input"); 
                             datumInput.type = "date";
                             datumInput.value = item[key] || heute.toISOString().split('T')[0]; // Default to today if no value
@@ -656,25 +650,12 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                             bezeichnungTd.appendChild(select);
                             tr.appendChild(bezeichnungTd);
                             
-                            // Kategorie und Preis nur anzeigen, wenn ein Produkt ausgewählt ist
                             const kategorieTd = document.createElement("td");
-                            const preisTd = document.createElement("td");
-                            
-                            if (item[key]) {
-                                const produkt = produkte.find(p => p.EAN == item[key]);
-                                if (produkt) {
-                                    kategorieTd.innerText = produkt.Kategorie;
-                                    preisTd.innerText = produkt.Preis + " €";
-                                } else {
-                                    kategorieTd.innerText = "";
-                                    preisTd.innerText = " €";
-                                }
-                            } else {
-                                kategorieTd.innerText = "";
-                                preisTd.innerText = " €";
-                            }
-                            
+                            kategorieTd.innerText = item[key] ? produkte.find(p => p.EAN == item[key]).Kategorie : ""; // Kategorie aus dem Produkt-Array holen;
                             tr.appendChild(kategorieTd);
+                            
+                            const preisTd = document.createElement("td");
+                            preisTd.innerText = item[key] ? produkte.find(p => p.EAN == item[key]).Preis + " €" : " €"; // Preis aus dem Produkt-Array holen
                             tr.appendChild(preisTd);
                         }
                     });
@@ -763,23 +744,18 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
                 saveButton.onclick = () => {
 
+
                     const updatedData = saveChanges();
                     wareneingang = updatedData; // Aktualisiere die wareneingang-Variable
 
-<<<<<<< HEAD
-=======
-                    console.log("Aktualisierte Wareneingangsdaten:", wareneingang); // Debug-Ausgabe der aktualisierten Daten
-                    
->>>>>>> main
-                    fetch('json-schreiben.php', {
+                    fetch('csv-schreiben.php', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
+                            'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
                             data: wareneingang,
-                            filename: 'daten/wareneingang.json'
+                            filename: 'daten/wareneingang.csv'
                         })
                     })
                     .then(response => response.text())
@@ -787,22 +763,16 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                         alert('Wareneingangstabelle erfolgreich gespeichert:', result);
                     })
                     .catch(error => {
-<<<<<<< HEAD
-                        alert('Fehler beim JSON erstellen:', error);
-=======
-                        alert('Fehler beim speichern:', error);
->>>>>>> main
+                        alert('Fehler beim CSV erstellen:', error);
                     });
 
             };
 
-        } 
+        } // Ende der Funktion createEditableTable
     }
 
     function Farben() {
-
-        portalmenu2.innerHTML = "<h2 style='display: inline;'>verwendete Farbpalette</h2>";
-        portalInhalt.innerHTML = "<p>Bitte warten, die Farben werden geladen...</p>";
+        portalInhalt.innerHTML = "<h2>Farben</h2><p>Bitte warten, die Farben werden geladen...</p>";
         
         console.log("Farben laden...");
         var xhr = new XMLHttpRequest();
@@ -817,87 +787,22 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     }
 
     function Programmeinstellungen() {
-        console.log("Programmeinstellungen andeshen und...");
-
-        portalmenu2.innerHTML = "<h2 style='display: inline;'>Konfiguration</h2>";
-        
-        let menu2 = "<h2 style='display: inline;'>Konfiguration</h2>";
-        menu2 += `
-            <button id="saveButton" class="kleinerBt">speichern</button>
-            <button onclick="location.reload();" class="kleinerBt">abbruch</button>
-        `;
-
-        portalInhalt.innerHTML = `
-            <table id="configTable" class="portal-table">
-                <thead>
-                    <tr>
-                        <th class="links">Schlüssel</th>
-                        <th class="links">Wert</th>
-                    </tr>
-                </thead>
-                <tbody id="configTableBody">
-                </tbody>
-            </table>
-        `;
-
-        portalmenu2.innerHTML = menu2;
-
-        const configTableBody = document.getElementById('configTableBody');
-        const addButton = document.getElementById('addButton');
-        const saveButton = document.getElementById('saveButton');
-
-        // Hilfsfunktion zum Rendern der Tabelle
-        function renderConfigTable() {
-            configTableBody.innerHTML = '';
-            Object.entries(config).forEach(([key, value]) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="links">${key}</td>
-                    <td class="links" contenteditable="true">${value}</td>
-                `;
-                configTableBody.appendChild(tr);
-            });
-        }
-
-        // Speichern der Konfiguration
-        saveButton.onclick = () => {
-            // Neues Config-Objekt erstellen
-            const newConfig = {};
-            document.querySelectorAll('#configTableBody tr').forEach(row => {
-                const key = row.cells[0].textContent.trim();
-                const value = row.cells[1].textContent.trim();
-                if (key && value) {
-                    newConfig[key] = value;
+        fetch('config.js?v=' + Date.now()) // Browser-Caching umgehen
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Fehler beim Laden der Konfiguration');
                 }
-            });
-
-            // Config-Objekt aktualisieren
-            config = newConfig;
-
-            // An Server senden
-            fetch('json-schreiben.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    data: config,
-                    filename: 'daten/config.json'
-                })
+                return response.text();
             })
-            .then(response => response.text())
-            .then(result => {
-                alert('Konfiguration erfolgreich gespeichert');
+            .then(text => {
+                portalInhalt.innerHTML = `
+                    <h2>Programmeinstellungen (config.js)</h2>
+                    <pre style="background: #f4f4f4; padding: 10px; overflow-x: auto;">${escapeHtml(text)}</pre>
+                `;
             })
             .catch(error => {
-                alert('Fehler beim Speichern der Konfiguration: ' + error);
+                portalInhalt.innerHTML = `<p style="color:red;">${error.message}</p>`;
             });
-        };
-
-        // Initial render
-        renderConfigTable();
-
     }
 
     function escapeHtml(text) {
@@ -915,9 +820,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     }
 
     function Kundentagesübersicht() {
-
-        portalmenu2.innerHTML = "<h2 style='display: inline;'>Kundentagesübersicht</h2>";
-        let html = "<table class='portal-table'>";
+        let html = "<h2>Kundentagesumsätze</h2><table class='portal-table'>";
         kunden.forEach(kunde => {
             let summe= 0;
             let htmlkunde = ""
@@ -957,23 +860,18 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     }    
 
     function Produkte_editieren() {
-       
-        let menu2 = "<h2 style='display: inline;''>Produktkatalog editieren</h2>";
-        menu2 += `
+        console.log("Produkte editieren...");
+        let html = "<h2 style='display: inline;''>Produktkatalog editieren</h2>";
+         html += `
             <button id="addButton" class="kleinerBt" >hinzufügen</button>
             <button id="saveButton" class="kleinerBt" >speichern</button>
             <button onclick="location.reload();" class="kleinerBt" >abbruch</button>
-        `;
-        
-        let html = "";
-         html += `
             <table id="dataTable" class="portal-table">
                 <thead><tr id="tableHeader"></tr></thead>
                 <tbody id="tableBody"></tbody>
             </table>
         `;
 
-        portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
 
         // Aktuellen Warenbestand berechnen
@@ -1012,7 +910,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 }
                 renderTable();
             }
-            
+
             function renderHeader() {
                 tableHeader.innerHTML = "";
                 keys.forEach(key => {
@@ -1029,22 +927,11 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                         data.sort((a, b) => {
                             let valueA = a[key];
                             let valueB = b[key];
-                            
-                            // Check if values can be converted to numbers
-                            const numA = Number(valueA);
-                            const numB = Number(valueB);
-                            
-                            if (!isNaN(numA) && !isNaN(numB)) {
-                                // Numeric sorting
-                                return sortAscending ? numA - numB : numB - numA;
-                            } else {
-                                // String sorting
-                                if (typeof valueA === 'string') valueA = valueA.toLowerCase();
-                                if (typeof valueB === 'string') valueB = valueB.toLowerCase();
-                                if (valueA < valueB) return sortAscending ? -1 : 1;
-                                if (valueA > valueB) return sortAscending ? 1 : -1;
-                                return 0;
-                            }
+                            if (typeof valueA === 'string') valueA = valueA.toLowerCase();
+                            if (typeof valueB === 'string') valueB = valueB.toLowerCase();
+                            if (valueA < valueB) return sortAscending ? -1 : 1;
+                            if (valueA > valueB) return sortAscending ? 1 : -1;
+                            return 0;
                         });
                         renderTable();
                         renderHeader();
@@ -1062,8 +949,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             function renderTable() {
                 tableBody.innerHTML = "";
                 data.forEach((item, index) => {
-                    if (item.EAN == 1 || item.EAN == 9990000000000) {return;} // Essen und manuelle Buchung nicht anzeigen
-
                     const tr = document.createElement("tr");
                     tr.classList.toggle("edited", editedRows.has(index));
                     tr.classList.toggle("new", newRows.has(index));
@@ -1071,31 +956,15 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
                     keys.forEach(key => {
                         const td = document.createElement("td");
-                        // Zahlenfelder rechts ausrichten
-                        if (['Bestand', 'Preis', 'Sortierung', 'MwSt', 'EAN', 'Min'].includes(key)) {
-                            td.classList.add('rechts');
-                        } else {
-                            td.classList.add('links'); 
-                        }
-
                         if (key === 'Bestand') {
                             td.contentEditable = !deletedRows.has(index);
-                            td.innerText = item[key] || '';
-                            // Prüfe ob Bestand unter Mindestbestand
-                            if (item['Min'] && parseInt(item[key] || 0) < parseInt(item['Min'])) {
-                                td.style.backgroundColor = '#ffcccc';
-                            }
+                            td.innerText = item[key] || '0';
                             td.onblur = () => {
-                                if (isNaN(parseFloat(td.innerText)) && td.innerText !== '') {
-                                    alert('Bitte geben Sie eine gültige Zahl ein.');
-                                    td.innerText = item[key] || '';
-                                    return;
-                                }
-                                const newValue = td.innerText === '' ? 0 : parseInt(td.innerText);
+                                const newValue = parseInt(td.innerText) || 0;
                                 const oldValue = item[key] || 0;
                                 if (newValue !== oldValue) {
                                     const diff = newValue - oldValue;
-                                    if (diff !== 0) {
+                                    if (diff > 0) {
                                         const wareneingangEntry = {
                                             Eingang: heute.toISOString().split('T')[0],
                                             EAN: item.EAN,
@@ -1104,36 +973,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                                         wareneingang.push(wareneingangEntry);
                                     }
                                     markAsEdited(index, key, newValue, td);
-                                }
-                                // Update Hintergrundfarbe nach Änderung
-                                if (item['Min'] && newValue < parseInt(item['Min'])) {
-                                    td.style.backgroundColor = '#ffcccc';
-                                } else {
-                                    td.style.backgroundColor = '';
-                                }
-                            };
-                        } else if (['Preis', 'Sortierung', 'MwSt', 'EAN', 'Min'].includes(key)) {
-                            td.contentEditable = !deletedRows.has(index);
-                            td.innerText = item[key];
-                            td.onblur = () => {
-                                if (isNaN(parseFloat(td.innerText)) && td.innerText !== '') {
-                                    alert(`Bitte geben Sie eine gültige Zahl für ${key} ein.`);
-                                    td.innerText = item[key];
-                                    return;
-                                }
-                                if (key === 'EAN') {
-                                    const newEAN = td.innerText;
-                                    const isDuplicate = data.some((dataItem, dataIndex) => 
-                                        dataIndex !== index && dataItem.EAN === newEAN
-                                    );
-                                    if (isDuplicate || newEAN === '1' || newEAN === '9990000000000') {
-                                        alert('Diese EAN existiert bereits! Auch 1 und 9990000000000 sind nicht erlaubt. Bitte wählen Sie eine andere EAN.');
-                                        td.innerText = item[key];
-                                    } else {
-                                        markAsEdited(index, key, newEAN, td);
-                                    }
-                                } else {
-                                    markAsEdited(index, key, td.innerText, td);
                                 }
                             };
                         } else {
@@ -1216,36 +1055,26 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 const updatedData = saveChanges();
                 produkte = updatedData.map(({Bestand, ...rest}) => rest);
 
-<<<<<<< HEAD
-                fetch('JSON-schreiben.php', {
-=======
-                fetch('json-schreiben.php', {
->>>>>>> main
+                fetch('csv-schreiben.php', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         data: produkte,
-                        filename: 'daten/produkte.json'
+                        filename: 'daten/produkte.csv'
                     })
                 })
                 .then(response => response.text())
                 .then(() => {
-<<<<<<< HEAD
-                    return fetch('JSON-schreiben.php', {
-=======
-                    return fetch('json-schreiben.php', {
->>>>>>> main
+                    return fetch('csv-schreiben.php', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
+                            'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
                             data: wareneingang,
-                            filename: 'daten/wareneingang.json'
+                            filename: 'daten/wareneingang.csv'
                         })
                     });
                 })
@@ -1264,14 +1093,11 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
     function Mitgliederdaten_anzeigen() {
                 
-
-        let menu2 = "<h2 style='display: inline;'>Kundenliste</h2> Rolle: K = Kassenwart / V = Verkäufer / M = Mitglied / G = Gast";
-
-        let html = '<table class="portal-table">';
+        let html = '<h2>Kundenliste</h2><table class="portal-table">';
         html += `
+        <p>Rolle: K = Kassenwart / V = Verkäufer / M = Mitglied / G = Gast </p>
         <tr>
             <th>ID</th>
-            <th class="links">Mitgliedsnr</th>
             <th class="links">Vorname</th>
             <th class="links">Nachname</th>
             <th class="links">Email</th>
@@ -1287,7 +1113,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         kunden.forEach(kunde => {
             html += `<tr>
                 <td>${kunde.uid}</td>
-                <td class="links">${kunde.memberid}</td>
                 <td class="links">${kunde.firstname}</td>
                 <td class="links">${kunde.lastname}</td>
                 <td class="links">${kunde.email}</td>
@@ -1312,17 +1137,15 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         });
 
         html += '</table>';
-
-        portalmenu2.innerHTML = menu2;
-        portalInhalt.innerHTML = html;
+                portalInhalt.innerHTML = html;
 
     }	
 
     function Kundenübersicht(kundennummer,datum1,datum2) {
 
-        let menu2 = "<h2 style='display: inline;'>Übersicht</h2>";
-        
-        let html = '';
+        console.log("Kundenübersicht für Kundennummer: " + kundennummer);
+
+        let html = '<h2>Kundenübersicht</h2><table class="portal-table">';
         
         const kunde = kunden.find(kunde => kunde.uid == kundennummer);
         
@@ -1338,17 +1161,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
         let summe = 0;        
 
-        menu2 += `
-            <input class="DatumInput" type="date" id="datum_anfang" value="${datum1.toISOString().split('T')[0]}">
-            <h2 style="display: inline;"> bis </h2>
-            <input class="DatumInput" type="date" id="datum_ende" value="${datum2.toISOString().split('T')[0]}">
-            <button id="bt_aktualisierung" class="kleinerBt">aktualisieren</button>
-            <button class="kleinerBt" onclick="Kundenübersicht(${kunde.uid}, monatsbeginn, heute)">Monat</button>
-            <button class="kleinerBt" onclick="Kundenübersicht(${kunde.uid}, wochenbeginn, heute)">Woche</button>
-            <button class="kleinerBt" onclick="Kundenübersicht(${kunde.uid}, heute, heute)">Tag</button>
-        `;
-
-
         html += `
             <table style="border-spacing: 10px;">
                 <tr>
@@ -1356,12 +1168,9 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                     <td>${kunde.firstname} ${kunde.lastname}</td>
                 </tr>                
                 <tr>
-                    <td>ID</td>
+                    <td>Mitgliedsnr</td>
                     <td>${kunde.uid}</td>
                 </tr>
-                <tr>
-                    <td>Mitgliedsnr</td>
-                    <td>${kunde.memberid}</td>
                 <tr>
                     <td>Email</td>
                     <td>${kunde.email}</td>
@@ -1380,10 +1189,15 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 </tr>
             </table>
             <hr>
-
-  
-           
-
+            <h2 style="display: inline;">Auswertung</h2>
+            <input class="DatumInput" type="date" id="datum_anfang" value="${datum1.toISOString().split('T')[0]}">
+            <h2 style="display: inline;"> bis </h2>
+            <input class="DatumInput" type="date" id="datum_ende" value="${datum2.toISOString().split('T')[0]}">
+            <button id="bt_aktualisierung" class="kleinerBt">aktualisieren</button>
+            <button class="kleinerBt" onclick="Kundenübersicht(${kunde.uid}, monatsbeginn, heute)">Monat</button>
+            <button class="kleinerBt" onclick="Kundenübersicht(${kunde.uid}, wochenbeginn, heute)">Woche</button>
+            <button class="kleinerBt" onclick="Kundenübersicht(${kunde.uid}, heute, heute)">Tag</button>
+            <hr>
             <h2 style="display: inline;"><a id="TabellenLink1" style='text-decoration: none;' href='#' onclick='toggleTabelle("Tabelle1", "TabellenLink1")'>➡️</a> Umsätze</h2>
             <table id="Tabelle1" class="portal-table" style="display: none; margin-top: 20px;">
                 <tr>
@@ -1539,7 +1353,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         </tbody></table>`;
         
 
-        portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html 
 
         const btn = document.getElementById("bt_aktualisierung");
@@ -1554,8 +1367,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     }
 
     function Mitgliedsdaten_ziehen() {
-        portalmenu2.innerHTML = "<h2 style='display: inline;'>Vereinsflieger Datenimport</h2>";
-        portalInhalt.innerHTML = "<p>Bitte warten, die Mitgliederdaten werden aus Vereinsflieger abgerufen...</p>";
+        portalInhalt.innerHTML = "<h2>Vereinsflieger Datenimport</h2><p>Bitte warten, die Mitgliederdaten werden aus Vereinsflieger abgerufen...</p>";
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "pull_Mitgliedsdaten_Vereinsflieger.php", true); 
         xhr.onreadystatechange = function () {
@@ -1580,13 +1392,10 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         let datum1 = heute; // Aktuelles Datum im Format YYYY-MM-DD
 
         let summe = 0;
-
-        let menu2 = "";
-        menu2 += `
+        let html = "";
+        html = `
             <h2 style="display: inline;">Tagesumsätze - ${datum1.toISOString().split('T')[0]}</h2>
         `;
-
-        let html = "";
 
         html += `
         <table class="portal-table">
@@ -1625,8 +1434,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
             </tr>
         </tbody></table>`;
-
-        portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
   
     }
@@ -1642,12 +1449,8 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         } 
         
         let summe = 0;
-
-        let menu2 = "";
-
-
         let html = "";
-        menu2 += `
+        html = `
             <h2 style="display: inline;">Umsätze</h2>
             <input class="DatumInput" type="date" id="datum_anfang" value="${datum1.toISOString().split('T')[0]}">
             <h2 style="display: inline;"> bis </h2>
@@ -1656,11 +1459,12 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             <button class="kleinerBt" onclick="Umsätze(monatsbeginn, heute)">Monat</button>
             <button class="kleinerBt" onclick="Umsätze(wochenbeginn, heute)">Woche</button>
             <button class="kleinerBt" onclick="Umsätze(heute, heute)">Tag</button>
+
         `;
 
         //Tabelle1 - Einzelumsätze
             html += `
-  
+            <hr>
             <h2 style="display: inline;"><a id="TabellenLink1" style='text-decoration: none;' href='#' onclick='toggleTabelle("Tabelle1", "TabellenLink1")'>➡️</a> Einzelumsätze</h2>
             <table id="Tabelle1" class="portal-table" style="display: none; margin-top: 20px;">
                 <tr>
@@ -1809,9 +1613,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
             </table>`;
 
-        portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
-
 
         const btn = document.getElementById("bt_aktualisierung");
         btn.addEventListener("click", () => {
@@ -1829,11 +1631,10 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         let produktsumme = 0;   
         let html = "";
 
-        let menu2 = "";
-        menu2 += `
+        html = `
             <h2 style="display: inline;">Tageszusammenfassung - ${datum1.toISOString().split('T')[0]}</h2>
+          
         `;
-
         html += `
         <table class="portal-table">
             <tr>
@@ -1884,7 +1685,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
             </tr>
         </tbody></table>`;
-        portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
     }
     
@@ -1947,174 +1747,71 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             link.textContent = '➡️';  // Symbol ändern (z.B. nach rechts)
         }
     }
-    function Abrechnung(datum1, datum2) {
-        // Default dates if none provided (full year)
-        if(!datum1 || !datum2) {
-            datum1 = jahresbeginn; // From global variable
-            datum2 = heute; // From global variable
-        }
+    
+    function abrechnung() {
+        // Zeitspanne festlegen vom 1.1. bis heute
+        let startDate = jahresbeginn.toISOString().split('T')[0];
+        let endDate = heute.toISOString().split('T')[0];
 
         // Array für die Abrechnung erstellen
-        let abrechnung = [];
-        
-        // Über alle Kunden iterieren
+        let Abrechnung = [];
+
+        // Für jeden Kunden...
         kunden.forEach(kunde => {
-            // Summe aller Verkäufe für diesen Kunden im gewählten Zeitraum
-            const kundenUmsatz = verkäufe
-                .filter(verkauf => 
-                    verkauf.Kundennummer === kunde.uid &&
-                    verkauf.Datum >= datum1.toISOString().split('T')[0] && 
-                    verkauf.Datum <= datum2.toISOString().split('T')[0]
-                )
-                .reduce((acc, verkauf) => {
-                    return {
-                        Anzahl: acc.Anzahl + 1,
-                        Summe: acc.Summe + parseFloat(verkauf.Preis)
-                    };
-                }, {Anzahl: 0, Summe: 0});
+            // Verkäufe des Kunden im Zeitraum filtern
+            let kundenVerkäufe = verkäufe.filter(v => 
+                v.Kundennummer === kunde.uid &&
+                v.Datum >= startDate && 
+                v.Datum <= endDate
+            );
 
-            // Nur Kunden mit Umsatz hinzufügen
-            if (kundenUmsatz.Anzahl > 0) {
-                abrechnung.push({
-                    bookingdate: datum2.toISOString().split('T')[0],
-                    articleid: "1017",
-                    memberid: parseInt(kunde.memberid, 10),
-                    amount: kundenUmsatz.Anzahl,
-                    callsign: "ClubCash",
-                    saletax: 19,
-                    totalprice: kundenUmsatz.Summe.toFixed(2),
-                    comment: datum1.toISOString().split('T')[0] + " bis " + datum2.toISOString().split('T')[0] + " - " + kunde.lastname + ", " + kunde.firstname,
-                    spid: 4
-                });
-            }
-        });
-
-        console.table(abrechnung); // Debug-Ausgabe der Abrechnung
-
-        // Tabelle erstellen und anzeigen
-        let html = `
-
-            <div class="datumauswahl">
-                <input class="DatumInput" type="date" id="datum_anfang" value="${datum1.toISOString().split('T')[0]}">
-                <h2 style="display: inline;"> bis </h2>
-                <input class="DatumInput" type="date" id="datum_ende" value="${datum2.toISOString().split('T')[0]}">
-                <button id="bt_aktualisierung" class="kleinerBt">aktualisieren</button>
-                <button class="kleinerBt" onclick="Abrechnung(monatsbeginn, heute)">Monat</button>
-                <button class="kleinerBt" onclick="Abrechnung(wochenbeginn, heute)">Woche</button>
-                <button class="kleinerBt" onclick="Abrechnung(heute, heute)">Tag</button>
-                <br>
-                <button id="bt-abrechnungExport" class="kleinerBt">Export an VF</button>
-                <button id="bt-Kontoausgleich" class="kleinerBt">zurücksetzen</button>
-            </div>
-
-            <table class="portal-table">
-                <tr>
-                    <th>bookingdate</th>
-                    <th>articleid</th>
-                    <th>memberid</th>
-                    <th>amount</th>
-                    <th>callsign</th>
-                    <th>saletax</th>
-                    <th>totalprice</th>
-                    <th>comment</th>
-                    <th>spid</th>
-                </tr>
-        `;
-
-        let gesamtSumme = 0;
-        let gesamtAnzahl = 0;
-
-        abrechnung.forEach(eintrag => {
-            gesamtSumme += parseFloat(eintrag.Summe);
-            gesamtAnzahl += eintrag.Anzahl;
-
-            html += `
-                <tr>
-                    <td>${eintrag.bookingdate}</td>
-                    <td>${eintrag.articleid}</td>
-                    <td>${eintrag.memberid}</td>
-                    <td>${eintrag.amount}</td>
-                    <td>${eintrag.callsign}</td>
-                    <td>${eintrag.saletax}</td>
-                    <td class="rechts">${eintrag.totalprice} €</td>
-                    <td class="links">${eintrag.comment}</td>
-                    <td>${eintrag.spid}</td>
-                </tr>
-            `;
-        });
-        html += "</table>";
-
-        // Anzeige im Portal
-        portalmenu2.innerHTML = "<h2 style='display: inline;'>Abrechnung</h2>";
-        portalInhalt.innerHTML = html;
-
-
-        // Event Listener für Datumsauswahl
-        const btn = document.getElementById("bt_aktualisierung");
-        if(btn) {
-            btn.addEventListener("click", () => {
-                const datumA = document.getElementById("datum_anfang").value;
-                const datumE = document.getElementById("datum_ende").value;
-                Abrechnung(new Date(datumA), new Date(datumE));
+            // Nach Produktgruppen gruppieren
+            let gruppenSummen = {};
+            kundenVerkäufe.forEach(verkauf => {
+                if (!gruppenSummen[verkauf.Kategorie]) {
+                    gruppenSummen[verkauf.Kategorie] = 0;
+                }
+                gruppenSummen[verkauf.Kategorie] += parseFloat(verkauf.Preis);
             });
-        }
+
+            // Abrechnungstext erstellen
+            let abrechnungsText = Object.entries(gruppenSummen)
+                .map(([gruppe, summe]) => `${gruppe}: ${summe.toFixed(2)}€`)
+                .join(', ');
+
+            // Zur Abrechnung hinzufügen
+            Abrechnung.push({
+                Kundennummer: kunde.uid,
+                Vorname: kunde.firstname,
+                Nachname: kunde.lastname,
+                Abrechnung: abrechnungsText
+            });
+        });
+
+        console.table(Abrechnung); // Debug-Ausgabe der Abrechnung
+
+        // HTML für die Abrechnung erstellen
+        let html = '<h2>Abrechnung</h2><table class="portal-table">';
+        html += `
+            <tr>
+                <th>Kundennummer</th>
+                <th class="links">Vorname</th>
+                <th class="links">Nachname</th>
+                <th class="links">Abrechnung</th>
+            </tr>`;
+        Abrechnung.forEach(eintrag => {
+            html += `<tr>
+                <td>${eintrag.Kundennummer}</td>
+                <td class="links">${eintrag.Vorname}</td>
+                <td class="links">${eintrag.Nachname}</td>
+                <td class="links">${eintrag.Abrechnung}</td>
+            </tr>`;
+        });
+        html += '</table>';
+        portalInhalt.innerHTML = html;
         
-        // Event Listener für Export-Button
-        const exportBtn = document.getElementById("bt-abrechnungExport");
-        exportBtn.addEventListener("click", () => {
-                abrechnungExport(abrechnung);
-        });
-
-
-        // Event Listener für Kontoausgleichs-Button
-        const KontoausgleichBtn = document.getElementById("bt-Kontoausgleich");
-        KontoausgleichBtn.addEventListener("click", () => {
-                Kontoausgleich(datum2, abrechnung);
-        });
-
-
-    }
-
-    function abrechnungExport(abrechnungsdaten) {
-
-        portalmenu2.innerHTML = "<h2 style='display: inline;'>Export der Abrechnung an Vereinsflieger</h2>";
-
-        portalInhalt.innerHTML = "<p>Bitte warten, die Abrechnung wird an Vereinsflieger übertragen...</p>";
-
-        // Array in JSON konvertieren und an PHP-Datei senden
-        fetch('push_Verkaufsdaten_Vereinsflieger.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(abrechnungsdaten)
-        })
-        .then(response => response.text())
-        .then(result => {
-            console.log('Erfolgreich an PHP gesendet:', result);
-            portalInhalt.insertAdjacentHTML("beforeend", "<p>✅ Datensätze sind für die Übertragung vorbereitet.</p>");
-            portalInhalt.insertAdjacentHTML("beforeend", result);
-        })
-        .catch(error => {
-            console.error('❌ Fehler beim Senden:', error);
-            portalInhalt.insertAdjacentHTML("beforeend", error);
-            alert('Daten können nicht übertragen werden!');
-        });
-         
     }
     
-    // Function to append HTML content to portalInhalt
-    function appendHTMLToPortalInhalt(htmlContent) {
-        portalInhalt.insertAdjacentHTML("beforeend", htmlContent);
-    }
-
-    function Kontoausgleich(ausgleichsdatum, abrechnungsdaten) {
-        portalmenu2.innerHTML = "<h2 style='display: inline;'>Kontoausgleich</h2>";
-        portalInhalt.innerHTML = "<p>Bitte warten, bis alle Konten ausgegleichen, bzw. zurückgesetzt wurden ...</p>";
-        console.log("Datum für Kontoausgleich:", ausgleichsdatum.toISOString().split('T')[0]);
-        console.log("Abrechnungsdaten:", abrechnungsdaten);
-
-    }
     </script>
 </body>
 </html>
