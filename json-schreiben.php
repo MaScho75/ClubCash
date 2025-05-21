@@ -1,8 +1,22 @@
 <?php
-<<<<<<< HEAD
 
-=======
->>>>>>> main
+/*
+ * This file is part of ClubCash.
+ *
+ * ClubCash is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * ClubCash is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with ClubCash. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 session_start();
 
 // Prüfen, ob der Benutzer eingeloggt ist
@@ -11,7 +25,6 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
     exit();
 }
 
-<<<<<<< HEAD
 // Fehlerbehandlung
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
@@ -64,43 +77,4 @@ try {
 }
 
 ?>
-=======
-// JSON-Daten aus dem POST-Request lesen
-$jsonInput = file_get_contents('php://input');
-$input = json_decode($jsonInput, true);
 
-// Prüfen, ob Daten und Dateiname übergeben wurden
-if ($input && isset($input['data']) && isset($input['filename'])) {
-    $data = $input['data'];
-    $filename = $input['filename'];
-
-    $result = writeArrayToJSON($data, $filename);
-
-    echo json_encode(['success' => $result]);
-} else {
-    echo json_encode([
-        'success' => false,
-        'error' => 'Keine gültigen Daten oder Dateiname übermittelt'
-    ]);
-}
-
-function writeArrayToJSON($data, $filename) {
-    if (empty($data) || !is_array($data)) {
-        return false;
-    }
-
-    try {
-        $jsonData = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-
-        // Optional: füge .json-Endung hinzu, falls nicht vorhanden
-        if (!str_ends_with($filename, '.json')) {
-            $filename .= '.json';
-        }
-
-        return file_put_contents($filename, $jsonData) !== false;
-    } catch (Exception $e) {
-        return false;
-    }
-}
-?>
->>>>>>> main
