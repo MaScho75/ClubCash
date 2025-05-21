@@ -1,6 +1,6 @@
 # ClubCash
 
-**ClubCash** ist ein webbasiertes, plattformunabhängiges Bezahlsystem für den Clubbetrieb von Fliegervereinen. Es wurde speziell für die Integration mit dem System von [Vereinsflieger.de](https://www.vereinsflieger.de) entwickelt und ermöglicht eine einfache, flexible und kostengünstige Verwaltung und Abrechnung von Produkten und Zahlungen im Vereinsumfeld.
+**ClubCash** ist ein webbasiertes, plattformunabhängiges bargeldloses Bezahlsystem für den Clubbetrieb von Fliegervereinen. Es wurde speziell für die Integration mit dem System von [Vereinsflieger.de](https://www.vereinsflieger.de) entwickelt und ermöglicht eine einfache, flexible und kostengünstige Verwaltung und Abrechnung von Produkten und Zahlungen im Vereinsumfeld.
 
 ---
 
@@ -8,10 +8,10 @@
 
 - Integration mit **Vereinsflieger.de**:
   - Rollen- und Mitgliederverwaltung wird vollständig übernommen.
-  - Abrechnung über Vereinsflieger.de.
+  - Abrechnung über Vereinsflieger.de
 - **Produktverwaltung**:
   - Verwaltung und Pflege von Produkten und Warenbeständen.
-  - Produkte werden über EAN-Strichcodes eingebucht.
+  - Produkte werden über EAN-Strichcodes oder aus einem Katalog eingebucht.
 - **Bezahlsystem**:
   - Zahlung über eigene Barcodes oder günstige, unverschlüsselte RFID-Chips.
   - Kassen funktionieren auch **offline**.
@@ -19,12 +19,12 @@
 - **Benutzerzugriff**:
   - Mitglieder können ihre Buchungen und Kontostände am Terminal oder über ein Webinterface einsehen.
 - **Technische Vorteile**:
-  - Webbasiert & plattformunabhängig.
-  - Open Source.
-  - Einfache Software-Updates.
-  - Datenexport-Funktion.
-  - Geplante Datenimport-Funktion.
-  - Verschiedene Backup-Möglichkeiten.
+  - Webbasiert & plattformunabhängig
+  - Open Source
+  - Einfache Software-Updates
+  - Datenexport-Funktion
+  - Geplante Datenimport-Funktion
+  - Verschiedene Backup-Möglichkeiten
 
 ---
 
@@ -32,7 +32,7 @@
 
 - Der Verein benötigt ein aktives Konto bei [Vereinsflieger.de](https://www.vereinsflieger.de).
 - Mitgliederverwaltung und Gebührenabrechnung erfolgen über Vereinsflieger.de.
-- Für die Anbindung muss dort ein **APPKEY** generiert werden.
+- Für die Anbindung muss bei Vereinsflieger.de ein **APPKEY** generiert werden.
   - Der Zugriff ist aktuell auf **500 API-Anfragen pro Tag pro APPKEY** begrenzt.
 - Die verwendeten Verzeichnisse sollten über `.htaccess` abgesichert werden können.
 
@@ -46,7 +46,7 @@ Dieses Projekt befindet sich in aktiver Entwicklung. Die **Import-Funktion** ist
 
 ## 📄 Lizenz
 
-Dieses Projekt ist **Open Source** und steht unter einer passenden Open-Source-Lizenz (bitte Lizenzdatei ergänzen, z. B. MIT oder GPL).
+Dieses Projekt ist **Open Source** und steht unter einer passenden Open-Source-Lizenz (AGPL).
 
 ---
 
