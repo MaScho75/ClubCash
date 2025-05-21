@@ -34,47 +34,6 @@
 
 </head>
 
-<<<<<<< HEAD:kasse/index.html
-=======
-<?php
-
-//Backup veranlassen
-
-$backupmeldung = '';
-ob_start();  // Output Buffering aktivieren
-include('backup.php');
-$backupmeldung = ob_get_clean();  // Ausgabe in die Variable speichern
-
-// Mitgliederdaten laden
-clearstatcache(true, "../daten/kunden.json"); // Clear file cache for this specific file
-$jsonKundenDatei = file_get_contents("../daten/kunden.json");
-$jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
-
-// Produkte laden
-clearstatcache(true, "daten/produkte.json"); // Clear file cache for this specific file
-$jsonProdukteDatei = file_get_contents("daten/produkte.json");
-$jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
-
-
-/* // Produkte laden
-$csvDatei = "../daten/produkte.csv";
-clearstatcache(true, $csvDatei); // Clear the file status cache for this specific file
-$produkte = [];
-
-if (($handle = fopen($csvDatei, "r")) !== FALSE) {
-    $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
-
-    while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
-        if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
-            $produkte[] = array_combine($header, $row); // Header mit Werten kombinieren
-        }
-    }
-    fclose($handle);
-} */
-
-?>
-
->>>>>>> main:kasse/index.php
 <body>
 
     <!-- Preloader anzeigen -->
@@ -480,7 +439,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
 
                     übertragung_umsatz(warenkorb2);
 
-                    //statusfeld.innerText = "Prokukte bezahlt!";
                     tbody.innerHTML = `
 			        <tr>
 			            <td class="zentriert">

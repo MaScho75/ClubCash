@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Skalierbarkeit für mobile Geräte sicherstellen -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Cafè Lüsse Login</title>
+    <title>ClubCashAdmin</title>
 
     <!-- Anweisung an Suchmaschinen, die Seite NICHT zu indexieren -->
     <meta name="robots" content="noindex, nofollow">

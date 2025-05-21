@@ -2065,6 +2065,9 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
         portalInhalt.innerHTML = "<p>Bitte warten, die Abrechnung wird an Vereinsflieger übertragen...</p>";
 
+
+        document.getElementById("preloader").style.display = "block";
+
         // Array in JSON konvertieren und an PHP-Datei senden
         fetch('push_Verkaufsdaten_Vereinsflieger.php', {
             method: 'POST',
@@ -2078,11 +2081,13 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             console.log('Erfolgreich an PHP gesendet:', result);
             portalInhalt.insertAdjacentHTML("beforeend", "<p>✅ Datensätze sind für die Übertragung vorbereitet.</p>");
             portalInhalt.insertAdjacentHTML("beforeend", result);
+            document.getElementById("preloader").style.display = "none";
         })
         .catch(error => {
             console.error('❌ Fehler beim Senden:', error);
             portalInhalt.insertAdjacentHTML("beforeend", error);
             alert('Daten können nicht übertragen werden!');
+            document.getElementById("preloader").style.display = "none";
         });
          
     }
@@ -2098,7 +2103,35 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         console.log("Datum für Kontoausgleich:", ausgleichsdatum.toISOString().split('T')[0]);
         console.log("Abrechnungsdaten:", abrechnungsdaten);
 
-    }
+        
+        
+        //daten für den Kontoausgleich übertragen
+        // try {
+        //         const response = await fetch("kasse/umsatz-api.php", {
+        //             method: "POST",
+        //             headers: {
+        //                 "Content-Type": "application/json"
+        //             },
+        //             body: JSON.stringify(data)
+        //         });
+
+        //         if (!response.ok) {
+        //             throw new Error(`Server-Fehler: ${response.status}`);
+        //         }
+
+        //         const result = await response.json();
+        //         console.log(result);
+        //         statusfeld.innerText = "Verkauf online gespeichert";
+        //         console.log("Verkauf online gespeichert");
+        //     } catch (error) {
+        //         console.error("Fehler:", error);
+        //         speichereOfflineVerkauf(data);
+        //         statusfeld.innerText = "Fehler - Verkauf offline gespeichert";
+        //         console.log("Fehler - Verkauf offline gespeichert");
+        //     }
+
+
+        // }
     </script>
 </body>
 </html>
