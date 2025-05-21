@@ -46,7 +46,7 @@ Dieses Projekt befindet sich in aktiver Entwicklung. Die **Import-Funktion** ist
 
 ## 📄 Lizenz
 
-Dieses Projekt ist **Open Source** und steht unter einer passenden Open-Source-Lizenz (AGPL).
+Dieses Projekt ist **Open Source** und steht unter GNU AFFERO GENERAL PUBLIC LICENSE.
 
 ---
 
