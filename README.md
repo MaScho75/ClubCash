@@ -52,4 +52,4 @@ Dieses Projekt ist **Open Source** und steht unter einer passenden Open-Source-L
 
 ## 🤝 Mitwirken
 
-Beiträge, Feedback und Ideen sind willkommen! Bitte eröffne ein [Issue](https://github.com/dein-benutzername/clubcash/issues) oder erstelle einen Pull Request.
+Beiträge, Feedback und Ideen sind willkommen! Bitte eröffne ein [Issue](https://github.com/MaScho75/clubcash/issues) oder erstelle einen Pull Request.
