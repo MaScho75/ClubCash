@@ -104,7 +104,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         <li><a href="#" onclick="Produkte_editieren()">Produkte</a></li>
         <li><a href="#" onclick="Wareneingang()">Wareneingang</a></li>
         <li><a href="#" onclick="Abrechnung()">Abrechnung</a></li>
-        <li><a href="#" onclick="abrechnung()">abrechnung</a></li>
+
       </ul>
     </li>
  
@@ -442,31 +442,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         // HTML in neues Fenster schreiben
         printWindow.document.write(html);
         printWindow.document.close();
-    }
-
-    function Abrechnung() {
-
-        portalmenu2.innerHTML = "<h2 style='display: inline;'>Abrechnung</h2>";
-
-        let html = "";
-        html += `
-        <h3>1. Kasse aus Wartungsmodus stellen</h3>
-        <p>Die Kasse auf Wartungsmodus stellen, um keine weiteren Verkäufe zuzulassen.</p>
-        <button id="btOffline" class="kleinerBt" disabled>Wartungsmodus</button>
-        <h3>2. Kontostande übertragen</h3>
-        <p>Die Kontostände der Mitglieder in die Vereinsflieger-Datenbank übertragen.</p>
-        <button id="btVFTansfer" class="kleinerBt" disabled>übertragen</button>
-        <h3>Kontostände ausgleichen</h3>
-        <p>Die Kontostände der Mitglieder in jeder Kategorie auf 0 € gesetzt.</p>
-        <button id="btKontoausgleich" class="kleinerBt" disabled>zurücksetzen</button>
-        <h3>3. Wartungsmodus aufgeben</h3>
-        <p>Den Wartungsmodus aufheben, um weitere Verkäufe zuzulassen.</p>
-        <button id="btOnline" class="kleinerBt" disabled>Wartung aufheben</button>
-
-        `;
-
-        portalInhalt.innerHTML = html;
-    }    
+    }   
 
     function Warenbestand() {
         warenbestand = [];
@@ -1245,6 +1221,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         html += `
         <tr>
             <th>ID</th>
+            <th class="links">Mitgliedsnr</th>
             <th class="links">Vorname</th>
             <th class="links">Nachname</th>
             <th class="links">Email</th>
@@ -1260,6 +1237,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         kunden.forEach(kunde => {
             html += `<tr>
                 <td>${kunde.uid}</td>
+                <td class="links">${kunde.memberid}</td>
                 <td class="links">${kunde.firstname}</td>
                 <td class="links">${kunde.lastname}</td>
                 <td class="links">${kunde.email}</td>
@@ -1328,9 +1306,12 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                     <td>${kunde.firstname} ${kunde.lastname}</td>
                 </tr>                
                 <tr>
-                    <td>Mitgliedsnr</td>
+                    <td>ID</td>
                     <td>${kunde.uid}</td>
                 </tr>
+                <tr>
+                    <td>Mitgliedsnr</td>
+                    <td>${kunde.memberid}</td>
                 <tr>
                     <td>Email</td>
                     <td>${kunde.email}</td>
@@ -1916,71 +1897,174 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             link.textContent = '➡️';  // Symbol ändern (z.B. nach rechts)
         }
     }
-    
-    function abrechnung() {
-        // Zeitspanne festlegen vom 1.1. bis heute
-        let startDate = jahresbeginn.toISOString().split('T')[0];
-        let endDate = heute.toISOString().split('T')[0];
+    function Abrechnung(datum1, datum2) {
+        // Default dates if none provided (full year)
+        if(!datum1 || !datum2) {
+            datum1 = jahresbeginn; // From global variable
+            datum2 = heute; // From global variable
+        }
 
         // Array für die Abrechnung erstellen
-        let Abrechnung = [];
-
-        // Für jeden Kunden...
-        kunden.forEach(kunde => {
-            // Verkäufe des Kunden im Zeitraum filtern
-            let kundenVerkäufe = verkäufe.filter(v => 
-                v.Kundennummer === kunde.uid &&
-                v.Datum >= startDate && 
-                v.Datum <= endDate
-            );
-
-            // Nach Produktgruppen gruppieren
-            let gruppenSummen = {};
-            kundenVerkäufe.forEach(verkauf => {
-                if (!gruppenSummen[verkauf.Kategorie]) {
-                    gruppenSummen[verkauf.Kategorie] = 0;
-                }
-                gruppenSummen[verkauf.Kategorie] += parseFloat(verkauf.Preis);
-            });
-
-            // Abrechnungstext erstellen
-            let abrechnungsText = Object.entries(gruppenSummen)
-                .map(([gruppe, summe]) => `${gruppe}: ${summe.toFixed(2)}€`)
-                .join(', ');
-
-            // Zur Abrechnung hinzufügen
-            Abrechnung.push({
-                Kundennummer: kunde.uid,
-                Vorname: kunde.firstname,
-                Nachname: kunde.lastname,
-                Abrechnung: abrechnungsText
-            });
-        });
-
-        console.table(Abrechnung); // Debug-Ausgabe der Abrechnung
-
-        // HTML für die Abrechnung erstellen
-        let html = '<h2>Abrechnung</h2><table class="portal-table">';
-        html += `
-            <tr>
-                <th>Kundennummer</th>
-                <th class="links">Vorname</th>
-                <th class="links">Nachname</th>
-                <th class="links">Abrechnung</th>
-            </tr>`;
-        Abrechnung.forEach(eintrag => {
-            html += `<tr>
-                <td>${eintrag.Kundennummer}</td>
-                <td class="links">${eintrag.Vorname}</td>
-                <td class="links">${eintrag.Nachname}</td>
-                <td class="links">${eintrag.Abrechnung}</td>
-            </tr>`;
-        });
-        html += '</table>';
-        portalInhalt.innerHTML = html;
+        let abrechnung = [];
         
+        // Über alle Kunden iterieren
+        kunden.forEach(kunde => {
+            // Summe aller Verkäufe für diesen Kunden im gewählten Zeitraum
+            const kundenUmsatz = verkäufe
+                .filter(verkauf => 
+                    verkauf.Kundennummer === kunde.uid &&
+                    verkauf.Datum >= datum1.toISOString().split('T')[0] && 
+                    verkauf.Datum <= datum2.toISOString().split('T')[0]
+                )
+                .reduce((acc, verkauf) => {
+                    return {
+                        Anzahl: acc.Anzahl + 1,
+                        Summe: acc.Summe + parseFloat(verkauf.Preis)
+                    };
+                }, {Anzahl: 0, Summe: 0});
+
+            // Nur Kunden mit Umsatz hinzufügen
+            if (kundenUmsatz.Anzahl > 0) {
+                abrechnung.push({
+                    bookingdate: datum2.toISOString().split('T')[0],
+                    articleid: "1017",
+                    memberid: parseInt(kunde.memberid, 10),
+                    amount: kundenUmsatz.Anzahl,
+                    callsign: "ClubCash",
+                    saletax: 19,
+                    totalprice: kundenUmsatz.Summe.toFixed(2),
+                    comment: datum1.toISOString().split('T')[0] + " bis " + datum2.toISOString().split('T')[0] + " - " + kunde.lastname + ", " + kunde.firstname,
+                    spid: 4
+                });
+            }
+        });
+
+        console.table(abrechnung); // Debug-Ausgabe der Abrechnung
+
+        // Tabelle erstellen und anzeigen
+        let html = `
+
+            <div class="datumauswahl">
+                <input class="DatumInput" type="date" id="datum_anfang" value="${datum1.toISOString().split('T')[0]}">
+                <h2 style="display: inline;"> bis </h2>
+                <input class="DatumInput" type="date" id="datum_ende" value="${datum2.toISOString().split('T')[0]}">
+                <button id="bt_aktualisierung" class="kleinerBt">aktualisieren</button>
+                <button class="kleinerBt" onclick="Abrechnung(monatsbeginn, heute)">Monat</button>
+                <button class="kleinerBt" onclick="Abrechnung(wochenbeginn, heute)">Woche</button>
+                <button class="kleinerBt" onclick="Abrechnung(heute, heute)">Tag</button>
+                <br>
+                <button id="bt-abrechnungExport" class="kleinerBt">Export an VF</button>
+                <button id="bt-Kontoausgleich" class="kleinerBt">zurücksetzen</button>
+            </div>
+
+            <table class="portal-table">
+                <tr>
+                    <th>bookingdate</th>
+                    <th>articleid</th>
+                    <th>memberid</th>
+                    <th>amount</th>
+                    <th>callsign</th>
+                    <th>saletax</th>
+                    <th>totalprice</th>
+                    <th>comment</th>
+                    <th>spid</th>
+                </tr>
+        `;
+
+        let gesamtSumme = 0;
+        let gesamtAnzahl = 0;
+
+        abrechnung.forEach(eintrag => {
+            gesamtSumme += parseFloat(eintrag.Summe);
+            gesamtAnzahl += eintrag.Anzahl;
+
+            html += `
+                <tr>
+                    <td>${eintrag.bookingdate}</td>
+                    <td>${eintrag.articleid}</td>
+                    <td>${eintrag.memberid}</td>
+                    <td>${eintrag.amount}</td>
+                    <td>${eintrag.callsign}</td>
+                    <td>${eintrag.saletax}</td>
+                    <td class="rechts">${eintrag.totalprice} €</td>
+                    <td class="links">${eintrag.comment}</td>
+                    <td>${eintrag.spid}</td>
+                </tr>
+            `;
+        });
+        html += "</table>";
+
+        // Anzeige im Portal
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>Abrechnung</h2>";
+        portalInhalt.innerHTML = html;
+
+
+        // Event Listener für Datumsauswahl
+        const btn = document.getElementById("bt_aktualisierung");
+        if(btn) {
+            btn.addEventListener("click", () => {
+                const datumA = document.getElementById("datum_anfang").value;
+                const datumE = document.getElementById("datum_ende").value;
+                Abrechnung(new Date(datumA), new Date(datumE));
+            });
+        }
+        
+        // Event Listener für Export-Button
+        const exportBtn = document.getElementById("bt-abrechnungExport");
+        exportBtn.addEventListener("click", () => {
+                abrechnungExport(abrechnung);
+        });
+
+
+        // Event Listener für Kontoausgleichs-Button
+        const KontoausgleichBtn = document.getElementById("bt-Kontoausgleich");
+        KontoausgleichBtn.addEventListener("click", () => {
+                Kontoausgleich(datum2, abrechnung);
+        });
+
+
+    }
+
+    function abrechnungExport(abrechnungsdaten) {
+
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>Export der Abrechnung an Vereinsflieger</h2>";
+
+        portalInhalt.innerHTML = "<p>Bitte warten, die Abrechnung wird an Vereinsflieger übertragen...</p>";
+
+        // Array in JSON konvertieren und an PHP-Datei senden
+        fetch('push_Verkaufsdaten_Vereinsflieger.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(abrechnungsdaten)
+        })
+        .then(response => response.text())
+        .then(result => {
+            console.log('Erfolgreich an PHP gesendet:', result);
+            portalInhalt.insertAdjacentHTML("beforeend", "<p>✅ Datensätze sind für die Übertragung vorbereitet.</p>");
+            portalInhalt.insertAdjacentHTML("beforeend", result);
+        })
+        .catch(error => {
+            console.error('❌ Fehler beim Senden:', error);
+            portalInhalt.insertAdjacentHTML("beforeend", error);
+            alert('Daten können nicht übertragen werden!');
+        });
+         
     }
     
+    // Function to append HTML content to portalInhalt
+    function appendHTMLToPortalInhalt(htmlContent) {
+        portalInhalt.insertAdjacentHTML("beforeend", htmlContent);
+    }
+
+    function Kontoausgleich(ausgleichsdatum, abrechnungsdaten) {
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>Kontoausgleich</h2>";
+        portalInhalt.innerHTML = "<p>Bitte warten, bis alle Konten ausgegleichen, bzw. zurückgesetzt wurden ...</p>";
+        console.log("Datum für Kontoausgleich:", ausgleichsdatum.toISOString().split('T')[0]);
+        console.log("Abrechnungsdaten:", abrechnungsdaten);
+
+    }
     </script>
 </body>
 </html>

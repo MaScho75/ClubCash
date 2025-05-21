@@ -551,6 +551,14 @@ button:hover {
     width: 100%;
 }
 
+#bt-abrechnungExport {
+    background-color: var(--warning-color);
+}
+
+#bt-Kontoausgleich {
+    background-color: var(--success-color);
+}
+
 #datenfeld {
     height: 400px;
     overflow: auto;

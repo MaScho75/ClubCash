@@ -68,6 +68,7 @@ if ($restInterface->SignIn($UserName, $Password, 0, $AppKey, $AuthSecret)) {
                     'firstname' => $user['firstname'] ?? null,
                     'lastname' => $user['lastname'] ?? null,
                     'email' => $user['email'] ?? null,
+                    'memberid' => $user['memberid'] ?? null,
                     'key2designation' => $user['key2designation'] ?? null,
                     'roles' => json_encode($roles, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), // JSON korrekt formatieren
                     'cc_admin' => in_array($config['cc_admin'], $roles, true),
