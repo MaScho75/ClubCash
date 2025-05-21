@@ -46,7 +46,11 @@ Dieses Projekt befindet sich in aktiver Entwicklung. Die **Import-Funktion** ist
 
 ## 📄 Lizenz
 
-Dieses Projekt ist **Open Source** und steht unter GNU AFFERO GENERAL PUBLIC LICENSE.
+Dieses Projekt steht unter der **GNU Affero General Public License v3.0**.  
+Das bedeutet, dass jede Person, die den Dienst über ein Netzwerk nutzt (z. B. Webbrowser), auch Zugang zum vollständigen Quellcode erhalten muss.
+
+Weitere Informationen findest du unter:  
+👉 [https://www.gnu.org/licenses/agpl-3.0.de.html](https://www.gnu.org/licenses/agpl-3.0.de.html)
 
 ---
 
