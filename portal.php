@@ -1,13 +1,28 @@
+
+
 <?php
+
+/*
+ * This file is part of ClubCash.
+ *
+ * ClubCash is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * ClubCash is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with ClubCash. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 session_start();
 
 // Prüfen, ob der Benutzer eingeloggt ist
-<<<<<<< HEAD
-    if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-        header('Location: index.php'); // Falls nicht eingeloggt, zurück zur Login-Seite
-        exit();
-    }
-=======
+
 if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
     header('Location: index.php'); // Falls nicht eingeloggt, zurück zur Login-Seite
     exit();
@@ -27,7 +42,6 @@ $jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein ass
 clearstatcache(true, "daten/wareneingang.json"); // Clear file cache for this specific file
 $jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
 $jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
->>>>>>> main
 
 // Configurationsdatei einbinden
     $jsonConfigDatei = file_get_contents("daten/config.json");
@@ -193,28 +207,12 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             }
         
         // PHP-Variablen in JavaScript-Variablen umwandeln
-<<<<<<< HEAD
             const kunden = <?php echo json_encode($jsonKundenDaten); ?>;
             let produkte = <?php echo json_encode($jsonProdukteDaten); ?>;
             let verkäufe = <?php echo json_encode($verkäufe); ?>;
             let wareneingang = <?php echo json_encode($jsonWareneingangDaten); ?>;
             let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
             let config = <?php echo json_encode($jsonConfigDaten); ?>;
-            console.log("config:", config); // Debug-Ausgabe der Konfiguration
-=======
-        const kunden = <?php echo json_encode($jsonKundenDaten); ?>;
-        let produkte = <?php echo json_encode($jsonProdukteDaten); ?>;
-        let verkäufe = <?php echo json_encode($verkäufe); ?>;
-        let wareneingang = <?php echo json_encode($jsonWareneingangDaten); ?>;
-        let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
->>>>>>> main
-
-        console.log("Überprüfung der Variablen:"); // Debug-Ausgabe
-        console.table("Kunden:", kunden); // Debug-Ausgabe der Kunden
-        console.table("Produkte:", produkte); // Debug-Ausgabe der Produkte
-        console.table("Verkäufe:", verkäufe); // Debug-Ausgabe der Verkäufe
-        console.table("Wareneingang:", wareneingang); // Debug-Ausgabe der Wareneingang
-
 
         // Bereinige die Schlüssel von BOM und unsichtbaren Zeichen
             wareneingang = wareneingang.map(item => {
@@ -766,11 +764,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                     const updatedData = saveChanges();
                     wareneingang = updatedData; // Aktualisiere die wareneingang-Variable
 
-<<<<<<< HEAD
-=======
-                    console.log("Aktualisierte Wareneingangsdaten:", wareneingang); // Debug-Ausgabe der aktualisierten Daten
-                    
->>>>>>> main
                     fetch('json-schreiben.php', {
                         method: 'POST',
                         headers: {
@@ -787,11 +780,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                         alert('Wareneingangstabelle erfolgreich gespeichert:', result);
                     })
                     .catch(error => {
-<<<<<<< HEAD
-                        alert('Fehler beim JSON erstellen:', error);
-=======
-                        alert('Fehler beim speichern:', error);
->>>>>>> main
+
                     });
 
             };
@@ -1216,11 +1205,8 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 const updatedData = saveChanges();
                 produkte = updatedData.map(({Bestand, ...rest}) => rest);
 
-<<<<<<< HEAD
-                fetch('JSON-schreiben.php', {
-=======
                 fetch('json-schreiben.php', {
->>>>>>> main
+
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1233,11 +1219,9 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 })
                 .then(response => response.text())
                 .then(() => {
-<<<<<<< HEAD
-                    return fetch('JSON-schreiben.php', {
-=======
+
                     return fetch('json-schreiben.php', {
->>>>>>> main
+
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
