@@ -45,8 +45,19 @@ echo "<p>✅ Konfigurationsdatei geladen.</p>";
 // Lese die .env-Datei
 $env = parse_ini_file('daten/.env');  // Lädt die Umgebungsvariablen aus der .env-Datei
 
+if (!$env) {
+    die("<pre>❌ Fehler beim Laden der Umgebungsvariablen: " . json_last_error_msg() . "</pre>");
+}
+echo "<p>✅ Umgebungsvariablen geladen.</p>";
+
 // Wrapper-Datei einbinden
+
+if (!file_exists('VereinsfliegerRestInterface.php')) {
+    die("<pre>❌ Datei VereinsfliegerRestInterface.php nicht gefunden.</pre>");
+}
 require_once 'VereinsfliegerRestInterface.php';
+
+echo "<p>✅ Wrapper-Datei VereinsfliegerRestInterface.php eingebunden.</p>";
 
 // Anmeldeinformationen
 $UserName = $env['USERNAME'];
@@ -70,9 +81,10 @@ if ($restInterface->SignIn($UserName, $Password, 0, $AppKey, $AuthSecret)) {
         if (json_last_error() === JSON_ERROR_NONE) {
             echo "<p>✅ Empfangene JSON-Daten</p>";
             //für den Debugging-Zweck:
-            //echo "<pre>";
-            //print_r($data);
-            //echo "</pre>";
+            // echo "<pre>Folgede Daten wurden empfangen:<br>";
+            // echo "----------------------------------------<br>";
+            // print_r($data);
+            // echo "</pre>";
         } else {
             echo "<p>❌Fehler beim Parsen der JSON-Daten:</p>";
             echo json_last_error_msg();
@@ -81,7 +93,7 @@ if ($restInterface->SignIn($UserName, $Password, 0, $AppKey, $AuthSecret)) {
         echo "<p>❌ Keine POST-Daten empfangen.</p>";
     }
 
-    $erfolg = false; // Dummy-Variable für den Erfolg der Übertragung
+    $erfolg = false; // Variable für den Erfolg der Übertragung
 
     foreach ($data as $key => $value) {
         echo "<p><b>Beginn der Übertragung des Datensatzes Nummer: </b>";
@@ -93,6 +105,18 @@ if ($restInterface->SignIn($UserName, $Password, 0, $AppKey, $AuthSecret)) {
 
         if ($erfolg) {
             echo "<br>✅ Datensatz wurde erfolgreich übertragen.";
+            // Jetzt soll ein neuer Datensatz in der Datenbank daten/umsatz.csv mit dem datensatz erstellt werden
+            $csvFile = 'daten/umsatz.csv';
+            $csvData = array_values($value); // Convert associative array to indexed array
+            $csvData = array_slice($csvData, 0, 10); // Take only the first 10 elements
+            $csvLine = implode(';', $csvData); // Create CSV line with semicolon separator
+            
+            if (file_put_contents($csvFile, $csvLine . PHP_EOL, FILE_APPEND) !== false) {
+                echo "<br>✅ Kontoausgleich wurde in ClubCash gespeichert.";
+            } else {
+                echo "<br>❌ Fehler beim Speichern in der umsatz.csv.";
+            }
+
         } else {
             echo "<br>❌ Fehler beim Übertragen des Datensatzes.";
         }
@@ -104,7 +128,6 @@ if ($restInterface->SignIn($UserName, $Password, 0, $AppKey, $AuthSecret)) {
 
 }else {
     echo "<p>❌ Anmeldung in Vereinsflieger fehlgeschlagen.</p>\n";
-    echo "<p>Fehler: " . $restInterface->getError() . "</p>";
 }
 
 ?>

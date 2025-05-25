@@ -140,7 +140,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         <li><a href="#" onclick="Produkte_editieren()">Produkte</a></li>
         <li><a href="#" onclick="Wareneingang()">Wareneingang</a></li>
         <li><a href="#" onclick="Abrechnung()">Abrechnung</a></li>
-
       </ul>
     </li>
  
@@ -1660,8 +1659,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
             verkäufe.forEach(verkauf => {
             
-                //if (verkauf.Datum === datum1.toISOString().split('T')[0])
-
                 if (verkauf.Datum >= datum1.toISOString().split('T')[0] && verkauf.Datum <= datum2.toISOString().split('T')[0]) {
 
                     Kunde = kunden.find(kunde => kunde.uid === verkauf.Kundennummer);
@@ -1758,8 +1755,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
             let gruppenanzahl = 0;
             let produktgruppen = [...new Set(produkte.map(produkt => produkt.Kategorie))]; // Einzigartige Produktgruppen extrahieren
-
-            console.log('Produktgruppen:', produktgruppen); // Debug-Ausgabe der Produktgruppen
 
             produktgruppen.forEach(gruppe => {
                 gruppensumme = 0;
@@ -1959,21 +1954,31 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
             // Nur Kunden mit Umsatz hinzufügen
             if (kundenUmsatz.Anzahl > 0) {
+                
+                let gutschrift =  -kundenUmsatz.Summe
+
                 abrechnung.push({
                     bookingdate: datum2.toISOString().split('T')[0],
+                    Zeit: datum2.toISOString().split('T')[1].substring(0, 5), // Nur Stunden und Minuten
+                    Terminal: "Z",
+                    Schlüssel: kunde.key2designation,
+                    Uid: kunde.uid,
+                    EAN: 9999, // Dummy EAN
+                    Produkt: "Kontoausgleich-VF",
+                    Art: "Buchung",
+                    Gutschrift: gutschrift.toFixed(2),
+                    Steuern: 0, // Keine Steuern für Kontoausgleich
                     articleid: "1017",
                     memberid: parseInt(kunde.memberid, 10),
                     amount: kundenUmsatz.Anzahl,
                     callsign: "ClubCash",
                     saletax: 19,
-                    totalprice: kundenUmsatz.Summe.toFixed(2),
                     comment: datum1.toISOString().split('T')[0] + " bis " + datum2.toISOString().split('T')[0] + " - " + kunde.lastname + ", " + kunde.firstname,
-                    spid: 4
+                    spid: 4,
+                    totalprice: kundenUmsatz.Summe.toFixed(2)
                 });
             }
         });
-
-        console.table(abrechnung); // Debug-Ausgabe der Abrechnung
 
         // Tabelle erstellen und anzeigen
         let html = `
@@ -2062,10 +2067,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     function abrechnungExport(abrechnungsdaten) {
 
         portalmenu2.innerHTML = "<h2 style='display: inline;'>Export der Abrechnung an Vereinsflieger</h2>";
-
-        portalInhalt.innerHTML = "<p>Bitte warten, die Abrechnung wird an Vereinsflieger übertragen...</p>";
-
-
+        portalInhalt.innerHTML = "<p>Bitte warten, die Abrechnung wird an Vereinsflieger übertragen.<br>Der Vorgang kann länger dauern.<br>Bitte den Vorgang nicht abbrechen...</p>";
         document.getElementById("preloader").style.display = "block";
 
         // Array in JSON konvertieren und an PHP-Datei senden
@@ -2081,57 +2083,29 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             console.log('Erfolgreich an PHP gesendet:', result);
             portalInhalt.insertAdjacentHTML("beforeend", "<p>✅ Datensätze sind für die Übertragung vorbereitet.</p>");
             portalInhalt.insertAdjacentHTML("beforeend", result);
+            portalInhalt.insertAdjacentHTML("beforeend", "<p>✅ Abrechnung erfolgreich an Vereinsflieger übertragen.</p>");
+            portalInhalt.insertAdjacentHTML("beforeend", "<p>⚠️ Bitte die Abrechnung in Vereinsflieger prüfen und bestätigen.</p>");
+            portalInhalt.insertAdjacentHTML("beforeend", "<p>⚠️ Damit die neuen Buchungen sichtbar sind, muss die Seitenansicht mit F5 oder mit dem folgenden Button aktualisiert werden.</p>");    portalInhalt.insertAdjacentHTML("beforeend", "<button class='kleinerBt' onclick='location.reload();'>aktualisieren</button>");
             document.getElementById("preloader").style.display = "none";
+            
+            // Zurücksetzen der Variablen, um sicher zu stellen, dass sie nicht mehr verwendet werden, bis die Seite neu geladen wird
+            verkäufe = [];
+            produkte = [];
+            wareneingang = [];
         })
         .catch(error => {
-            console.error('❌ Fehler beim Senden:', error);
+            console.error('❌ - Fehler beim Senden:', error);
             portalInhalt.insertAdjacentHTML("beforeend", error);
             alert('Daten können nicht übertragen werden!');
             document.getElementById("preloader").style.display = "none";
-        });
-         
+        });         
     }
-    
+
     // Function to append HTML content to portalInhalt
     function appendHTMLToPortalInhalt(htmlContent) {
         portalInhalt.insertAdjacentHTML("beforeend", htmlContent);
     }
 
-    function Kontoausgleich(ausgleichsdatum, abrechnungsdaten) {
-        portalmenu2.innerHTML = "<h2 style='display: inline;'>Kontoausgleich</h2>";
-        portalInhalt.innerHTML = "<p>Bitte warten, bis alle Konten ausgegleichen, bzw. zurückgesetzt wurden ...</p>";
-        console.log("Datum für Kontoausgleich:", ausgleichsdatum.toISOString().split('T')[0]);
-        console.log("Abrechnungsdaten:", abrechnungsdaten);
-
-        
-        
-        //daten für den Kontoausgleich übertragen
-        // try {
-        //         const response = await fetch("kasse/umsatz-api.php", {
-        //             method: "POST",
-        //             headers: {
-        //                 "Content-Type": "application/json"
-        //             },
-        //             body: JSON.stringify(data)
-        //         });
-
-        //         if (!response.ok) {
-        //             throw new Error(`Server-Fehler: ${response.status}`);
-        //         }
-
-        //         const result = await response.json();
-        //         console.log(result);
-        //         statusfeld.innerText = "Verkauf online gespeichert";
-        //         console.log("Verkauf online gespeichert");
-        //     } catch (error) {
-        //         console.error("Fehler:", error);
-        //         speichereOfflineVerkauf(data);
-        //         statusfeld.innerText = "Fehler - Verkauf offline gespeichert";
-        //         console.log("Fehler - Verkauf offline gespeichert");
-        //     }
-
-
-        // }
-    </script>
+</script>
 </body>
 </html>
