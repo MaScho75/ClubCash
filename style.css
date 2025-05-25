@@ -10,6 +10,20 @@
     font-display: swap; /* Verhindert FOIT (Flash of Invisible Text) */
 }
 
+#portalmenu2 {
+    padding: 10px 10px 0px 20px;
+}
+
+#portalmenu2 h2 {
+    margin: 10px;
+}
+
+#portalmenu2 input {
+    border: solid 1px var(--border-color);
+    border-radius: 5px;
+    background-color: var(--text-color-light);
+}
+
 .barcode {
     font-family: '3-of-9', 'Courier New', monospace;
     font-size: 2em;
@@ -69,6 +83,11 @@ mark {
     max-width: none;
 }
 
+.portal-table td {
+    padding: 2px 5px 2px 5px;
+    border: 1px solid var(--border-color);
+}
+
 .summenzeile {
     border-top: 1px solid black;
 }
@@ -82,7 +101,7 @@ mark {
     border: 1px solid var(--border-color);
     text-align: left;
     overflow: auto;
-    max-height: calc(100vh - 260px);
+    max-height: calc(100vh - 320px);
 }
 
 /* Für das portal-inhalt den Scrollbalken auf Standard zurücksetzen */
@@ -748,7 +767,7 @@ th {
 }
 
 
-#offlineFenster {
+#Wartungsfenster {
     display: block;
     background-color: var(--background-dark);
     color: var(--text-color-light);

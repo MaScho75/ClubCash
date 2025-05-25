@@ -4,7 +4,7 @@ header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
 
 // Pfad zur CSV-Datei
-$file = "../daten/verkaufsliste.csv";
+$file = "../daten/umsatz.csv";
 
 // Heute im Format YYYY-MM-DD
 date_default_timezone_set('Europe/Berlin');
@@ -38,6 +38,6 @@ if (($handle = fopen($file, "r")) !== FALSE) {
         "data" => $todayData
     ]);
 } else {
-    echo json_encode(["status" => "error", "message" => "Die Verkaufsliste konnte nicht abegerufen werden!"]);
+    echo json_encode(["status" => "error", "message" => "Die umsatz konnte nicht abegerufen werden!"]);
 }
 ?>
