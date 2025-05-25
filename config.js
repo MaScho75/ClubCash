@@ -1,5 +1,6 @@
 const config = {
 <<<<<<< HEAD
+<<<<<<< HEAD
     "offlinemodus": false, 
     "bildschirmschoner": true, 
     "tagesabrechnung": false, 
@@ -14,6 +15,8 @@ const config = {
     "Vereinsname": "Flugsportclub Charlottenburg Berlin e.V.", 
     "VereinsnameAbk": "FCC Berlin", 
 =======
+=======
+>>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
     "wartungsmodus": false, // zeigt am Startbildschrim an, dass das System nicht im Betrieb oder im Wartungsmodusist. 
     "bildschirmschoner": true, // Starte den Bildschirmschoner in Minuten, "false" deaktiviert ihn
     "tagesabrechnung": false, // blendet das Menu Tagesabrechung ein

@@ -14,6 +14,7 @@ $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assozia
 
 // Produkte laden
 <<<<<<< HEAD
+<<<<<<< HEAD
 clearstatcache(true, "daten/produkte.json"); // Clear file cache for this specific file
 $jsonProdukteDatei = file_get_contents("daten/produkte.json");
 $jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
@@ -32,6 +33,16 @@ $jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt
 
 >>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
 
+=======
+$jsonProdukteDatei = file_get_contents("daten/produkte.json");
+$jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
+
+// Wareneingang laden
+$jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
+$jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
+
+
+>>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
 // csv umsatz laden
 $csvDatei2 = "daten/umsatz.csv"; 
 $verkäufe = [];
@@ -771,8 +782,11 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                     wareneingang = updatedData; // Aktualisiere die wareneingang-Variable
 
 <<<<<<< HEAD
+<<<<<<< HEAD
                     console.log("Aktualisierte Wareneingangsdaten:", wareneingang); // Debug-Ausgabe der aktualisierten Daten
                     
+=======
+>>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
 =======
 >>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
                     fetch('json-schreiben.php', {
@@ -792,7 +806,11 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                     })
                     .catch(error => {
 <<<<<<< HEAD
+<<<<<<< HEAD
                         alert('Fehler beim speichern:', error);
+=======
+                        alert('Fehler beim JSON erstellen:', error);
+>>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
 =======
                         alert('Fehler beim JSON erstellen:', error);
 >>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
@@ -1126,7 +1144,11 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 produkte = updatedData.map(({Bestand, ...rest}) => rest);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
                 fetch('json-schreiben.php', {
+=======
+                fetch('JSON-schreiben.php', {
+>>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
 =======
                 fetch('JSON-schreiben.php', {
 >>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
@@ -1143,7 +1165,11 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 .then(response => response.text())
                 .then(() => {
 <<<<<<< HEAD
+<<<<<<< HEAD
                     return fetch('json-schreiben.php', {
+=======
+                    return fetch('JSON-schreiben.php', {
+>>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
 =======
                     return fetch('JSON-schreiben.php', {
 >>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca

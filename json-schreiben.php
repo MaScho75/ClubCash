@@ -1,5 +1,9 @@
 <?php
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
 =======
 
 >>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
@@ -11,6 +15,7 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
     exit();
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 // JSON-Daten aus dem POST-Request lesen
 $jsonInput = file_get_contents('php://input');
@@ -51,6 +56,8 @@ function writeArrayToJSON($data, $filename) {
 }
 ?>
 =======
+=======
+>>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
 // Fehlerbehandlung
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
@@ -102,5 +109,9 @@ try {
     ]);
 }
 
+<<<<<<< HEAD
+?>
+>>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
+=======
 ?>
 >>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
