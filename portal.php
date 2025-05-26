@@ -13,8 +13,6 @@ $jsonKundenDatei = file_get_contents("daten/kunden.json");
 $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
 
 // Produkte laden
-<<<<<<< HEAD
-<<<<<<< HEAD
 clearstatcache(true, "daten/produkte.json"); // Clear file cache for this specific file
 $jsonProdukteDatei = file_get_contents("daten/produkte.json");
 $jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
@@ -23,26 +21,7 @@ $jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein ass
 clearstatcache(true, "daten/wareneingang.json"); // Clear file cache for this specific file
 $jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
 $jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
-=======
-$jsonProdukteDatei = file_get_contents("daten/produkte.json");
-$jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
 
-// Wareneingang laden
-$jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
-$jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
-
->>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
-
-=======
-$jsonProdukteDatei = file_get_contents("daten/produkte.json");
-$jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
-
-// Wareneingang laden
-$jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
-$jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
-
-
->>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
 // csv umsatz laden
 $csvDatei2 = "daten/umsatz.csv"; 
 $verkäufe = [];
@@ -781,14 +760,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                     const updatedData = saveChanges();
                     wareneingang = updatedData; // Aktualisiere die wareneingang-Variable
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-                    console.log("Aktualisierte Wareneingangsdaten:", wareneingang); // Debug-Ausgabe der aktualisierten Daten
-                    
-=======
->>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
-=======
->>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
                     fetch('json-schreiben.php', {
                         method: 'POST',
                         headers: {
@@ -805,19 +776,9 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                         alert('Wareneingangstabelle erfolgreich gespeichert:', result);
                     })
                     .catch(error => {
-<<<<<<< HEAD
-<<<<<<< HEAD
-                        alert('Fehler beim speichern:', error);
-=======
                         alert('Fehler beim JSON erstellen:', error);
->>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
-=======
-                        alert('Fehler beim JSON erstellen:', error);
->>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
                     });
-
             };
-
         } 
     }
 
@@ -1143,15 +1104,8 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 const updatedData = saveChanges();
                 produkte = updatedData.map(({Bestand, ...rest}) => rest);
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-                fetch('json-schreiben.php', {
-=======
+
                 fetch('JSON-schreiben.php', {
->>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
-=======
-                fetch('JSON-schreiben.php', {
->>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1164,15 +1118,9 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 })
                 .then(response => response.text())
                 .then(() => {
-<<<<<<< HEAD
-<<<<<<< HEAD
-                    return fetch('json-schreiben.php', {
-=======
+
                     return fetch('JSON-schreiben.php', {
->>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
-=======
-                    return fetch('JSON-schreiben.php', {
->>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca
+
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1742,7 +1690,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
 
-
         const btn = document.getElementById("bt_aktualisierung");
         btn.addEventListener("click", () => {
             const datumA = document.getElementById("datum_anfang").value;
@@ -1775,7 +1722,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         <tbody>`;
 
         const VerkäufeDatumFilter = verkäufe.filter(auswahl => auswahl.Datum === datum1.toISOString().split('T')[0]);
-
         const zusammenfassung = {};
 
         VerkäufeDatumFilter.forEach(eintrag => {
@@ -1806,7 +1752,6 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
                 </tr>`;
                 
                 summe += ds.gesamtpreis;}
-
 
         html += `
             <tr style="border-top: 1px solid black;">
