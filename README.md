@@ -54,14 +54,15 @@ Vorhandene Bezahlsysteme können integriert werden.
 ---
 
 ## 🛒 Kaufempfehlungen
-**RasperryPi**
+
+- **RasperryPi** <br>
 mit Touchscreen
 n.n.
-**Strichcodescanner**
+- **Strichcodescanner** <br>
 n.n.
-**RFID-Leser**
+- **RFID-Leser** <br>
 n.n.
-**PRID Karten/Chips**
+- **PRID Karten/Chips** <br>
 n.n.
 
 ---
