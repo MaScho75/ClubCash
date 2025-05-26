@@ -40,11 +40,16 @@ if (!$config) {
     die("<pre>❌ Fehler beim Laden der Konfigurationsdatei: " . json_last_error_msg() . "</pre>");
 }
 
-
 echo "<p>✅ Konfigurationsdatei erfolgreich geladen.</p>";
 
 // Lese die .env-Datei
 $env = parse_ini_file('daten/.env');  // Lädt die Umgebungsvariablen aus der .env-Datei
+
+if (!$env) {
+    die("<pre>❌ Fehler beim Laden der Umgebungsvariablen aus der .env-Datei.</pre>");
+}
+
+echo "<p>✅ Umgebungsvariablen erfolgreich geladen.</p>";
 
 // Wrapper-Datei einbinden
 require_once 'VereinsfliegerRestInterface.php';
