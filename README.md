@@ -1,8 +1,21 @@
 # ClubCash
 
-**ClubCash** ist ein bargeldloses webasiertes Bezahlsystem für Flugsport-Vereine für das Bezahlen von beispielsweise Getränken, Eis, Süssigkeiten und Merchandise-Produkten ausschließlich für Vereinsmitglieder über Bezahlterminals mit Produktstrichcodes und kostengünstigen unverechlüsselten RFID Chips mit direktem Anschluss an [Vereinsflieger.de](https://www.vereinsflieger.de)
-Bebötigt wird ein Gerät mit Webbrowser und zumindest temporären Internetverbindung (Android Tablet,  RaspberryPi, Touchscreen oder Mausbedienung, PC, Betriebssystem unabhängig), Strichcodescanner und RFID-Chipkartenlesegerät und eine Webserver oder gemieteten Webspace.  
-Vorhandene Systeme können integriert werden.
+**ClubCash** ist ein 
+- bargeldloses webasiertes Bezahlsystem
+- für *Flugsport-Vereine*
+- für das Bezahlen von beispielsweise Getränken, Eis, Süssigkeiten und Merchandise-Produkten
+- ausschließlich für Vereinsmitglieder
+- über Bezahlterminals
+- mit Produktstrichcodes und
+- kostengünstigen unverechlüsselten RFID Chips
+- mit direktem Anschluss an [Vereinsflieger.de](https://www.vereinsflieger.de).
+Bebötigt wird
+- ein Gerät mit Webbrowser und
+- zumindest temporären Internetverbindung (Android Tablet,  RaspberryPi, Touchscreen oder Mausbedienung, PC, Betriebssystem unabhängig),
+- Strichcodescanner und
+- ggf. RFID-Chipkartenlesegerät und ein
+- Webserver oder gemieteten Webspace.  
+Vorhandene Bezahlsysteme können integriert werden.
 
 ---
 
