@@ -1,5 +1,3 @@
-
-
 <?php
 
 /*
@@ -72,6 +70,23 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         }
     }
     fclose($handle);
+}
+
+// Ermittle die aktuelle zum Download verfügbare Version, die auf GitHub hinterlegt ist
+$owner = 'MaScho75';
+$repo = 'ClubCash';
+$url = "https://api.github.com/repos/$owner/$repo/releases/latest";
+
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_USERAGENT, 'PHP Script');
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+if ($response !== false) {
+    $release = json_decode($response, true);
 }
 
 ?>
@@ -150,6 +165,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
         <li><a href="#" class="disabled">Zugriff Vereinsflieger</a></li>
         <li><a href="#" onclick="Farben()">Farben</a></li>
         <li><a href="#" onclick="Programmeinstellungen()">Porgrammeinstellungen</a></li>
+        <li><a href="#" onclick="Update()">Update</a></li>
         <li><a href="#" class="disabled">alle Daten löschen</a></li>
       </ul>
     </li>
@@ -213,6 +229,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             let wareneingang = <?php echo json_encode($jsonWareneingangDaten); ?>;
             let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
             let config = <?php echo json_encode($jsonConfigDaten); ?>;
+            const release = <?php echo json_encode($release); ?>;
 
         // Version anzeigen
             document.getElementById('Version').textContent = config.Version;
@@ -2108,6 +2125,43 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     // Function to append HTML content to portalInhalt
     function appendHTMLToPortalInhalt(htmlContent) {
         portalInhalt.insertAdjacentHTML("beforeend", htmlContent);
+    }
+
+    function Update() {
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>Update</h2>";
+        html = "";
+        html += "<p>installierte Version: " + config.Version + "</p>";
+        html += "<p>last release: " + release.tag_name + " - " + release.created_at + "</p>";
+        console.log("Release", release);
+
+        if (config.Version === release.tag_name) {
+            html += "<p>✅ Die Software ist auf dem neuesten Stand.</p>";
+        } else {
+            html += "<p>⚠️ Es ist ein Update verfügbar. Bitte die Software aktualisieren.</p>";
+            html += `<button class='kleinerBt' onclick=''>Update</button>`;
+        }
+        html += "<button class='kleinerBt' onclick='Systembackup()'>Systembackup</button>";
+
+        portalInhalt.innerHTML = html;
+
+    }
+
+    function Systembackup() {
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>Systembackup</h2>";
+        portalInhalt.innerHTML = "<p>Bitte warten, das Systembackup wird erstellt...</p>";
+        document.getElementById("preloader").style.display = "block";
+
+        // AJAX request to create backup
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "create-system-backup.php", true);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                portalInhalt.innerHTML = xhr.responseText;
+                document.getElementById("preloader").style.display = "none";
+            }
+        };
+        xhr.send(); 
+        
     }
 
 </script>

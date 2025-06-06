@@ -34,50 +34,6 @@
 
 </head>
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD:kasse/index.php
-<?php
-
-//Backup veranlassen
-
-$backupmeldung = '';
-ob_start();  // Output Buffering aktivieren
-include('backup.php');
-$backupmeldung = ob_get_clean();  // Ausgabe in die Variable speichern
-
-// Mitgliederdaten laden
-clearstatcache(true, "../daten/kunden.json"); // Clear file cache for this specific file
-$jsonKundenDatei = file_get_contents("../daten/kunden.json");
-$jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
-
-// Produkte laden
-clearstatcache(true, "daten/produkte.json"); // Clear file cache for this specific file
-$jsonProdukteDatei = file_get_contents("daten/produkte.json");
-$jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
-
-
-/* // Produkte laden
-$csvDatei = "../daten/produkte.csv";
-clearstatcache(true, $csvDatei); // Clear the file status cache for this specific file
-$produkte = [];
-
-if (($handle = fopen($csvDatei, "r")) !== FALSE) {
-    $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
-
-    while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
-        if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
-            $produkte[] = array_combine($header, $row); // Header mit Werten kombinieren
-        }
-    }
-    fclose($handle);
-} */
-
-?>
-
-=======
->>>>>>> 6b6330bacad7d7d05b2ef09e764d17d481c980ca:kasse/index.html
->>>>>>> ef42392efe8500501dc97ed47958140ea4700e4c
 <body>
 
     <!-- Preloader anzeigen -->
@@ -129,19 +85,16 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                         <tr>
                             <td class="zentriert" style="font-size: 25px; padding: 10px;">Bitte Produkt scannen oder Chip auflegen.</td>
                         </tr>
-
                         <tr>
                             <td>
                                 <div id="direktwahl"></div>
                             </td>
                     </tbody>
-
                 </table>
-
             </div>
 
             <div id="copyright">
-                <p class="zentriert" style="margin: 0px;">&copy; 2025 Marcel Schommer - Version: 0.4.0</p>
+                <p class="zentriert" style="margin: 0px;">&copy; 2025 Marcel Schommer - Version: <span id="version">x.x.x</span></p>
             </div>
         </div>
 
@@ -211,7 +164,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
         </svg>
     </div>
 
-    
     <script>
 
         //Backup der umsatz.csv
@@ -266,7 +218,6 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
             const preislisten_tbody = document.querySelector("#preislistentabelle tbody");
             const statusbar = document.getElementById("statusfeld");
             const zifferneingabefeld = document.getElementById("zifferneingabefeld");
-
 
         // Eingabekontrolle - Eventhandler
             let tastenkontrolle = function(event) {
@@ -370,6 +321,9 @@ if (($handle = fopen($csvDatei, "r")) !== FALSE) {
                 document.addEventListener('scroll', resetTimer);
                 resetTimer(); // aktiviert den Bildschirmschoner
             }
+            console.log("Konfiguration: ", config);
+            console.log("Version: ", config.Version);
+            document.getElementById("version").innerText = config.Version;
         }
             
         async function loadJSON(url) {
