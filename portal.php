@@ -106,7 +106,8 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
      <div id="kopf" style="display: flex; align-items: center;">
             <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px;  margin: 30px;">	   
-	        <h1>ClubCash Portal</h1>
+            <h1>ClubCash Portal</h1>
+                        <p>&nbsp;<b><span id="Version">x.x.x</span></b></p>
 	</div>
     
 <nav class="navbar">
@@ -175,7 +176,7 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
 
     <script>
 
-        let portalmenu2 = document.getElementById('portalmenu2'); 
+        let portalmenu2 = document.getElementById('portalmenu2');
 
         // Datum mitteleuropäisch formatiert
             let heute = new Date();
@@ -212,6 +213,9 @@ if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
             let wareneingang = <?php echo json_encode($jsonWareneingangDaten); ?>;
             let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
             let config = <?php echo json_encode($jsonConfigDaten); ?>;
+
+        // Version anzeigen
+            document.getElementById('Version').textContent = config.Version;
 
         // Bereinige die Schlüssel von BOM und unsichtbaren Zeichen
             wareneingang = wareneingang.map(item => {
