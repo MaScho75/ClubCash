@@ -12,8 +12,8 @@ if (!class_exists('ZipArchive')) {
     exit();
 }
 
-$backupDir = 'backups/';
-$backupFile = $backupDir . 'system_backup_' . date('Y-m-d_H-i-s') . '.zip';
+$backupDir = 'backup/';
+$backupFile = $backupDir . 'ClubCash_Systembackup_' . date('Y-m-d_H-i-s') . '.zip';
 
 if (!is_dir($backupDir)) {
     mkdir($backupDir, 0755, true);
@@ -36,6 +36,8 @@ if ($zip->open($backupFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE
 
     $zip->close();
     echo "Backup erfolgreich erstellt: " . htmlspecialchars($backupFile);
+    echo "<br><button class='kleinerBt' onclick=\"window.location.href='" . htmlspecialchars($backupFile) . "'\">Download</button>";
+
 } else {
     echo "Fehler beim Erstellen des Backups";
 }

@@ -190,110 +190,110 @@ if ($response !== false) {
 </div>
 
 
-    <script>
+<script>
 
-        let portalmenu2 = document.getElementById('portalmenu2');
+    let portalmenu2 = document.getElementById('portalmenu2');
 
-        // Datum mitteleuropäisch formatiert
-            let heute = new Date();
-            heute = new Date(heute.getTime() - heute.getTimezoneOffset() * 60000);
+    // Datum mitteleuropäisch formatiert
+        let heute = new Date();
+        heute = new Date(heute.getTime() - heute.getTimezoneOffset() * 60000);
 
-        //Wochenbeginn
-            let wochenbeginn = new Date(heute);
-            let day = heute.getDay();
-            day = (day === 0) ? 7 : day; // Sonntag (0) wird zu 7
-            wochenbeginn.setDate(heute.getDate() - (day - 1)); // auf Montag zurückrechnen
-            wochenbeginn.setHours(2, 0, 0, 0); // 2 Uhr früh, Minuten/Sekunden/Millisekunden auf 0 setzen
+    //Wochenbeginn
+        let wochenbeginn = new Date(heute);
+        let day = heute.getDay();
+        day = (day === 0) ? 7 : day; // Sonntag (0) wird zu 7
+        wochenbeginn.setDate(heute.getDate() - (day - 1)); // auf Montag zurückrechnen
+        wochenbeginn.setHours(2, 0, 0, 0); // 2 Uhr früh, Minuten/Sekunden/Millisekunden auf 0 setzen
 
-        //Monatsbeginn
-            let monatsbeginn = new Date(heute);
-            monatsbeginn.setDate(1); // Erster Tag des Monats
-            monatsbeginn.setHours(monatsbeginn.getHours() + 2); // 2 Stunden addieren
+    //Monatsbeginn
+        let monatsbeginn = new Date(heute);
+        monatsbeginn.setDate(1); // Erster Tag des Monats
+        monatsbeginn.setHours(monatsbeginn.getHours() + 2); // 2 Stunden addieren
 
-        //Jahresbeginn
-            let jahresbeginn = new Date(heute);
-            jahresbeginn.setDate(1); // Erster Tag des Jahres
-            jahresbeginn.setMonth(0); // Januar
-            jahresbeginn.setHours(jahresbeginn.getHours() + 2); // 2 Stunden addieren
+    //Jahresbeginn
+        let jahresbeginn = new Date(heute);
+        jahresbeginn.setDate(1); // Erster Tag des Jahres
+        jahresbeginn.setMonth(0); // Januar
+        jahresbeginn.setHours(jahresbeginn.getHours() + 2); // 2 Stunden addieren
 
-        //Sanduhr
-            window.onload = function() {
-            // Preloader ausblenden, wenn die Seite vollständig geladen ist
-            document.getElementById("preloader").style.display = "none";
-            }
-        
-        // PHP-Variablen in JavaScript-Variablen umwandeln
-            const kunden = <?php echo json_encode($jsonKundenDaten); ?>;
-            let produkte = <?php echo json_encode($jsonProdukteDaten); ?>;
-            let verkäufe = <?php echo json_encode($verkäufe); ?>;
-            let wareneingang = <?php echo json_encode($jsonWareneingangDaten); ?>;
-            let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
-            let config = <?php echo json_encode($jsonConfigDaten); ?>;
-            const release = <?php echo json_encode($release); ?>;
+    //Sanduhr
+        window.onload = function() {
+        // Preloader ausblenden, wenn die Seite vollständig geladen ist
+        document.getElementById("preloader").style.display = "none";
+        }
+    
+    // PHP-Variablen in JavaScript-Variablen umwandeln
+        const kunden = <?php echo json_encode($jsonKundenDaten); ?>;
+        let produkte = <?php echo json_encode($jsonProdukteDaten); ?>;
+        let verkäufe = <?php echo json_encode($verkäufe); ?>;
+        let wareneingang = <?php echo json_encode($jsonWareneingangDaten); ?>;
+        let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
+        let config = <?php echo json_encode($jsonConfigDaten); ?>;
+        const release = <?php echo json_encode($release); ?>;
 
-        // Version anzeigen
-            document.getElementById('Version').textContent = config.Version;
+    // Version anzeigen
+        document.getElementById('Version').textContent = config.Version;
 
-        // Bereinige die Schlüssel von BOM und unsichtbaren Zeichen
-            wareneingang = wareneingang.map(item => {
-                const cleanItem = {};
-                Object.entries(item).forEach(([key, value]) => {
-                    // Entferne alle unsichtbaren Zeichen am Anfang und Ende
-                    const cleanKey = key.replace(/^[\uFEFF\u200B\u0000-\u0020]+|[\u0000-\u0020]+$/g, '');
-                    cleanItem[cleanKey] = value;
-                });
-                return cleanItem;
+    // Bereinige die Schlüssel von BOM und unsichtbaren Zeichen
+        wareneingang = wareneingang.map(item => {
+            const cleanItem = {};
+            Object.entries(item).forEach(([key, value]) => {
+                // Entferne alle unsichtbaren Zeichen am Anfang und Ende
+                const cleanKey = key.replace(/^[\uFEFF\u200B\u0000-\u0020]+|[\u0000-\u0020]+$/g, '');
+                cleanItem[cleanKey] = value;
             });
+            return cleanItem;
+        });
 
 
-        //aktuelle Kontostände der Kunden berechnen
-            let kundenkontostand = Kundenkontostand(verkäufe);
-            const portalInhalt = document.getElementById('portal-inhalt');
-            const portalMenu = document.getElementById('portal-menu');
+    //aktuelle Kontostände der Kunden berechnen
+        let kundenkontostand = Kundenkontostand(verkäufe);
+        const portalInhalt = document.getElementById('portal-inhalt');
+        const portalMenu = document.getElementById('portal-menu');
 
-        // Finde das angemeldete Mitglied anhand der Email-Adresse (case-insensitive)
-            const angemeldetesMitglied = kunden.find(kunde => 
-                kunde.email.toLowerCase() === '<?php echo strtolower($_SESSION['username']); ?>');
-            document.getElementById('userName').textContent = angemeldetesMitglied.firstname + " " + angemeldetesMitglied.lastname;
-		
-		//Menu gemäß Rollen ein- und ausblenden
-            if (customer_login === true && angemeldetesMitglied.cc_seller === true) {
-                document.getElementById('MenuMeinKonto').style.display = 'block';
-                document.getElementById('MenuAuswertung').style.display = 'block';
-                document.getElementById('MenuAdministrator').style.display = 'none';
-                document.getElementById('MenuEinstellungen').style.display = 'none';
-                document.getElementById('MenuDownload').style.display = 'none';
-            } else if (customer_login === true ) {
-                document.getElementById('MenuMeinKonto').style.display = 'block';
-                document.getElementById('MenuAuswertung').style.display = 'none';
-                document.getElementById('MenuAdministrator').style.display = 'none';
-                document.getElementById('MenuEinstellungen').style.display = 'none';
-                document.getElementById('MenuDownload').style.display = 'none';
-            } else if (angemeldetesMitglied.cc_admin === true) {
-                document.getElementById('MenuMeinKonto').style.display = 'block';
-                document.getElementById('MenuAuswertung').style.display = 'block';
-                document.getElementById('MenuAdministrator').style.display = 'block';
-                document.getElementById('MenuEinstellungen').style.display = 'block';
-                document.getElementById('MenuDownload').style.display = 'block';
-            } else if (angemeldetesMitglied.cc_seller === true) {
-                document.getElementById('MenuMeinKonto').style.display = 'block';
-                document.getElementById('MenuAuswertung').style.display = 'block';
-                document.getElementById('MenuAdministrator').style.display = 'none';
-                document.getElementById('MenuEinstellungen').style.display = 'none';
-                document.getElementById('MenuDownload').style.display = 'none';
-            } else if (angemeldetesMitglied.cc_member === true) {
-                document.getElementById('MenuMeinKonto').style.display = 'block';
-                document.getElementById('MenuAuswertung').style.display = 'none';
-                document.getElementById('MenuAdministrator').style.display = 'none';
-                document.getElementById('MenuEinstellungen').style.display = 'none';
-                document.getElementById('MenuDownload').style.display = 'none';
-            } else if (angemeldetesMitglied.cc_guest === true) {
-                document.getElementById('MenuMeinKonto').style.display = 'block';
-                document.getElementById('MenuAuswertung').style.display = 'none';
-                document.getElementById('MenuAdministrator').style.display = 'none';
-                document.getElementById('MenuEinstellungen').style.display = 'none';
-                document.getElementById('MenuDownload').style.display = 'none';
-            }
+    // Finde das angemeldete Mitglied anhand der Email-Adresse (case-insensitive)
+        const angemeldetesMitglied = kunden.find(kunde => 
+            kunde.email.toLowerCase() === '<?php echo strtolower($_SESSION['username']); ?>');
+        document.getElementById('userName').textContent = angemeldetesMitglied.firstname + " " + angemeldetesMitglied.lastname;
+    
+    //Menu gemäß Rollen ein- und ausblenden
+        if (customer_login === true && angemeldetesMitglied.cc_seller === true) {
+            document.getElementById('MenuMeinKonto').style.display = 'block';
+            document.getElementById('MenuAuswertung').style.display = 'block';
+            document.getElementById('MenuAdministrator').style.display = 'none';
+            document.getElementById('MenuEinstellungen').style.display = 'none';
+            document.getElementById('MenuDownload').style.display = 'none';
+        } else if (customer_login === true ) {
+            document.getElementById('MenuMeinKonto').style.display = 'block';
+            document.getElementById('MenuAuswertung').style.display = 'none';
+            document.getElementById('MenuAdministrator').style.display = 'none';
+            document.getElementById('MenuEinstellungen').style.display = 'none';
+            document.getElementById('MenuDownload').style.display = 'none';
+        } else if (angemeldetesMitglied.cc_admin === true) {
+            document.getElementById('MenuMeinKonto').style.display = 'block';
+            document.getElementById('MenuAuswertung').style.display = 'block';
+            document.getElementById('MenuAdministrator').style.display = 'block';
+            document.getElementById('MenuEinstellungen').style.display = 'block';
+            document.getElementById('MenuDownload').style.display = 'block';
+        } else if (angemeldetesMitglied.cc_seller === true) {
+            document.getElementById('MenuMeinKonto').style.display = 'block';
+            document.getElementById('MenuAuswertung').style.display = 'block';
+            document.getElementById('MenuAdministrator').style.display = 'none';
+            document.getElementById('MenuEinstellungen').style.display = 'none';
+            document.getElementById('MenuDownload').style.display = 'none';
+        } else if (angemeldetesMitglied.cc_member === true) {
+            document.getElementById('MenuMeinKonto').style.display = 'block';
+            document.getElementById('MenuAuswertung').style.display = 'none';
+            document.getElementById('MenuAdministrator').style.display = 'none';
+            document.getElementById('MenuEinstellungen').style.display = 'none';
+            document.getElementById('MenuDownload').style.display = 'none';
+        } else if (angemeldetesMitglied.cc_guest === true) {
+            document.getElementById('MenuMeinKonto').style.display = 'block';
+            document.getElementById('MenuAuswertung').style.display = 'none';
+            document.getElementById('MenuAdministrator').style.display = 'none';
+            document.getElementById('MenuEinstellungen').style.display = 'none';
+            document.getElementById('MenuDownload').style.display = 'none';
+        }
 
     function Preisliste_Eiskarte() {
         const heute = new Date();
@@ -1268,7 +1268,6 @@ if ($response !== false) {
 
     function Mitgliederdaten_anzeigen() {
                 
-
         let menu2 = "<h2 style='display: inline;'>Kundenliste</h2> Rolle: K = Kassenwart / V = Verkäufer / M = Mitglied / G = Gast";
 
         let html = '<table class="portal-table">';
@@ -1552,9 +1551,6 @@ if ($response !== false) {
             const datumE = document.getElementById("datum_ende").value;
             Kundenübersicht(kundennummer,new Date(datumA), new Date(datumE));
         });
-
-
-        
     }
 
     function Mitgliedsdaten_ziehen() {
@@ -1571,6 +1567,7 @@ if ($response !== false) {
     }
 
     function backupliste() {
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>gespeicherte Backups</h2>";
         fetch('get-backup-files.php')
         .then(response => response.text())
         .then(data => {
@@ -1947,6 +1944,7 @@ if ($response !== false) {
             link.textContent = '➡️';  // Symbol ändern (z.B. nach rechts)
         }
     }
+
     function Abrechnung(datum1, datum2) {
         // Default dates if none provided (full year)
         if(!datum1 || !datum2) {
