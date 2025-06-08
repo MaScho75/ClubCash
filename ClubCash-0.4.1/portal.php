@@ -295,14 +295,6 @@ if ($response !== false) {
             document.getElementById('MenuDownload').style.display = 'none';
         }
 
-        // Sollte gerade die Seite nach der Löschung eines Backupfiles aufgerufen werden, dann öffne die Backupliste
-            const urlParams = new URLSearchParams(window.location.search);
-            const action = urlParams.get('action');
-            // Prüfen, ob 'action' gesetzt ist und den Wert 'backupliste' hat
-            if (action === 'backupliste') {
-                backupliste(); // JavaScript-Funktion aufrufen
-            }
-
     function Preisliste_Eiskarte() {
         const heute = new Date();
 
@@ -2138,7 +2130,7 @@ if ($response !== false) {
         html = "";
         html += "<p>Installierte Version: " + config.Version + "</p>";
         html += "<p>Zeitunkt des letzten Updates: " + config.letzteAktualisierung + "</p>";
-        html += "<p>Altuelles Release: " + release.tag_name + "</p>";
+        html += "<p>Altuelles Eelease: " + release.tag_name + "</p>";
         html += "<p>Zeitpunkt des letzten Releases: " + release.published_at + "</p>";
 
         if (config.Version === release.tag_name) {

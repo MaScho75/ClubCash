@@ -1,50 +1,68 @@
 <?php
 session_start();
 
+// Prüfen, ob der Benutzer eingeloggt ist
 if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
     header('Location: index.php');
     exit();
 }
 
-//überprüfe, ob das System zip-Archive unterstützt
+// Überprüfen, ob ZipArchive unterstützt wird
 if (!class_exists('ZipArchive')) {
-    echo "<p>⚠️ Das System unterstützt keine Zip-Archive.<br> Bitte installieren Sie die ZipArchive-Erweiterung. <br>Ein Backup ist nicht möglich.</p>";
+    echo "<p>⚠️ Das System unterstützt keine Zip-Archive.<br>Bitte installieren Sie die ZipArchive-Erweiterung.<br>Ein Backup ist nicht möglich.</p>";
     exit();
 }
 
-$backupDir = 'backup/';
-$backupFile = $backupDir . 'ClubCash_Systembackup_' . date('Y-m-d_H-i-s') . '.zip';
+$backupDir = 'backup';
+$timestamp = date('Y-m-d_H-i-s');
+$backupFile = $backupDir . DIRECTORY_SEPARATOR . 'ClubCash_Systembackup_' . $timestamp . '.zip';
 
+// Backup-Ordner erstellen, falls nicht vorhanden
 if (!is_dir($backupDir)) {
     mkdir($backupDir, 0755, true);
 }
 
 $zip = new ZipArchive();
 if ($zip->open($backupFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+
+    $excludeDirs = [
+        realpath($backupDir),           // den Backup-Ordner selbst ausschließen
+        realpath('.git'),               // Git (falls vorhanden)
+        realpath('vendor'),             // Composer vendor-Ordner (optional)
+    ];
+
     $files = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator('.'),
+        new RecursiveDirectoryIterator('.', FilesystemIterator::SKIP_DOTS),
         RecursiveIteratorIterator::LEAVES_ONLY
     );
 
-    // First, ensure the backup directory exists in the ZIP
-    $zip->addEmptyDir($backupDir);
-
     foreach ($files as $file) {
-        // Skip if it's a directory or if the path contains the backup directory
-        if (!$file->isDir() && strpos($file->getRealPath(), $backupDir) === false) {
+        if ($file->isFile()) {
             $filePath = $file->getRealPath();
+
+            // Ausschluss prüfen
+            $exclude = false;
+            foreach ($excludeDirs as $dir) {
+                if ($dir !== false && strpos($filePath, $dir) === 0) {
+                    $exclude = true;
+                    break;
+                }
+            }
+            if ($exclude) continue;
+
             $relativePath = substr($filePath, strlen(realpath('.')) + 1);
             $zip->addFile($filePath, $relativePath);
         }
     }
 
     $zip->close();
-    echo "Backup erfolgreich erstellt: " . htmlspecialchars($backupFile);
-    echo "<br><button class='kleinerBt' onclick=\"window.location.href='" . htmlspecialchars($backupFile) . "'\">Download</button>";
 
+    $downloadUrl = $backupDir . '/' . basename($backupFile);
+
+    echo "<p>✅ Backup erfolgreich erstellt:</p>";
+    echo "<a class='kleinerBt' href='" . htmlspecialchars($downloadUrl) . "' download>ClubCash_Systembackup_" . $timestamp . ".zip</a>";
+ 
 } else {
-    echo "Fehler beim Erstellen des Backups";
+    echo "<p>❌ Fehler beim Erstellen des Backups.</p>";
 }
-
-exit();
 ?>

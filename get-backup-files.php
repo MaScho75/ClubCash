@@ -27,17 +27,47 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
 
 
 $folderPath = 'backup'; // Der Ordner mit den Backups
-$files = scandir($folderPath); // Listet alle Dateien im Ordner auf
 
-// Filtere "." und ".." aus
-$files = array_diff($files, array('.', '..'));
+if (!is_dir($folderPath)) {
+    echo "<p>❌ Der Ordner '$folderPath' existiert nicht.</p>";
+    exit();
+}
 
-echo "<ul>";
-foreach ($files as $file) {
-    $filePath = $folderPath . '/' . $file;
+// Datei löschen, falls der Parameter gesetzt ist
+if (isset($_GET['delete'])) {
+    $deleteFile = basename($_GET['delete']); // schützt vor Pfadmanipulation
+    $filePath = $folderPath . '/' . $deleteFile;
+
     if (is_file($filePath)) {
-        echo "<li><a href='$filePath' download>$file</a></li>"; // Zeigt Download-Link für jede Datei
+        if (unlink($filePath)) {
+            // ✅ Erfolgreich gelöscht → weiterleiten zu portal.php mit Funktionsparameter
+            header('Location: portal.php?action=backupliste');
+            exit();
+        } else {
+            echo "<p>❌ Fehler beim Löschen von '$deleteFile'.</p>";
+        }
+    } else {
+        echo "<p>⚠️ Datei '$deleteFile' nicht gefunden.</p>";
     }
 }
-echo "</ul>";
+
+// Dateien anzeigen (optional)
+$files = scandir($folderPath);
+$files = array_filter($files, fn($file) => is_file($folderPath . '/' . $file));
+
+if (empty($files)) {
+    echo "<p>Keine Backups gefunden.</p>";
+} else {
+    echo "<p>📦 Backups gefunden: " . count($files) . "</p>";
+    foreach ($files as $file) {
+        $fileUrl = $folderPath . '/' . $file;
+        $deleteLink = $_SERVER['PHP_SELF'] . '?delete=' . urlencode($file);
+        echo "<p>
+                <a href=\"$deleteLink\" onclick=\"return confirm('Wirklich löschen?');\">🗑️</a>
+                &nbsp;
+                <a href=\"$fileUrl\" download>$file</a>
+              </p>";
+    }
+}
+
 ?>
