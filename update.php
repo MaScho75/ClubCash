@@ -94,9 +94,10 @@ $configFile = 'daten/config.json';
 if (file_exists($configFile)) {
     $config = json_decode(file_get_contents($configFile), true);
     if (is_array($config)) {
-        $config['version'] = $release['tag_name'] ?? 'unbekannt';
+        $config['Version'] = $release['tag_name'] ?? 'unbekannt';
+        $config['letzteAktualisierung'] = date('Y-m-d H:i:s'); // Aktuelles Datum und Uhrzeit des Updates
         file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-        echo '✅ Versionsnummer in der config.json aktualisiert.<br>';
+        echo '✅ Versionsnummer und Aktualisierungszeitüunkt in der config.json aktualisiert.<br>';
     } else {
         echo '❌ Fehler beim Lesen der config.json. Die Versionsnummer konnte nicht aktualisiert werden<br>';
     }
