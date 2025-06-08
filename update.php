@@ -1,137 +1,122 @@
 <?php
-
 session_start();
-
-// Authentifizierung prüfen
 if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: index.php');
-    exit();
+    header('Location: index.php'); exit();
 }
-
-// ZipArchive prüfen
 if (!class_exists('ZipArchive')) {
-    die('❌ Das System unterstützt keine Zip-Archive. Bitte die ZipArchive-Erweiterung aktivieren.');
+    die('❌ ZipArchive nicht verfügbar - bitte aktivieren.');
 }
-
-// cURL-Verfügbarkeit prüfen
 if (!function_exists('curl_init')) {
-    die('❌ cURL ist auf diesem Server nicht verfügbar. Bitte aktiviere die PHP-cURL-Erweiterung.');
+    die('❌ cURL nicht verfügbar - bitte aktivieren.');
 }
 
-echo '🔄 Aktualisiere ClubCash...<br>';
+echo "🔄 Aktualisiere ClubCash...<br>";
 
-// GitHub API mit cURL abrufen
-function getGitHubRelease($url) {
+function getGitHubData($url) {
     $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'ClubCash Update Script');
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Accept: application/vnd.github.v3+json']);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-    $response = curl_exec($ch);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_USERAGENT => 'ClubCash Update Script',
+        CURLOPT_HTTPHEADER => ['Accept: application/vnd.github.v3+json'],
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    $resp = curl_exec($ch);
     if (curl_errno($ch)) {
-        echo '❌ cURL-Fehler: ' . curl_error($ch);
+        echo '❌ cURL-Fehler: ' . curl_error($ch) . '<br>';
         curl_close($ch);
         return false;
     }
     curl_close($ch);
-    return $response;
+    return $resp;
 }
 
-// Datei herunterladen mit cURL
-function downloadFile($url, $path) {
-    $fp = fopen($path, 'w+');
-    if (!$fp) {
-        echo '❌ Fehler beim Erstellen der Datei: ' . htmlspecialchars($path) . '<br>';
-        return false;
-    }
-
+function downloadFile($url, $dest) {
+    $fp = fopen($dest, 'w+');
+    if (!$fp) return false;
     $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_FILE, $fp);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'ClubCash Update Script');
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt_array($ch, [
+        CURLOPT_FILE => $fp,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_USERAGENT => 'ClubCash Update Script',
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
     curl_exec($ch);
-    $success = !curl_errno($ch);
-    if (!$success) {
-        echo '❌ Fehler beim Download: ' . curl_error($ch) . '<br>';
-    }
-    curl_close($ch);
-    fclose($fp);
-    return $success;
+    $ok = !curl_errno($ch);
+    curl_close($ch); fclose($fp);
+    return $ok;
 }
 
 $owner = 'MaScho75';
-$repo = 'ClubCash';
-$apiUrl = "https://api.github.com/repos/$owner/$repo/releases/latest";
-$response = getGitHubRelease($apiUrl);
+$repo  = 'ClubCash';
+$url   = "https://api.github.com/repos/$owner/$repo/releases";
+$data  = getGitHubData($url);
+if ($data === false) die('❌ Fehler beim GitHub-Abruf.');
 
-if ($response === false) {
-    die('❌ Fehler beim Abrufen der GitHub-Daten.');
+$releases = json_decode($data, true);
+if (!is_array($releases) || empty($releases)) {
+    die('❌ Keine Releases gefunden.');
 }
 
-$release = json_decode($response, true);
+// Debug-Ausgabe der ersten Releases
+echo '<h3>📋 GitHub API-Antwort (assets-Werte):</h3>';
+echo '<pre>' . htmlspecialchars(json_encode(array_column($releases, 'assets'), JSON_PRETTY_PRINT)) . '</pre>';
 
-// Debug-Ausgabe (optional für dich zum Prüfen)
-if (!isset($release['assets'])) {
-    echo '<pre>⚠️ API-Antwort:<br>' . htmlspecialchars(json_encode($release, JSON_PRETTY_PRINT)) . '</pre>';
-}
+$downloadUrl = null;
+$zipName = null;
+$tag = '(unbekannt)';
 
-if (!isset($release['assets']) || !is_array($release['assets']) || count($release['assets']) === 0) {
-    echo '⚠️ Keine Release-Dateien (Assets) gefunden.<br>';
-    exit();
-}
-
-$found = false;
-foreach ($release['assets'] as $asset) {
-    if (preg_match('/\.zip$/i', $asset['name'])) {
-        $found = true;
-        echo '⬇️ Gefundene ZIP-Datei: ' . htmlspecialchars($asset['name']) . '<br>';
-
-        $downloadUrl = $asset['browser_download_url'];
-        $zipFile = 'update.zip';
-
-        echo '⬇️ Herunterladen...<br>';
-        if (!downloadFile($downloadUrl, $zipFile)) {
-            die('❌ Fehler beim Herunterladen der ZIP-Datei.');
+foreach ($releases as $rel) {
+    if (!empty($rel['assets']) && is_array($rel['assets'])) {
+        foreach ($rel['assets'] as $asset) {
+            echo '→ Asset gefunden: ' . htmlspecialchars($asset['name']) . '<br>';
+            if (preg_match('/\.zip$/i', $asset['name'])) {
+                $downloadUrl = $asset['browser_download_url'];
+                $zipName = $asset['name'];
+                $tag = $rel['tag_name'] ?? $tag;
+                break 2;
+            }
         }
-
-        echo '📦 Entpacken...<br>';
-        $zip = new ZipArchive;
-        if ($zip->open($zipFile) === true) {
-            $zip->extractTo('.');
-            $zip->close();
-            echo '✅ Dateien erfolgreich entpackt.<br>';
-            unlink($zipFile);
-        } else {
-            die('❌ Fehler beim Entpacken der ZIP-Datei.');
-        }
-
-        break;
     }
 }
 
-if (!$found) {
-    echo '⚠️ Keine passende ZIP-Datei im Release gefunden.<br>';
-    exit();
+if (!$downloadUrl) {
+    die('⚠️ Keine ZIP-Asset-Datei in den Releases gefunden. Überprüfe Name, JSON-Ausgabe oben.');
 }
 
-// config.json aktualisieren
-$configFile = 'daten/config.json';
-if (file_exists($configFile)) {
-    $config = json_decode(file_get_contents($configFile), true);
-    if (is_array($config)) {
-        $config['Version'] = $release['tag_name'] ?? 'unbekannt';
-        $config['letzteAktualisierung'] = date('Y-m-d H:i:s');
-        file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-        echo '✅ config.json wurde aktualisiert.<br>';
+echo "✅ Gefundenes Release: $tag<br>";
+echo "⬇️ Herunterladen: $zipName<br>";
+
+if (!downloadFile($downloadUrl, 'update.zip')) {
+    die('❌ Fehler beim Herunterladen.');
+}
+
+echo "📦 Entpacken...<br>";
+$zip = new ZipArchive;
+if ($zip->open('update.zip') === true) {
+    $zip->extractTo('.');
+    $zip->close();
+    unlink('update.zip');
+    echo "✅ Entpackt.<br>";
+} else {
+    unlink('update.zip');
+    die('❌ Entpackfehler.');
+}
+
+if (file_exists('daten/config.json')) {
+    $cfg = json_decode(file_get_contents('daten/config.json'), true);
+    if (is_array($cfg)) {
+        $cfg['Version'] = $tag;
+        $cfg['letzteAktualisierung'] = date('Y-m-d H:i:s');
+        file_put_contents('daten/config.json', json_encode($cfg, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+        echo "✅ config.json aktualisiert.<br>";
     } else {
-        echo '❌ config.json konnte nicht gelesen werden.<br>';
+        echo "❌ Fehler beim Parsen von config.json.<br>";
     }
 } else {
-    echo '❌ config.json nicht gefunden.<br>';
+    echo "⚠️ config.json nicht gefunden.<br>";
 }
 
-echo '🎉 Update abgeschlossen!<br>';
-echo '<button class="kleinerBt" onclick="window.location.href=\'index.php\'">🔁 Zurück zur Startseite</button>';
+echo "🎉 Update abgeschlossen!<br>";
+echo '<button onclick="location.href=\'index.php\'">Zurück zur Startseite</button>';
 
 ?>
