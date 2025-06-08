@@ -49,22 +49,6 @@ function downloadFile($url, $dest) {
     return $ok;
 }
 
-// Rekursiv Ordner löschen
-function deleteDir($dirPath) {
-    if (!is_dir($dirPath)) return;
-    $items = scandir($dirPath);
-    foreach ($items as $item) {
-        if ($item === '.' || $item === '..') continue;
-        $path = $dirPath . DIRECTORY_SEPARATOR . $item;
-        if (is_dir($path)) {
-            deleteDir($path);
-        } else {
-            unlink($path);
-        }
-    }
-    rmdir($dirPath);
-}
-
 // GitHub-Repo-Daten
 $owner = 'MaScho75';
 $repo  = 'ClubCash';
@@ -81,6 +65,7 @@ if (!$tag) die('❌ Keine Tag-Information im Release.');
 
 echo "⬇️ Gefundene Version: $tag<br>";
 
+// ZIP-URL und Ziel
 $zipUrl = "https://github.com/$owner/$repo/archive/refs/tags/$tag.zip";
 $zipFile = 'update.zip';
 
@@ -94,46 +79,27 @@ $zip = new ZipArchive;
 if ($zip->open($zipFile) === true) {
     $zip->extractTo('.');
     $zip->close();
-    unlink($zipFile);
     echo "✅ Entpackt.<br>";
+    unlink($zipFile);
 } else {
     unlink($zipFile);
     die('❌ Entpackfehler.');
 }
 
-// Verschiebe Dateien aus dem Unterordner ins Hauptverzeichnis
+// Ordnername des entpackten Projekts
 $extractedFolder = "$repo-" . ltrim($tag, 'v');
+
+// Dateien ins Hauptverzeichnis verschieben
 if (is_dir($extractedFolder)) {
     echo "🚚 Verschiebe Dateien aus $extractedFolder...<br>";
     $files = scandir($extractedFolder);
     foreach ($files as $file) {
-        if ($file === '.' || $file === '..' || $file === basename(__FILE__)) {
-            continue;
-        }
-
-        $source = "$extractedFolder/$file";
-        $target = $file;
-
-        // Existierende Datei/Ordner löschen
-        if (file_exists($target)) {
-            if (is_dir($target)) {
-                deleteDir($target);
-            } else {
-                unlink($target);
-            }
-        }
-
-        // Verschieben
-        if (!rename($source, $target)) {
-            echo "❌ Fehler beim Verschieben von '$file'<br>";
-        } else {
-            echo "✅ Verschoben: $file<br>";
+        if ($file !== '.' && $file !== '..') {
+            rename("$extractedFolder/$file", $file);
         }
     }
-
-    // Entpackten Ordner löschen
-    deleteDir($extractedFolder);
-    echo "✅ Alle Dateien verschoben.<br>";
+    rmdir($extractedFolder);
+    echo "✅ Dateien verschoben.<br>";
 } else {
     die("❌ Entpackter Ordner '$extractedFolder' nicht gefunden.");
 }

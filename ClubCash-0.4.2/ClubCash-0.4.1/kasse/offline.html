@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <!-- Zeichensatz auf UTF-8 setzen -->
+    <meta charset="UTF-8">
+
+    <!-- Skalierbarkeit für mobile Geräte sicherstellen -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Cafè Lüsse Kasse</title>
+
+    <!-- Anweisung an Suchmaschinen, die Seite NICHT zu indexieren -->
+    <meta name="robots" content="noindex, nofollow">
+
+    <script>
+        const timestamp = new Date().getTime();
+        const stylesheets = [
+            "../style.css",
+            "../farben.css"
+        ];
+
+        stylesheets.forEach(path => {
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.href = `${path}?v=${timestamp}`;
+            document.head.appendChild(link);
+        });
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../config.js?v=<?php echo time(); ?>"></script>
+
+</head>
+
+<body>
+
+    <!-- Preloader anzeigen -->
+    <div class="preloader" id="preloader">
+        <div class="spinner"></div>
+    </div>
+
+    <div id="navbar" onclick="toggleMenu()">
+        <div class="menu-icon">☰</div>
+        <div class="menu">
+            <button id="bt_tagesabrechnung" onclick="tagesabrechnung();">Tagesabrechnung</button>
+            <button id="bt_tageszusammenfassung" onclick="tageszusammenfassung();">Tageszusammenfassung</button>
+            <button id="bt_kundentagesübersicht" onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
+            <button id="bt_mittagspreis" onclick="mittagspreis();">Preisanpassung Essen</button>
+            <button id="bt_info" onclick="info();">Programminfos</button>
+        </div>
+    </div>
+
+    <div id="preisfenster">
+
+        <div id="preisfenster_inhalt">
+            <h1>Preisliste</h1>
+            <button id="preisliste_schließen" onclick="preisfenster.style.display = 'none';">X</button>
+            <table id="preislistentabelle" border="0">
+                <thead>
+                    <tr>
+                        <th class="produktspalte2">Produkt</th>
+                        <th class="preisspalte2">Preis</th>
+                        <th class="leerspalte"></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="display">
+
+        <div id="linkeSpalte">
+
+            <div id="statusfeld">
+                Guten Tag!
+            </div>
+
+            <div id="datenfeld">
+                <table id="warenkorbtabelle" border="0">
+                    <thead></thead>
+                    <tbody>
+                        <tr>
+                            <td class="zentriert" style="font-size: 25px; padding: 10px;">Bitte Produkt scannen oder Chip auflegen.</td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <div id="direktwahl"></div>
+                            </td>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <div id="rechteSpalte">
+
+            <div id="logo">
+                <img src="../grafik/ClubCashLogo-gelbblauschwarz.svg" alt="ClubCash" style="width: 130px;">
+            </div>
+
+            <div id="menubar">
+                <p class="zentriert"><b>Terminal <span id=terminal>X</span></b></p>
+                <button id="Bt_preisfenster" onclick="preisfenster_öffnen()">Preisliste</button>
+                <button id="Bt_manuelleBuchung" onclick="manuell();">Direktbuchung</button>
+                <button id="abbruch" onclick="window.location.reload(true);">Abbruch</button>                
+            </div>
+
+            <div id="summenkasten">
+                <span id=summenfeld>0.00</span>&nbsp;€
+            </div>
+
+        </div>
+
+        <div id=tastatur>
+            <p class="preiseingabe"><b><span id="zifferneingabefeld">0.00</span> €</b></p>
+            <button onclick="meingabe(1)">1</button>
+            <button onclick="meingabe(2)">2</button>
+            <button onclick="meingabe(3)">3</button>
+            <button onclick="meingabe(4)">4</button>
+            <button onclick="meingabe(5)">5</button>
+            <button onclick="meingabe(6)">6</button>
+            <button onclick="meingabe(7)">7</button>
+            <button onclick="meingabe(8)">8</button>
+            <button onclick="meingabe(9)">9</button>
+            <button onclick="meingabe(0)">0</button>
+            <button id="BT_EingabeBestätigt" class="BT_Eingabe" onclick="meingabe('E')">E</button>
+            <button id="BT_Abbruch">X</button>
+        </div>
+
+    </div>
+    
+    <!-- Bildschirmschoner -->
+    <div class="box_zentrieren" id="bildschirmschoner" onclick="window.location.reload(true);">
+        <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" class="scaling-img">
+        
+    </div>
+
+    <!-- offline Bildschrim  -->
+    <div id="offlineFenster">
+            <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" style="margin: 50px ; height: 200px;">
+         <h1>System ist im Wartungsmodus!</h1>
+         <p>marcel@schommer.berlin</p>
+         <p><i>+49 170 5510566</i></p>
+    </div>
+
+    <div id="checkmark-container" style="display: none;">
+        <svg width="200" height="200" viewBox="0 0 100 100">
+            <path id="checkmark" d="M25 50 L45 70 L75 35"
+                stroke="#4CAF50" stroke-width="8"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-dasharray="100"
+                stroke-dashoffset="100" />
+        </svg>
+    </div>
+
+    <script>
+
+        //Sanduhr
+        window.onload = function() {
+            // Preloader ausblenden, wenn die Seite vollständig geladen ist
+            document.getElementById("preloader").style.display = "none";
+        }
+
+        // Terminal ermitteln aus der URL https://host/index.html?zahl=42
+        const urlParams = new URLSearchParams(window.location.search);
+        let terminal = urlParams.get("terminal"); // Holt den Wert von "terminal" aus der URL
+
+        if (terminal == null) {
+            terminal = "X"; // Wenn kein "Terminal" in der URL, dann X
+        }
+
+        document.getElementById("terminal").innerText = terminal;
+
+
+
+        let warenkorb = [];
+        let summe = 0.00;
+        let eingabe = "";
+        let eingabestring = "";
+        let timeout; //Bildschirmschone Timer
+
+        const datenfeld = document.getElementById("datenfeld");
+        const warenkorbtabelle = document.getElementById("warenkorbtabelle");
+        const tbody = document.querySelector("#warenkorbtabelle tbody");
+        const statusfeld = document.getElementById("statusfeld");
+        const summenfeld = document.getElementById("summenfeld");
+        const menubar = document.getElementById("menubar");
+        const thead = document.querySelector("#warenkorbtabelle thead");
+        const preisfenster = document.getElementById("preisfenster");
+        const tastatur = document.getElementById("tastatur");
+        const navbar = document.getElementById("navbar");
+        const div_Bildschirmschoner = document.getElementById("bildschirmschoner");
+        const Bt_manuelleBuchung = document.getElementById("Bt_manuelleBuchung");
+        const preislisten_tbody = document.querySelector("#preislistentabelle tbody");
+        const statusbar = document.getElementById("statusfeld");
+        const zifferneingabefeld = document.getElementById("zifferneingabefeld");
+
+
+// Configutarionen
+
+        if (!config.offlinemodus) document.getElementById("offlineFenster").style = "display: none"; // Offlinemodus
+        if (!config.tagesabrechnung) document.getElementById("bt_tagesabrechnung").style = "display: none";
+        if (!config.tageszusammenfassung) document.getElementById("bt_tageszusammenfassung").style = "display: none";
+        if (!config.kundentagesübersicht) document.getElementById("bt_kundentagesübersicht").style = "display: none";
+        if (!config.preisanpassungessen) document.getElementById("bt_mittagspreis").style = "display: none";
+        
+        if (config.bildschirmschoner) {
+            document.addEventListener('mousemove', resetTimer);
+            document.addEventListener('mousedown', resetTimer);
+            document.addEventListener('keypress', resetTimer);
+            document.addEventListener('touchstart', resetTimer);
+            document.addEventListener('scroll', resetTimer);
+            resetTimer(); // aktiviert den Bildschirmschoner
+        }
+
+        let tastenkontrolle = function(event) {
+
+            if (event.key === "Enter" && eingabe !== "") { //Sollte nur Enter gedrückt worden sein, wird der folgende Code nicht ausgeführt. 
+
+                tastatur.style.display = 'none'; //soltte die Tastatur noch offen sein, wird sie geschlossen
+                preisfenster.style.display = 'none'; //sollte das Preisfenster noch offen sein, wird es geschlossen
+                document.activeElement.blur(); // ist notwendig, damit nicht ein Button fokussiert bleibt und nach dem Enter eine Aktion auslöst
+
+                produktprüfung(eingabe);
+
+                kundenprüfung(eingabe);
+                
+                sonderfunktionen(eingabe);
+
+                if (eingabe) {
+                    statusfeld.innerText = "Kein Produkt und kein Kunde erkannt."
+                    Fehlerton();
+                    eingabe = "";
+                }
+            }
+
+            if (event.key.length === 1) {
+                eingabe += event.key;
+                console.log("Eingabe hat den Wert: " + eingabe);
+                preisfenster.style.display = 'none';
+            }
+        }
+
+        document.addEventListener("keydown", tastenkontrolle);
+
+        // Wait for both promises to resolve before calling functions
+
+        // let produkte = loadCSV("../daten/produkte.csv"); // CSV-Datei mit den Produkten laden
+              
+        //  let kunden = loadJSON("../daten/kunden.json"); // JSON-Datei mit den Kundendaten laden
+
+        let produkte = [];
+        let kunden = [];
+
+        Promise.all([
+                loadCSV("../daten/produkte.csv"), 
+                loadJSON("../daten/kunden.json")
+            ])
+            .then(([geladeneProdukte, geladeneKunden]) => {
+                produkte = geladeneProdukte;
+                kunden = geladeneKunden;
+                preisliste();
+                direktwahl(); 
+            })
+            .catch(error => {
+            console.error("Error loading data:", error);
+            });    
+
+        async function loadJSON(url) {
+            // Add timestamp to prevent caching
+            const timestamp = new Date().getTime();
+            const response = await fetch(`${url}?v=${timestamp}`);
+            if (!response.ok) {
+                throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+            }
+            const data = await response.json();
+            return data;
+        }
+
+        async function loadCSV(url) {
+            // Add timestamp to prevent caching
+            const timestamp = new Date().getTime();
+            const response = await fetch(`${url}?v=${timestamp}`);
+            const data = await response.text();
+
+            // Split into lines 
+            const lines = data.trim().split('\n');
+
+            // First line contains column headers
+            const headers = lines[0].split(';');
+
+            // Process remaining lines
+            const result = lines.slice(1).map(line => {
+                const values = line.split(';');
+                // Create object with column headers as keys
+                return headers.reduce((obj, header, index) => {
+                    // Filter quotes from values
+                    obj[header] = values[index] ? values[index].replace(/"/g, '') : values[index];
+                    return obj;
+                }, {});
+            });
+
+            return result;
+        }
+
+        //Hamburger Menu
+        function toggleMenu() {
+            document.querySelector(".menu").classList.toggle("active");
+        }
+
+        function preisfenster_öffnen() {
+            document.querySelector(".menu").classList.remove("active");
+            preisfenster.style.display = 'flex';
+        }
+
+        function direktwahl() {
+
+            produkte.forEach(produkt => {
+                if (produkt.Sortierung > 0 && produkt.Sortierung < 11) {
+                    let button = document.createElement("button");
+                    button.innerText = produkt.Bezeichnung + " - " + produkt.Preis + " €";
+                    button.onclick = function() {
+                        produktprüfung(produkt.EAN);
+                    }
+                    document.getElementById("direktwahl").appendChild(button);
+                }
+            });
+        }
+
+        function produktprüfung(EANr) {
+
+            document.querySelector(".menu").classList.remove("active"); //Menu ausblenden, sollte es geöffnet sein. 
+
+            let produkt = produkte.find(produkte => produkte.EAN === EANr);
+
+            if (produkt) {
+                warenkorbüberschrift();
+                warenkorb.push(produkt);
+                warenkorbaddition(produkt);
+                eingabe = "";
+            }
+        }
+
+        function kundenprüfung(KundenNr) {
+
+            let kunde = kunden.find(kunden => kunden.key2designation === KundenNr); // key2designation ist die Kundennummer
+
+            if (kunde) {
+                if (!summe == 0) {
+
+                    let warenkorb2 = [];
+                    let now = new Date();
+                    // Manuelles Erstellen des Datums im Format YYYY-MM-DD
+                    let year = now.getFullYear();
+                    let month = String(now.getMonth() + 1).padStart(2, '0'); // Monat ist 0-basiert, daher +1
+                    let day = String(now.getDate()).padStart(2, '0'); // Den Tag immer auf 2 Stellen auffüllen
+                    let datum = `${year}-${month}-${day}`;
+                    let zeit = now.toTimeString().split(" ")[0].slice(0, 5);
+
+                    for (ds of warenkorb) {
+                        /*let ds2 = {
+                            Datum: datum,
+                            Zeit: zeit,
+                            Terminal: terminal,
+                            Schlüssel: kunde.key2designation,
+                            EAN: ds.EAN,
+                            Produkt: ds.Bezeichnung,
+                            Kategorie: ds.Kategorie,
+                            Preis: ds.Preis,
+                            MwSt: ds.MwSt,
+                            Kundennummer: kunde.uid
+                        }*/
+                        let ds2 = {
+                            Datum: datum,
+                            Zeit: zeit,
+                            Terminal: terminal,
+                            Schlüssel: kunde.key2designation,
+                            Kundennummer: kunde.uid,
+                            EAN: ds.EAN,
+                            Produkt: ds.Bezeichnung,
+                            Kategorie: ds.Kategorie,
+                            Preis: ds.Preis,
+                            MwSt: ds.MwSt
+                        }
+                        warenkorb2.push(ds2);
+                    }
+
+                    übertragung_verkaufsliste(warenkorb2);
+
+                    statusfeld.innerText = "Prokukte bezahlt!";
+                    tbody.innerHTML = `
+			        <tr>
+			            <td class="zentriert">
+			                <p style="font-size: 35px; ">Alle Produkte aus dem Warenkorb
+			                <br>wurden dem Kundenkonto von</p>
+			                <h1><b>` + kunde.firstname + ` ` + kunde.lastname + `</b></h1>
+			                <p style="margin: 20px; font-size: 35px"; >übertragen.</p>
+			            </td>
+			        </tr> 
+                    <tr>
+                        <div id="checkmark-container" style="display: none;">
+                            <svg width="200" height="200" viewBox="0 0 100 100" style="margin: -105px 0px 0px 0px;">
+                                <path id="checkmark" d="M25 50 L45 70 L75 35"
+                                    stroke="#4CAF50" stroke-width="8"
+                                    fill="none"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-dasharray="100"
+                                    stroke-dashoffset="100" />
+                            </svg>
+                        </div>
+                    </tr>
+			        `;
+
+                    thead.innerHTML = "";
+
+                    eingabe = "";
+                    warenkorb = [];
+                    warenkorb2 = [];
+                    summe = 0;
+
+                    abbruch.innerText = "zurück";
+
+                    eingabestopp();
+
+                    zeigeHaken(); // Zeige Häkchenanimation an
+
+                    setTimeout(() => {
+                        location.reload(); // Seite wird nach 3 Sekunden neu geladen
+                    }, 3000); 
+
+                } else {
+                    eingabe = "";
+                    statusfeld.innerText = "Kontoübersicht " + kunde.lastname + ", " + kunde.firstname;
+                    kundenkontoübersicht(KundenNr);
+                }
+            }
+        }
+
+        async function kundenkontoübersicht(KundenNr) {
+            document.getElementById('abbruch').innerText="zurück";
+            eingabestopp();
+
+            let kontosumme = 0.0;
+
+            try {
+
+                let response = await fetch("kundenkontouebersicht-cvs.php", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(KundenNr)
+                });
+
+                if (!response.ok) {
+                    throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+                }
+
+                let data = await response.json();
+
+                if (data.status !== "success") {
+                    console.error("Fehler beim Abrufen:", data.message);
+                    return;
+                }
+
+                tbody.innerText = ""; // Bestehenden Inhalt löschen
+
+                thead.innerHTML = `
+            <tr>
+            <th class="datumspalte">Datum</th>
+            <th>Zeit</th>
+            <th style="text-align: left;">T</th>
+            <th style="text-align: left;">Produkt</th>
+             <th class="rechts">Preis</th>
+             </tr>
+             `;
+
+                data.data.forEach(row => {
+
+                    kontosumme += parseFloat(row.Preis);
+
+                    let tr = document.createElement("tr");
+                    tr.innerHTML = `
+                <td class="zentriert">` + row.Datum + `</td>
+                <td class="zentriert">` + row.Zeit + `</td>
+                <td class="zentriert">` + row.Terminal + `</td>
+                <td>` + row.Produkt + `</td>
+                <td class="währung">` + row.Preis + ` €</td>
+            `;
+                    tbody.appendChild(tr);
+
+                });
+
+                summenfeld.innerText = kontosumme.toFixed(2);
+
+                warenkorb = [];
+
+            } catch (error) {
+                console.error("Fehler beim Laden der Daten:", error);
+            }
+        }
+
+        async function tagesabrechnung() {
+            document.getElementById('abbruch').innerText="zurück";
+            tastatur.style.display = 'none';
+
+            eingabestopp();
+
+            let tagessumme = 0.0;
+
+            try {
+                let response = await fetch("tagesabrechnung-csv.php");
+                if (!response.ok) {
+                    throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+                }
+
+                let data = await response.json();
+
+                if (data.status !== "success") {
+                    console.error("Fehler beim Abrufen:", data.message);
+                    return;
+                }
+
+                tbody.innerText = ""; // Bestehenden Inhalt löschen
+
+                thead.innerHTML = `
+            <tr>
+            <th>T</th>
+            <th>Zeit</th>
+            <th class="kundenspalte">Kunde</th>
+            <th style="text-align: left;">Produkt</th>
+            <th class="preisspalte">Preis</th>
+            </tr>
+            `;
+            
+                console.log("Data: ", data.data );
+                console.log("Kunden: ", kunden);
+
+                data.data.forEach(row => {
+
+                    let kunde = kunden.find(kunden => kunden.key2designation === row.Schlüssel);
+
+                    //let kunde = kunden.find(kunden => kunden.uid === row.Kundennummer);
+
+                    tagessumme += parseFloat(row.Preis);
+
+                    let tr = document.createElement("tr");
+                    tr.innerHTML = `
+                <td class="zentriertTop" class="top">` + row.Terminal + `</td>
+                <td class="zentriertTop" class="top">` + row.Zeit + `</td>
+                <td class="top">` + kunde.lastname + ", " + kunde.firstname + `</td>
+                <td class="top">` + row.Produkt + `</td>
+                <td class="währung">` + row.Preis + ` €</td>
+            `;
+                    tbody.appendChild(tr);
+
+
+                });
+
+                statusfeld.innerText = "Tagesabrechnung";
+
+                summenfeld.innerText = tagessumme.toFixed(2);
+
+                warenkorb = [];
+
+            } catch (error) {
+                console.error("Fehler beim Laden der Daten:", error);
+                statusfeld.innerText = "Fehler beim Laden der Daten:" + error;
+            }
+        }
+
+        async function tageszusammenfassung() {
+            document.getElementById('abbruch').innerText="zurück";
+            eingabestopp();
+            tastatur.style.display = 'none';
+
+            let tagessumme = 0.0;
+
+            try {
+                let response = await fetch("tagesabrechnung-csv.php");
+                if (!response.ok) {
+                    throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+                }
+
+                let data = await response.json();
+
+                if (data.status !== "success") {
+                    console.error("Fehler beim Abrufen:", data.message);
+                    return;
+                }
+
+                const productCounts = data.data.reduce((acc, row) => {
+
+                    const product = row.Produkt; // Produktname
+                    const price = parseFloat(row.Preis); // Preis
+
+                    if (acc[product]) {
+                        acc[product].count += 1; // Falls das Produkt schon im Objekt ist, erhöhe die Zählung
+                        acc[product].totalPrice += price; // und addiere den Preis
+
+                    } else {
+                        acc[product] = {
+                            count: 1, // Erstes Vorkommen des Produkts
+                            unitPrice: price, // Einzelpreis
+                            totalPrice: price // Summenpreis (zu Beginn gleich dem Einzelpreis) erste Mal ist, setze den Zähler auf 1
+                        };
+                    }
+                    return acc;
+                }, {});
+
+                tbody.innerText = ""; // Bestehenden Inhalt löschen
+
+                thead.innerHTML = `
+            <tr>
+            <th>Anzahl</th>
+            <th class="links">Produkt</th>   
+            <th class="rechts">Einzelpreis</th>
+            <th class="rechts">Summe</th>
+             </tr>
+             `;
+
+                for (const [product, details] of Object.entries(productCounts)) {
+
+                    let tr = document.createElement("tr");
+
+                    if (product == "Direktbuchung") {
+                        tr.innerHTML = `
+                <td class="zentriert"> ${details.count} </td>
+                <td> ${product} </td>
+                <td class="währung"> * </td>
+                <td class="währung"> ${details.totalPrice.toFixed(2)} €</td>
+                `;
+                        tbody.appendChild(tr);
+
+                        tagessumme += details.totalPrice;
+
+                        continue;
+                    }
+
+                    tr.innerHTML = `
+                <td class="zentriert"> ${details.count} </td>
+                <td> ${product} </td>
+                <td class="währung"> ${details.unitPrice.toFixed(2)} €</td>
+                <td class="währung"> ${details.totalPrice.toFixed(2)} €</td>
+            `;
+                    tbody.appendChild(tr);
+
+                    tagessumme += details.totalPrice;
+
+                }
+
+                statusfeld.innerText = "Tageszusammenfassung";
+                summenfeld.innerText = tagessumme.toFixed(2);
+                warenkorb = [];
+
+            } catch (error) {
+                console.error("Fehler beim Laden der Daten:", error);
+                statusfeld.innerText = "Fehler beim Laden der Daten:", error;
+            }
+        }
+
+        async function kundentagesübersicht() {
+            document.getElementById('abbruch').innerText="zurück";
+            eingabestopp();
+            tastatur.style.display = 'none';
+
+            let tagessumme = 0.0;
+
+            try {
+                let response = await fetch("tagesabrechnung-csv.php");
+                if (!response.ok) {
+                    throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+                }
+
+                let data = await response.json();
+
+                if (data.status !== "success") {
+                    console.error("Fehler beim Abrufen:", data.message);
+                    return;
+                }
+
+                const sortedByCustomer = data.data.sort((a, b) => a.Kundennummer.localeCompare(b.Kundennummer));
+
+                // Produkte zählen, Einzelpreis und Gesamtsumme berechnen
+                const customerData = sortedByCustomer.reduce((acc, row) => {
+                    const customer = row.Kundennummer; // Kunde
+                    const product = row.Produkt; // Produkt
+                    const price = parseFloat(row.Preis); // Preis als Zahl
+
+                    // Wenn der Kunde noch nicht im Accumulator ist, hinzufügen
+                    if (!acc[customer]) {
+                        acc[customer] = {};
+                    }
+
+                    // Wenn das Produkt noch nicht für diesen Kunden existiert
+                    if (!acc[customer][product]) {
+                        acc[customer][product] = {
+                            count: 0,
+                            unitPrice: price,
+                            totalPrice: 0
+                        };
+                    }
+
+                    // Produktanzahl erhöhen und Gesamtsumme berechnen
+                    acc[customer][product].count += 1;
+                    acc[customer][product].totalPrice += price;
+
+                    return acc;
+
+                }, {});
+
+                thead.innerHTML = "";
+                tbody.innerText = ""; // Bestehenden Inhalt löschen
+
+                for (const Kunde1 in customerData) {
+
+                    let kunde = kunden.find(kunden => kunden.uid === Kunde1);
+
+                    let tr = document.createElement("tr");
+                    tr.innerHTML = `
+                <td colspan="4" 
+                id="Namenfeld"
+                style="
+                    position: sticky;
+                    top: 0;
+                    z-index: 1;"
+                >` + kunde.lastname + `, ` + kunde.firstname + `</td>
+            `;
+                    tbody.appendChild(tr);
+                    
+                    let kundensumme = 0.0;
+
+                    for (const [product, details] of Object.entries(customerData[Kunde1])) {
+
+
+                        let tr = document.createElement("tr");
+
+                        if (product == "Direktbuchung") {
+                            tr.innerHTML = `
+                    <td class="zentriert">` + details.count + `</td>
+                    <td class="links">` + product + `</td>
+                    <td class="währung">*</td>
+                    <td class="währung">` + details.totalPrice.toFixed(2) + ` €</td>
+                  `;
+                        } else {
+                            tr.innerHTML = `
+                    <td class="zentriert">` + details.count + `</td>
+                    <td class="links">` + product + `</td>
+                    <td class="währung">` + details.unitPrice.toFixed(2) + ` €</td>
+                    <td class="währung">` + details.totalPrice.toFixed(2) + ` €</td>
+                  `;
+                        }
+
+                        tbody.appendChild(tr);
+                        kundensumme += details.totalPrice;
+                    }
+
+                    tagessumme += kundensumme;
+
+                    let tr2 = document.createElement("tr");
+                    tr2.innerHTML = `
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="währung" style="padding-bottom: 10px;"><b>` + kundensumme.toFixed(2) + ` €</b></td>
+            `;
+                    tbody.appendChild(tr2);
+
+                }
+
+                statusfeld.innerText = "Kunden Tagesübersicht";
+                summenfeld.innerText = tagessumme.toFixed(2);
+                warenkorb = [];
+
+            } catch (error) {
+                console.error("Fehler beim Laden der Daten:", error);
+                statusfeld.innerText = "Fehler beim Laden der Daten:", error;
+            }
+        }
+
+        function Fehlerton() {
+            const audioContext = new(window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.type = 'square'; // Typ des Tons, ein Rechteckton (für Fehlerton)
+            oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // Frequenz, hier 440 Hz (A4)
+            oscillator.start();
+
+            // Stoppe den Ton nach 0.3 Sekunden
+            setTimeout(() => {
+                oscillator.stop();
+            }, 300);
+        }
+
+        async function übertragung_verkaufsliste(data) {
+            fetch("verkaufsliste-api.php", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Server-Fehler: ${response.status}`);
+                    }
+                    return response.text(); // Erst als Text lesen
+                })
+                .then(text => {
+                    try {
+                        return JSON.parse(text); // Dann als JSON parsen
+                    } catch (error) {
+                        throw new Error("Ungültige JSON-Antwort: " + text);
+                    }
+                })
+                .then(result => console.log(result))
+                .catch(error => console.error("Fehler:", error));
+        }
+
+        function manuell() {
+            tastatur.style.display = "block";
+            statusfeld.innerText = "Direkte Buchung";
+            summenfeld.innerText = "0.00";
+            document.querySelector(".menu").classList.remove("active");
+            eingabestring = "";
+            document.getElementById('BT_Abbruch').onclick = function() {tastatur.style.display = "none"};
+        }
+
+        function meingabe(x) {
+            if (x == "E") {
+                if (eingabestring == "") {
+                    statusfeld.innerText = "Keine Eingabe erfolgt.";
+                    tastatur.style.display = "none";
+                    return;
+                }
+                let manuelles_Produkt = {
+                    EAN: 9990000000000,
+                    Bezeichnung: "Direktbuchung",
+                    Preis: (eingabestring / 100).toFixed(2),
+                    MwSt: 19,
+                    Kategorie: "Direktbuchung"
+                }
+
+                tastatur.style.display = "none";
+                warenkorbüberschrift();
+                warenkorb.push(manuelles_Produkt);
+                warenkorbaddition(manuelles_Produkt);
+                return;
+            }
+            eingabestring += x;
+            zifferneingabefeld.innerText = (eingabestring / 100).toFixed(2);
+        }
+
+        function eingabestopp() {
+            document.removeEventListener("keydown", tastenkontrolle);
+            Bt_preisfenster.style.display = 'none';
+            Bt_manuelleBuchung.style.display = 'none';
+        }
+
+        function warenkorbüberschrift() {
+
+            if (warenkorb.length == 0) {
+                warenkorb2 = [];
+                tbody.innerHTML = ""; // Bestehenden Inhalt löschen
+                thead.innerHTML = `
+                <tr>
+				    <th class="produktspalte" >Produkt</th>
+					<th class="preisspalteWarenkorb">Preis</th>
+					<th class="leerspalte"></th>		
+		        </tr>
+             `;
+            }
+        }
+
+        function warenkorbaddition(produkt) {
+
+            statusfeld.innerText = "Produkt dem Warenkorb hinzugefügt."
+
+            summe = summe + parseFloat(produkt.Preis);
+
+            summenfeld.innerText = summe.toFixed(2);
+
+            let zeile = tbody.insertRow();
+            let zelle1 = zeile.insertCell();
+            zelle1.innerText = produkt.Bezeichnung;
+            zelle1.className = "rechts_groß";
+            let zelle2 = zeile.insertCell();
+            zelle2.innerText = produkt.Preis + " €";
+            zelle2.className = "rechts_groß";
+            if (produkt.EAN != 9990000000000) {
+                let zelle3 = zeile.insertCell();
+                zelle3.innerHTML = "<button onclick='produktprüfung(`" + produkt.EAN + "`)' class='plus-button'>+</button>";
+            }
+
+        }
+
+        function info() {
+            Bt_preisfenster.style.display = 'none';
+            Bt_manuelleBuchung.style.display = 'none';
+            navbar.style.display = 'none';
+            tastatur.style.display = 'none';
+            statusfeld.innerText = "Information zum Kassensystem";
+            $("#datenfeld").load("../info.html");
+
+            eingabestopp();
+            Bt_manuelleBuchung.style.display = 'none';
+            
+            document.getElementById('abbruch').innerText="zurück";
+
+        }
+
+        function preisliste() {
+            produkte.sort((a, b) => a.Sortierung - b.Sortierung);
+            preislisten_tbody.innerHTML = "";
+            produkte.forEach(produkt => {
+                if (produkt.EAN == "") { // Leere Zeilen überspringen
+                    return;
+                }
+                let zeile = preislisten_tbody.insertRow();
+                let zelle1 = zeile.insertCell();
+                zelle1.innerText = produkt.Bezeichnung;
+                zelle1.className = "preisliste_rechts_groß";
+                let zelle2 = zeile.insertCell();
+                zelle2.innerText = produkt.Preis + " €";
+                zelle2.className = "preisliste_rechts_groß";
+                let zelle3 = zeile.insertCell();
+                zelle3.innerHTML = "<button onclick='aus_preisliste_buchen(`" + produkt.EAN + "`)' class='plus-button'>+</button>";
+
+            });
+        }
+
+        function aus_preisliste_buchen(EAN_Preisliste) {
+            produktprüfung(EAN_Preisliste);
+            preisfenster.style.display = 'none';
+        }
+
+        //Mittagessenpreis
+        function mittagspreis() {
+            eingabestopp();
+            statusfeld.innerText = "Preisänderung für das Essen";
+            Bt_preisfenster.style.display = 'none';
+            Bt_manuelleBuchung.style.display = 'none';
+            navbar.style.display = 'none';
+
+            summenfeld.innerText = "0.00";
+            eingabestring = "";
+
+            tastatur.style.display = 'block';
+
+            datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Bitte gebe den neuen Preis für das Essen ein.</h1></div>`;
+        
+            document.getElementById('BT_Abbruch').onclick = function() {window.location.reload(true);}
+        
+            document.getElementById('BT_EingabeBestätigt').onclick = function() {
+                datenfeld.innerHTML = `
+                <p><p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Der Preis wurde geändert!<b></p>
+                <p class="zentriert" style="font-size: 30px;">Der neue Preis für das heutige Essen beträgt jetzt: </p>
+                <h1 class="zentriert" style="color: var(--success-color);">` + zifferneingabefeld.firstChild.nodeValue + ` €</h1>
+                `;
+                tastatur.style.display = 'none';
+                let preisNum = parseFloat(zifferneingabefeld.firstChild.nodeValue);
+                update_mittagspreis(preisNum);
+            };
+        }
+
+        function update_mittagspreis(neuerPreis) {
+            document.getElementById('abbruch').innerText="zurück";
+            const produkt = produkte.find(item => item.EAN === "1");
+            if (!produkt) {
+                console.error("Fehler: Produkt mit EAN 1 nicht gefunden.");
+                statusbar.innerHTML = "Fehler in der Produktdatenbank!";
+                return;
+            }
+
+            produkt.Preis = neuerPreis.toFixed(2); // Preis aktualisieren
+
+            // CSV-Daten aus Array generieren (Annahme: Kopfzeile bleibt gleich)
+            const csvData = "EAN;Bezeichnung;Preis;MwSt;Kategorie;Bemerkung;Sortierung\n" +
+                produkte.map(p => `${p.EAN};${p.Bezeichnung};${p.Preis};${p.MwSt};${p.Kategorie};${p.Bemerkung};${p.Sortierung}`).join("\n");
+
+            fetch('save_produkte_csv.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        csvData
+                    }) // Jetzt im richtigen JSON-Format
+                })
+                .then(response => response.text()) // PHP gibt eine Textmeldung zurück
+                .then(data => statusbar.innerHTML = 'Antwort vom Server: ' + data)
+                .catch(error => statusbar.innerHTML = 'Fehler: ' + error);
+        }
+
+        // Funktion zum Anzeigen des Bildschirm-Schoners
+        function showScreensaver() {
+            div_Bildschirmschoner.style.display = 'flex';
+        }
+
+        // Funktion, die den Inaktivitäts-Timer zurücksetzt
+        function resetTimer() {
+            clearTimeout(timeout);
+            timeout = setTimeout(showScreensaver, 60000 + config.bildschirmschoner);
+        }
+            
+        //Sonderfunktionen
+        //spezielle EAN-Nummer lösen Sonderfunktionen aus
+        
+        function sonderfunktionen(EANr) {
+            switch (EANr) {
+                case "1111":
+                    tagesabrechnung();
+                    eingabe="";
+                    break;
+                case "2222":
+                    tageszusammenfassung();
+                    eingabe="";
+                    break;
+                case "3333":
+                    kundentagesübersicht();
+                    eingabe="";
+                    break;
+                case "4444":
+                    mittagspreis();
+                    eingabe="";
+                    break;
+            }
+        }
+
+        function zeigeHaken() {
+            const container = document.getElementById("checkmark-container");
+            const check = document.getElementById("checkmark");
+
+            container.style.display = "flex";
+
+            // Leichte Verzögerung, damit Transition greift
+            setTimeout(() => {
+                check.style.strokeDashoffset = "0";
+            }, 50);
+        }
+        
+    </script>
+
+</body>
+
+</html>
