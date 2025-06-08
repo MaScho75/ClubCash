@@ -59,6 +59,7 @@ $release = json_decode($response, true);
 if (isset($release['assets']) && is_array($release['assets'])) {
     echo 'Neue Version gefunden: ' . htmlspecialchars($release['tag_name']) . '<br>';
     foreach ($release['assets'] as $asset) {
+        echo 'Starte Dateiupload...<br>';
         if (strpos($asset['name'], 'zip') !== false) {
             $downloadUrl = $asset['browser_download_url'];
             $zipFile = 'update.zip';
