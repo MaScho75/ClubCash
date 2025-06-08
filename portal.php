@@ -2166,21 +2166,23 @@ if ($response !== false) {
     }
 
     function Systembackup() {
-        portalmenu2.innerHTML = "<h2 style='display: inline;'>Systembackup</h2>";
-        portalInhalt.innerHTML = "<p>Bitte warten, das Systembackup wird erstellt...</p>";
-        document.getElementById("preloader").style.display = "block";
-
-        // AJAX request to create backup
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", "create-system-backup.php", true);
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                portalInhalt.innerHTML = xhr.responseText;
-                document.getElementById("preloader").style.display = "none";
-            }
-        };
-        xhr.send(); 
+        if (confirm('Soll jetzt ein Systembackup erstellt werden? Es mehrere Minuten dauern. Die Datei kann im Anschluss heruntergeladen werden. Zusätzlich ist sie im Order /backup/ gespeichert.')) {
         
+            portalmenu2.innerHTML = "<h2 style='display: inline;'>Systembackup</h2>";
+            portalInhalt.innerHTML = "<p>Bitte warten, das Systembackup wird erstellt...</p>";
+            document.getElementById("preloader").style.display = "block";
+
+            // AJAX request to create backup
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "create-system-backup.php", true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    portalInhalt.innerHTML = xhr.responseText;
+                    document.getElementById("preloader").style.display = "none";
+                }
+            };
+            xhr.send(); 
+        }
     }
 
 </script>

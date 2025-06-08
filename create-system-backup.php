@@ -26,7 +26,11 @@ if ($zip->open($backupFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE
         RecursiveIteratorIterator::LEAVES_ONLY
     );
 
+    // First, ensure the backup directory exists in the ZIP
+    $zip->addEmptyDir($backupDir);
+
     foreach ($files as $file) {
+        // Skip if it's a directory or if the path contains the backup directory
         if (!$file->isDir() && strpos($file->getRealPath(), $backupDir) === false) {
             $filePath = $file->getRealPath();
             $relativePath = substr($filePath, strlen(realpath('.')) + 1);
