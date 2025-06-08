@@ -12,6 +12,7 @@ if (!function_exists('curl_init')) {
 
 echo "🔄 Aktualisiere ClubCash...<br>";
 
+// GitHub-Daten abrufen
 function getGitHubData($url) {
     $ch = curl_init($url);
     curl_setopt_array($ch, [
@@ -30,6 +31,7 @@ function getGitHubData($url) {
     return $resp;
 }
 
+// Datei herunterladen
 function downloadFile($url, $dest) {
     $fp = fopen($dest, 'w+');
     if (!$fp) return false;
@@ -47,6 +49,7 @@ function downloadFile($url, $dest) {
     return $ok;
 }
 
+// GitHub-Repo-Daten
 $owner = 'MaScho75';
 $repo  = 'ClubCash';
 $apiUrl = "https://api.github.com/repos/$owner/$repo/releases/latest";
@@ -62,12 +65,11 @@ if (!$tag) die('❌ Keine Tag-Information im Release.');
 
 echo "⬇️ Gefundene Version: $tag<br>";
 
-// GitHub-Source-Code ZIP-URL (immer verfügbar)
+// ZIP-URL und Ziel
 $zipUrl = "https://github.com/$owner/$repo/archive/refs/tags/$tag.zip";
 $zipFile = 'update.zip';
 
 echo "⬇️ Lade Quellcode-ZIP herunter: $zipUrl<br>";
-
 if (!downloadFile($zipUrl, $zipFile)) {
     die('❌ Fehler beim Herunterladen der ZIP-Datei.');
 }
@@ -77,13 +79,32 @@ $zip = new ZipArchive;
 if ($zip->open($zipFile) === true) {
     $zip->extractTo('.');
     $zip->close();
-    unlink($zipFile);
     echo "✅ Entpackt.<br>";
+    unlink($zipFile);
 } else {
     unlink($zipFile);
     die('❌ Entpackfehler.');
 }
 
+// Ordnername des entpackten Projekts
+$extractedFolder = "$repo-" . ltrim($tag, 'v');
+
+// Dateien ins Hauptverzeichnis verschieben
+if (is_dir($extractedFolder)) {
+    echo "🚚 Verschiebe Dateien aus $extractedFolder...<br>";
+    $files = scandir($extractedFolder);
+    foreach ($files as $file) {
+        if ($file !== '.' && $file !== '..') {
+            rename("$extractedFolder/$file", $file);
+        }
+    }
+    rmdir($extractedFolder);
+    echo "✅ Dateien verschoben.<br>";
+} else {
+    die("❌ Entpackter Ordner '$extractedFolder' nicht gefunden.");
+}
+
+// config.json aktualisieren
 $configPath = 'daten/config.json';
 if (file_exists($configPath)) {
     $config = json_decode(file_get_contents($configPath), true);
@@ -93,7 +114,7 @@ if (file_exists($configPath)) {
         file_put_contents($configPath, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
         echo "✅ config.json aktualisiert.<br>";
     } else {
-        echo "❌ Fehler beim Parsen von config.json.<br>";
+        echo "❌ Fehler beim Parsen von config.json: " . json_last_error_msg() . "<br>";
     }
 } else {
     echo "⚠️ config.json nicht gefunden.<br>";
