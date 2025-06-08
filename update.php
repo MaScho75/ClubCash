@@ -1,44 +1,31 @@
 <?php
 
 /*
- * This file is part of ClubCash.
- *
- * ClubCash is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License,
- * or (at your option) any later version.
- *
- * ClubCash is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with ClubCash. If not, see <https://www.gnu.org/licenses/>.
+ * ClubCash Update Script
+ * GNU AGPL v3 lizenziert
  */
 
 session_start();
 
-// Prüfen, ob der Benutzer eingeloggt ist
-
+// Benutzer-Authentifizierung prüfen
 if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: index.php'); // Falls nicht eingeloggt, zurück zur Login-Seite
+    header('Location: index.php');
     exit();
 }
 
-// Prüfen, ob ZipArchive verfügbar ist
+// ZIP-Unterstützung prüfen
 if (!class_exists('ZipArchive')) {
-    die('❌ Das System unterstützt keine Zip-Archive.<br>Bitte installieren Sie die ZipArchive-Erweiterung.<br>Ein Update ist nicht möglich.');
+    die('❌ Das System unterstützt keine Zip-Archive. Bitte aktivieren Sie die ZipArchive-Erweiterung.');
 }
 
-// Das aktuelle Repository aus GitHub abrufen und die Dateien aktualisieren
+echo '🔄 Aktualisiere ClubCash...<br>';
 
-echo 'Aktualisiere ClubCash...<br>';
-
+// GitHub-API-Abfrage vorbereiten
 $owner = 'MaScho75';
 $repo = 'ClubCash';
 $url = "https://api.github.com/repos/$owner/$repo/releases/latest";
 
+// GitHub API aufrufen mit User-Agent
 $context = stream_context_create([
     'http' => [
         'header' => [
@@ -51,61 +38,99 @@ $context = stream_context_create([
 $response = file_get_contents($url, false, $context);
 
 if ($response === false) {
-    die('❌ Fehler beim Abrufen der neuesten Version. Bitte versuchen Sie es später erneut.');
+    die('❌ Fehler beim Abrufen der neuesten Version von GitHub.');
 }
 
+// JSON verarbeiten
 $release = json_decode($response, true);
-
-if (isset($release['assets']) && is_array($release['assets'])) {
-    echo 'Neue Version gefunden: ' . htmlspecialchars($release['tag_name']) . '<br>';
-    foreach ($release['assets'] as $asset) {
-        echo 'Starte Dateiupload...<br>';
-        if (strpos($asset['name'], 'zip') !== false) {
-            $downloadUrl = $asset['browser_download_url'];
-            $zipFile = 'update.zip';
-            
-            // Herunterladen der ZIP-Datei
-            echo 'Herunterladen der Datei: ' . htmlspecialchars($asset['name']) . '<br>';
-            file_put_contents($zipFile, fopen($downloadUrl, 'r'));
-
-            // Entpacken der ZIP-Datei
-            echo 'Entpacken der Datei...<br>';
-            $zip = new ZipArchive;
-            if ($zip->open($zipFile) === true) {
-                $zip->extractTo('.');
-                $zip->close();
-                echo 'Dateien erfolgreich entpackt.<br>';
-                unlink($zipFile); // ZIP-Datei nach dem Entpacken löschen
-
-                echo '✅ Update erfolgreich durchgeführt!<br>';
-            } else {
-                echo '❌ Fehler beim Entpacken der ZIP-Datei.<br>';
-            }
-            break;
-        }
-    }
-} else {
-    echo '⚠️ Keine neuen Versionen gefunden.<br>';
+if (json_last_error() !== JSON_ERROR_NONE) {
+    die('❌ JSON-Fehler: ' . json_last_error_msg());
 }
 
-// Versionsnummer aktualisieren in der config.json
+// Prüfen, ob Assets vorhanden sind
+if (!isset($release['assets']) || !is_array($release['assets']) || count($release['assets']) === 0) {
+    die('⚠️ Keine Release-Dateien (Assets) gefunden.');
+}
 
-echo 'Aktualisiere die Versionsnummer...<br>';
-$configFile = 'daten/config.json';
+echo '✅ Neue Version gefunden: ' . htmlspecialchars($release['tag_name']) . '<br>';
+
+// Hilfsfunktion zum sicheren Herunterladen
+function downloadFile($url, $path) {
+    $fp = fopen($path, 'w+');
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_FILE, $fp);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'ClubCash Update Script');
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_exec($ch);
+    $success = !curl_errno($ch);
+    curl_close($ch);
+    fclose($fp);
+    return $success;
+}
+
+// ZIP-Datei suchen und herunterladen
+foreach ($release['assets'] as $asset) {
+    if (strpos($asset['name'], 'zip') !== false) {
+        $downloadUrl = $asset['browser_download_url'];
+        $zipFile = 'update.zip';
+
+        echo '⬇️ Herunterladen: ' . htmlspecialchars($asset['name']) . '<br>';
+        if (!downloadFile($downloadUrl, $zipFile)) {
+            die('❌ Fehler beim Herunterladen der Datei.');
+        }
+
+        // Backup der aktuellen Config
+        $configFile = 'daten/config.json';
+        if (file_exists($configFile)) {
+            $backupFile = 'daten/config_backup_' . date('Ymd_His') . '.json';
+            copy($configFile, $backupFile);
+            echo '🗄️ Backup der config.json gespeichert: ' . htmlspecialchars($backupFile) . '<br>';
+        }
+
+        // Entpacken
+        echo '📦 Entpacken der ZIP-Datei...<br>';
+        $zip = new ZipArchive;
+        if ($zip->open($zipFile) === true) {
+            $zip->extractTo('.');
+            $zip->close();
+            echo '✅ Dateien erfolgreich entpackt.<br>';
+
+            // ZIP löschen
+            if (unlink($zipFile)) {
+                echo '🧹 ZIP-Datei gelöscht.<br>';
+            } else {
+                echo '⚠️ Konnte ZIP-Datei nicht löschen.<br>';
+            }
+        } else {
+            die('❌ Fehler beim Entpacken der ZIP-Datei.');
+        }
+
+        break; // Nur eine ZIP-Datei behandeln
+    }
+}
+
+// Versionsnummer aktualisieren
+echo '🔧 Aktualisiere config.json...<br>';
 if (file_exists($configFile)) {
-    $config = json_decode(file_get_contents($configFile), true);
+    $configData = file_get_contents($configFile);
+    $config = json_decode($configData, true);
+
     if (is_array($config)) {
         $config['Version'] = $release['tag_name'] ?? 'unbekannt';
-        $config['letzteAktualisierung'] = date('Y-m-d H:i:s'); // Aktuelles Datum und Uhrzeit des Updates
+        $config['letzteAktualisierung'] = date('Y-m-d H:i:s');
         file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-        echo '✅ Versionsnummer und Aktualisierungszeitüunkt in der config.json aktualisiert.<br>';
+        echo '✅ config.json aktualisiert.<br>';
     } else {
-        echo '❌ Fehler beim Lesen der config.json. Die Versionsnummer konnte nicht aktualisiert werden<br>';
+        echo '❌ Fehler beim Parsen der config.json.<br>';
     }
 } else {
-    echo '❌ config.json nicht gefunden. Die Versionsnummer konnte nicht aktualisiert werden<br>';
+    echo '❌ config.json nicht gefunden.<br>';
 }
 
-echo '⚠️ Laden Sie die Seite neu, um die Änderungen zu sehen.<br>';
-echo '<button class="kleinerBt" onclick="window.location.href=\'index.php\'">Startseite</button>';
-?>
+// Optional: Logging
+file_put_contents('update.log', "[" . date('Y-m-d H:i:s') . "] Update auf Version {$release['tag_name']}\n", FILE_APPEND);
+
+// Fertig
+echo '🎉 Update abgeschlossen!<br>';
+echo '<button class="kleinerBt" onclick="window.location.href=\'index.php\'">🔁 Zurück zur Startseite</button>';
