@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
 
 //überprüfe, ob das System zip-Archive unterstützt
 if (!class_exists('ZipArchive')) {
-    echo "Das System unterstützt keine Zip-Archive. Bitte installieren Sie die ZipArchive-Erweiterung.";
+    echo "<p>⚠️ Das System unterstützt keine Zip-Archive.<br> Bitte installieren Sie die ZipArchive-Erweiterung. <br>Ein Backup ist nicht möglich.</p>";
     exit();
 }
 

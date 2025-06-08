@@ -2136,12 +2136,29 @@ if ($response !== false) {
             html += "<p>✅ Die Software ist auf dem neuesten Stand.</p>";
         } else {
             html += "<p>⚠️ Es ist ein Update verfügbar. Bitte die Software aktualisieren.</p>";
-            html += `<button class='kleinerBt' onclick=''>Update</button>`;
+            html += `<button class='kleinerBt' onclick='Update2()'>Update</button>`;
         }
         html += "<button class='kleinerBt' onclick='Systembackup()'>Systembackup</button>";
 
         portalInhalt.innerHTML = html;
 
+    }
+
+    function Update2() {
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>Update</h2>";
+        portalInhalt.innerHTML = "<p>Bitte warten, das Update wird installiert...</p>";
+        document.getElementById("preloader").style.display = "block";
+
+        // AJAX request to perform the update
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "update.php", true);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                portalInhalt.innerHTML = xhr.responseText;
+                document.getElementById("preloader").style.display = "none";
+            }
+        };
+        xhr.send(); 
     }
 
     function Systembackup() {
