@@ -73,11 +73,16 @@ n.n.
 
 ---
 
-
 ## 📝 Hinweise
 
 Dieses Projekt befindet sich in aktiver Entwicklung. Die **Import-Funktion** ist aktuell geplant, aber noch nicht umgesetzt.
 Es handelt sich um keine offizielles Kassensystem nach der Kassensicherungsverordnung.
+
+---
+
+## Installationanleitung
+
+n.n.
 
 ---
 
