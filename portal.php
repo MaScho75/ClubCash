@@ -162,7 +162,6 @@ if ($response !== false) {
     <li>
       <a href="#" id="MenuEinstellungen" style="display: none;">Einstellungen</a>
       <ul>
-        <li><a href="#" class="disabled">Zugriff Vereinsflieger</a></li>
         <li><a href="#" onclick="Farben()">Farben</a></li>
         <li><a href="#" onclick="Programmeinstellungen()">Porgrammeinstellungen</a></li>
         <li><a href="#" onclick="Update()">Update</a></li>
@@ -2129,18 +2128,17 @@ if ($response !== false) {
     function Update() {
         portalmenu2.innerHTML = "<h2 style='display: inline;'>Update</h2>";
         html = "";
-        html += "<p>installierte Version: " + config.Version + "</p>";
-        html += "<p>last release: " + release.tag_name + " - " + release.created_at + "</p>";
-        console.log("Release", release);
+        html += "<p>Installierte Version: " + config.Version + "</p>";
+        html += "<p>Zeitunkt des letzten Updates: " + config.letzteAktualisierung + "</p>";
+        html += "<p>Altuelles Eelease: " + release.tag_name + "</p>";
+        html += "<p>Zeitpunkt des letzten Releases: " + release.published_at + "</p>";
 
         if (config.Version === release.tag_name) {
             html += "<p>✅ Die Software ist auf dem neuesten Stand.</p>";
         } else {
             html += "<p>⚠️ Es ist ein Update verfügbar. Bitte die Software aktualisieren.</p>";
             html += "<p>⚠️ Bitte vor dem Update manuell ein Systembackup erstellen.<br>Die aktuellen Daten werden dabei mit gesichert. Sollte das Backup fehlschlagen, kann mit dem Backup das System vollständig wiederherstellen oder es auf einem anderen System installieren werden.</p>";
-
             html += "<button class='kleinerBt' onclick='Systembackup()'>Systembackup</button>"
-
             html += `<button class='kleinerBt' onclick='Update2()'>Update</button>`;
         }
 
@@ -2166,7 +2164,7 @@ if ($response !== false) {
     }
 
     function Systembackup() {
-        if (confirm('Soll jetzt ein Systembackup erstellt werden? Es mehrere Minuten dauern. Die Datei kann im Anschluss heruntergeladen werden. Zusätzlich ist sie im Order /backup/ gespeichert.')) {
+        if (confirm('Soll jetzt ein Systembackup erstellt werden? Es kann mehrere Minuten dauern. Das Backup kann als ZIP-Datei im Anschluss heruntergeladen werden. Zusätzlich ist sie im Order /backup/ gespeichert.')) {
         
             portalmenu2.innerHTML = "<h2 style='display: inline;'>Systembackup</h2>";
             portalInhalt.innerHTML = "<p>Bitte warten, das Systembackup wird erstellt...</p>";
