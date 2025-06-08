@@ -101,5 +101,4 @@ if (file_exists($configPath)) {
 
 echo "🎉 Update abgeschlossen!<br>";
 echo '<button onclick="location.href=\'index.php\'">Zurück zur Startseite</button>';
-
 ?>

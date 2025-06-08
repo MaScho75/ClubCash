@@ -166,6 +166,7 @@ if ($response !== false) {
         <li><a href="#" onclick="Farben()">Farben</a></li>
         <li><a href="#" onclick="Programmeinstellungen()">Porgrammeinstellungen</a></li>
         <li><a href="#" onclick="Update()">Update</a></li>
+        <li><a href="#" onclick="Systembackup()">Systembackup</a></li>
         <li><a href="#" class="disabled">alle Daten löschen</a></li>
       </ul>
     </li>
@@ -2136,9 +2137,12 @@ if ($response !== false) {
             html += "<p>✅ Die Software ist auf dem neuesten Stand.</p>";
         } else {
             html += "<p>⚠️ Es ist ein Update verfügbar. Bitte die Software aktualisieren.</p>";
+            html += "<p>⚠️ Bitte vor dem Update manuell ein Systembackup erstellen.<br>Die aktuellen Daten werden dabei mit gesichert. Sollte das Backup fehlschlagen, kann mit dem Backup das System vollständig wiederherstellen oder es auf einem anderen System installieren werden.</p>";
+
+            html += "<button class='kleinerBt' onclick='Systembackup()'>Systembackup</button>"
+
             html += `<button class='kleinerBt' onclick='Update2()'>Update</button>`;
         }
-        html += "<button class='kleinerBt' onclick='Systembackup()'>Systembackup</button>";
 
         portalInhalt.innerHTML = html;
 
