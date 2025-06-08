@@ -56,3 +56,82 @@ function downloadFile($url, $path) {
         echo '❌ Fehler beim Download: ' . curl_error($ch) . '<br>';
     }
     curl_close($ch);
+    fclose($fp);
+    return $success;
+}
+
+$owner = 'MaScho75';
+$repo = 'ClubCash';
+$apiUrl = "https://api.github.com/repos/$owner/$repo/releases/latest";
+$response = getGitHubRelease($apiUrl);
+
+if ($response === false) {
+    die('❌ Fehler beim Abrufen der GitHub-Daten.');
+}
+
+$release = json_decode($response, true);
+
+// Debug-Ausgabe (optional für dich zum Prüfen)
+if (!isset($release['assets'])) {
+    echo '<pre>⚠️ API-Antwort:<br>' . htmlspecialchars(json_encode($release, JSON_PRETTY_PRINT)) . '</pre>';
+}
+
+if (!isset($release['assets']) || !is_array($release['assets']) || count($release['assets']) === 0) {
+    echo '⚠️ Keine Release-Dateien (Assets) gefunden.<br>';
+    exit();
+}
+
+$found = false;
+foreach ($release['assets'] as $asset) {
+    if (preg_match('/\.zip$/i', $asset['name'])) {
+        $found = true;
+        echo '⬇️ Gefundene ZIP-Datei: ' . htmlspecialchars($asset['name']) . '<br>';
+
+        $downloadUrl = $asset['browser_download_url'];
+        $zipFile = 'update.zip';
+
+        echo '⬇️ Herunterladen...<br>';
+        if (!downloadFile($downloadUrl, $zipFile)) {
+            die('❌ Fehler beim Herunterladen der ZIP-Datei.');
+        }
+
+        echo '📦 Entpacken...<br>';
+        $zip = new ZipArchive;
+        if ($zip->open($zipFile) === true) {
+            $zip->extractTo('.');
+            $zip->close();
+            echo '✅ Dateien erfolgreich entpackt.<br>';
+            unlink($zipFile);
+        } else {
+            die('❌ Fehler beim Entpacken der ZIP-Datei.');
+        }
+
+        break;
+    }
+}
+
+if (!$found) {
+    echo '⚠️ Keine passende ZIP-Datei im Release gefunden.<br>';
+    exit();
+}
+
+// config.json aktualisieren
+$configFile = 'daten/config.json';
+if (file_exists($configFile)) {
+    $config = json_decode(file_get_contents($configFile), true);
+    if (is_array($config)) {
+        $config['Version'] = $release['tag_name'] ?? 'unbekannt';
+        $config['letzteAktualisierung'] = date('Y-m-d H:i:s');
+        file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        echo '✅ config.json wurde aktualisiert.<br>';
+    } else {
+        echo '❌ config.json konnte nicht gelesen werden.<br>';
+    }
+} else {
+    echo '❌ config.json nicht gefunden.<br>';
+}
+
+echo '🎉 Update abgeschlossen!<br>';
+echo '<button class="kleinerBt" onclick="window.location.href=\'index.php\'">🔁 Zurück zur Startseite</button>';
+
+?>
