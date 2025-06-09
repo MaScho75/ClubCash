@@ -16,6 +16,53 @@
  * along with ClubCash. If not, see <https://www.gnu.org/licenses/>.
  */
 
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 38.4px;
+    height: 21.6px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--border-color);
+    transition: .4s;
+    border-radius: 21.6px;
+}
+
+.switch .slider:before {
+    position: absolute;
+    content: "";
+    height: 16.8px;
+    width: 16.8px;
+    left: 2.4px;
+    bottom: 2.4px;
+    background-color: var(--text-color-light);
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+    background-color: var(--button-color);
+}
+
+.switch input:checked + .slider:before {
+    transform: translateX(16.8px);
+}
+
+
 @font-face {
     font-family: 'Carlito';
     src: url('grafik/Carlito-Regular.ttf') format('truetype');
@@ -26,6 +73,44 @@
     /* Mehrere Quellen für bessere Kompatibilität */
     src: url('grafik/LibreBarcode39-Regular.ttf') format('truetype');
     font-display: swap; /* Verhindert FOIT (Flash of Invisible Text) */
+}
+
+.EinstellungsFrm label {
+    margin-left: 20px;
+}
+
+.EinstellungsFrm input {
+    max-height: 24px;
+    border: none;
+    padding: 0px 10px 0px 10px;
+    font-size: 16px;
+}
+
+p.beschreibung {
+    font-size: .8em;
+    color: var(--text-color-dark);
+    margin: 0;
+    height: 20px;
+    overflow: hidden;
+}
+
+p.beschreibung:hover {
+    height: auto; /* Höhe anpassen, wenn der Text überläuft */
+    overflow: visible; /* Sichtbar machen, wenn der Text überläuft */
+    color: var(--secondary-color);
+}
+
+p.formularunterüberschrift {
+    font-family: 'Carlito', sans-serif;
+    font-size: 1.2em;
+    font-style: italic;
+    color: var(--text-color-dark);
+    margin: 0;
+    grid-column: span 3;
+    background-color: var(--border-color);
+    padding-left: 10px;
+    margin-top: 20px;
+    border-radius: 5px;
 }
 
 #portalmenu2 {

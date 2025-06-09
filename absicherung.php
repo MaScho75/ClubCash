@@ -60,11 +60,9 @@ file_put_contents($kasseDir . '/.htaccess', $htaccess);
 // Benutzer und Passwort
 $user = 'kasse';
 
-// Passwort verschlüsseln
-$hashedPassword = crypt($pass, base64_encode(random_bytes(9)));
-
 // .htpasswd schreiben
-file_put_contents($kasseDir . '/.htpasswd', "$user:$hashedPassword\n");
+
+file_put_contents($kasseDir . '/.htpasswd', $user . ':' . $jsonConfigDaten['kassenpw'] . "\n");
 
 echo "<p>✅ Verzeichnis /kasse wurde durch .htaccess gesichert.</p>";
 
@@ -84,9 +82,6 @@ file_put_contents($datenDir . '/.htaccess', $htaccess);
 
 // Benutzer und Passwort
 $user = 'kasse';
-
-// Passwort verschlüsseln
-$hashedPassword = crypt($pass, base64_encode(random_bytes(9)));
 
 // .htpasswd schreiben
 file_put_contents($datenDir . '/.htpasswd', $user . ':' . $jsonConfigDaten['kassenpw'] . "\n");

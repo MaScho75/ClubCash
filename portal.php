@@ -26,6 +26,9 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
     exit();
 }
 
+//test
+echo crypt('test', '$apr1$12345678$');
+
 // Mitgliederdaten laden
 clearstatcache(true, "daten/kunden.json"); // Clear file cache for this specific file
 $jsonKundenDatei = file_get_contents("daten/kunden.json");
@@ -162,12 +165,12 @@ if ($response !== false) {
     <li>
       <a href="#" id="MenuEinstellungen" style="display: none;">Einstellungen</a>
       <ul>
-        <li><a href="#" onclick="Farben()">Farben</a></li>
-        <li><a href="#" onclick="Programmeinstellungen()">Porgrammeinstellungen</a></li>
+        <li><a href="#" onclick="Programmeinstellungen()">Programmeinstellungen</a></li>
         <li><a href="#" onclick="Update()">Update</a></li>
         <li><a href="#" onclick="Systembackup()">Systembackup</a></li>
         <li><a href="#" onclick="Sicherheitscheck()">Sicherheitscheck</a></li>
         <li><a href="#" class="disabled">alle Daten löschen</a></li>
+        <li><a href="#" onclick="Farben()">Farben</a></li>
       </ul>
     </li>
     <li>
@@ -175,7 +178,7 @@ if ($response !== false) {
       <ul>
         <li><a href="daten/produkte.json" >Produktliste JSON</a></li>
         <li><a href="daten/kunden.json" >Kundenliste JSON</a></li>
-        <li><a href="daten/umsatz.csv" >umsatz CSV</a></li>
+        <li><a href="daten/umsatz.csv" >Umsatz CSV</a></li>
         <li><a href="#" onclick="backupliste()">Backups</a></li>
       </ul>
     </li>
@@ -299,6 +302,7 @@ if ($response !== false) {
         // Sollte gerade die Seite nach der Löschung eines Backupfiles aufgerufen werden, dann öffne die Backupliste
            const urlParams = new URLSearchParams(window.location.search);
            const action = urlParams.get('action');
+
         // Prüfen, ob 'action' gesetzt ist und den Wert 'backupliste' hat
            if (action === 'backupliste') {
                 backupliste(); // JavaScript-Funktion aufrufen
@@ -835,90 +839,6 @@ if ($response !== false) {
             }
         };
         xhr.send();
-
-    }
-
-    function Programmeinstellungen() {
-        console.log("Programmeinstellungen andeshen und...");
-
-        portalmenu2.innerHTML = "<h2 style='display: inline;'>Konfiguration</h2>";
-        
-        let menu2 = "<h2 style='display: inline;'>Konfiguration</h2>";
-        menu2 += `
-            <button id="saveButton" class="kleinerBt">speichern</button>
-            <button onclick="location.reload();" class="kleinerBt">abbruch</button>
-        `;
-
-        portalInhalt.innerHTML = `
-            <table id="configTable" class="portal-table">
-                <thead>
-                    <tr>
-                        <th class="links">Schlüssel</th>
-                        <th class="links">Wert</th>
-                    </tr>
-                </thead>
-                <tbody id="configTableBody">
-                </tbody>
-            </table>
-        `;
-
-        portalmenu2.innerHTML = menu2;
-
-        const configTableBody = document.getElementById('configTableBody');
-        const addButton = document.getElementById('addButton');
-        const saveButton = document.getElementById('saveButton');
-
-        // Hilfsfunktion zum Rendern der Tabelle
-        function renderConfigTable() {
-            configTableBody.innerHTML = '';
-            Object.entries(config).forEach(([key, value]) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="links">${key}</td>
-                    <td class="links" contenteditable="true">${value}</td>
-                `;
-                configTableBody.appendChild(tr);
-            });
-        }
-
-        // Speichern der Konfiguration
-        saveButton.onclick = () => {
-            // Neues Config-Objekt erstellen
-            const newConfig = {};
-            document.querySelectorAll('#configTableBody tr').forEach(row => {
-                const key = row.cells[0].textContent.trim();
-                const value = row.cells[1].textContent.trim();
-                if (key && value) {
-                    newConfig[key] = value;
-                }
-            });
-
-            // Config-Objekt aktualisieren
-            config = newConfig;
-
-            // An Server senden
-            fetch('json-schreiben.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    data: config,
-                    filename: 'daten/config.json'
-                })
-            })
-            .then(response => response.text())
-            .then(result => {
-                alert('Konfiguration erfolgreich gespeichert');
-            })
-            .catch(error => {
-                alert('Fehler beim Speichern der Konfiguration: ' + error);
-            });
-        };
-
-        // Initial render
-        renderConfigTable();
 
     }
 
@@ -2238,6 +2158,409 @@ if ($response !== false) {
             preloader.style.display = "none";
         });
     
+    }
+
+    function Programmeinstellungen() {
+        let menu2 = "<h2 style='display: inline;'>Konfiguration</h2>";
+        menu2 += `
+            <button id="saveButtonConfig" class="kleinerBt">speichern</button> 
+            <button onclick="location.reload();" class="kleinerBt">abbruch</button>
+            <button class='kleinerBt' onclick='Systembackup()'>Systembackup</button>
+        `;    
+
+        let html = "";
+
+        // Formularfelder für jede Konfigurationseinstellung
+        html += `
+
+            <p>⚠️ Bevor Änderungen vorgenommen werden, wird eine Systemsicherung empfohlen!</p>
+            <div class="EinstellungsFrm" style="display: grid; grid-template-columns: 250px 350px 300px; gap: 10px; align-items: top;">
+                                
+                <!-- Zugriffsdaten -->
+                    <p class="formularunterüberschrift">Zugriffsdaten</p>
+
+                        <!-- APPKEY -->
+                        <label>APPKEY</label>
+                        <input type="text" id="appkey" value="${config.appkey}" class="inputfeld">
+                        <p class="beschreibung">Jeder Verein kann sich in Vereinsflieger einen sogenannte APPKEY 
+                            generieren zu lassen. Diese ist notwendig, um auf die Daten von Vereinflieger für die API zuzugreifen. 
+                            Die notwendigen Informationen erhält man bei Vereinsfleiger.de</p>  
+                            
+                        <!-- Passwort für das Kassenmodul -->
+                        <label>Passwort Kassenmodul</label>
+                        <input type="password" id="kassenpw1" value="" class="inputfeld">
+                        <p class="beschreibung">Für den Zugriff auf das Kassenmodul muss ein Passwort festgelegt werden.
+                        Bei Aufruf des Kassenmoduls wird als Benutzername: kasse und als Passwort, dass hier ausgewählte
+                        verwendet. Das Passwort muss indestens 12 Zeichen lang sein, und mindestens einen Großbuchstaben, 
+                        einen Kleinbuchstaben und eine Ziffer besitzen.<br>
+                        Nach Einrichtung oder Änderung des Passwortes mus ein Systemcheck durchgführt werden, um die 
+                        Passwörter zu aktivieren.</p>  
+
+                        <!-- Passwort für das Kassenmodul -->
+                        <label>Pw Wiederholung</label>
+                        <input type="password" id="kassenpw2" value="" class="inputfeld">
+                        <p class="beschreibung">Bitte des Passwort wiederholen.</p>  
+
+                <!-- Vereinsinformationen -->
+                    <p class="formularunterüberschrift">Vereinsinformationen</p>
+
+                        <!-- Vereinsname -->
+                        <label>Vereinsname</label>
+                        <input type="text" id="vereinName" value="${config.Vereinsname}" class="inputfeld">
+                        <p class="beschreibung"></p>
+
+                        <!-- VereinsAbkürzel -->
+                        <label>Vereinskürzel</label>
+                        <input type="text" id="vereinAbkuerzel" value="${config.VereinsnameAbk}" class="inputfeld">
+                        <p class="beschreibung"></p>
+
+                        <!-- Vereinsadresse -->
+                        <label>Straße</label>
+                        <input type="text" id="vereinAdresse" value="${config.Straße}" class="inputfeld">
+                        <p class="beschreibung"></p>
+
+                        <!-- VereinsPLZ -->
+                        <label>PLZ</label>
+                        <input type="text" id="vereinPLZ" value="${config.PLZ}" class="inputfeld">
+                        <p class="beschreibung"></p>
+                        
+                        <!-- Vereinsort -->
+                        <label>Ort</label>
+                        <input type="text" id="vereinOrt" value="${config.Ort}" class="inputfeld">
+                        <p class="beschreibung"></p>
+
+                        <!-- VereinsTelefon -->
+                        <label>Telefon</label>
+                        <input type="text" id="vereinTelefon" value="${config.Telefon}" class="inputfeld">
+                        <p class="beschreibung"></p>
+
+                        <!-- VereinsEmail -->
+                        <label>Email</label>
+                        <input type="email" id="vereinEmail" value="${config.Email}" class="inputfeld">
+                        <p class="beschreibung">Die E-Mail-Adresse des Vereins, der in der Abrechnung und als Antwortadresse angezeigt wird.</p>
+
+                        <!-- VereinsWebseite -->
+                        <label>Webseite</label>
+                        <input type="text" id="vereinWebseite" value="${config.Webseite}" class="inputfeld">
+                        <p class="beschreibung"></p>
+                        
+                        <!-- Kassenwart -->
+                        <label>Kassenwart</label>
+                        <input type="text" id="kassenwart" value="${config.Kassenwart}" class="inputfeld">
+                        <p class="beschreibung"></p>
+                        
+                        <!-- Bankverbindung -->
+                        <label>Bankverbindung</label>
+                        <input type="text" id="bankverbindung" value="${config.Bankverbindung}" class="inputfeld">
+                        <p class="beschreibung"></p>
+
+                        <!-- IBAN -->
+                        <label>IBAN</label>
+                        <input type="text" id="iban" value="${config.IBAN}" class="inputfeld">
+                        <p class="beschreibung"></p>
+
+                        <!-- Kontoinhaber -->
+                        <label>Kontoinhaber</label>
+                        <input type="text" id="kontoinhaber" value="${config.Kontoinhaber}" class="inputfeld">
+                        <p class="beschreibung"></p>
+
+                        <!-- Steuernummer -->
+                        <label>Steuernummer</label>
+                        <input type="text" id="steuernummer" value="${config.Steuernummer}" class="inputfeld">
+                        <p class="beschreibung"></p>
+
+                        <!-- USt-IdNr -->
+                        <label>USt-IdNr</label>
+                        <input type="text" id="ustIdNr" value="${config.UStID}" class="inputfeld">
+                        <p class="beschreibung"></p>
+
+                <!-- Rollen -->
+                    <p class="formularunterüberschrift">Rollen</p>
+
+                        <!-- Gast -->
+                        <label>Gast</label>
+                        <input type="text" id="gast" value="${config.cc_guest}" class="inputfeld">
+                        <p class="beschreibung">Die Rollenbezeichnung für Zugriffsrechte der Gäste. 
+                        Hierzu muss eine benutzerdefiniertes Feld bei der Mitgliederbereuung für jedes Mitglied 
+                        in Vereinsflieger eingerichtet sein. Hier wird die passende Bezeichtung des Benutzerdefinierten 
+                        Feldes angegeben. Der Wert des Feldes muss true oder false sein.</p>
+
+                        <!-- Mitglied -->
+                        <label>Mitglied</label>
+                        <input type="text" id="mitglied" value="${config.cc_member}" class="inputfeld">
+                        <p class="beschreibung">Die Rollenbezeichnung für Zugriffsrechte der Mitglieder.
+                        Hierzu muss eine benutzerdefiniertes Feld bei der Mitgliederbereuung für jedes Mitglied
+                        in Vereinsflieger eingerichtet sein. Hier wird die passende Bezeichtung des Benutzerdefinierten
+                        Feldes angegeben. Der Wert des Feldes muss true oder false sein.</p>
+
+                        <!-- Verkäufer -->
+                        <label>Verkäufer</label>
+                        <input type="text" id="verkäufer" value="${config.cc_seller}" class="inputfeld">
+                        <p class="beschreibung">Die Rollenbezeichnung für Zugriffsrechte der Verkäufer.
+                        Hierzu muss eine benutzerdefiniertes Feld bei der Mitgliederbereuung für jedes Mitglied
+                        in Vereinsflieger eingerichtet sein. Hier wird die passende Bezeichtung des Benutzerdefinierten
+                        Feldes angegeben. Der Wert des Feldes muss true oder false sein.</p>
+
+                        <!-- Admin -->
+                        <label>Admin</label>
+                        <input type="text" id="admin" value="${config.cc_admin}" class="inputfeld">
+                        <p class="beschreibung">Die Rollenbezeichnung für Zugriffsrechte der Admins.
+                        Hierzu muss eine benutzerdefiniertes Feld bei der Mitgliederbereuung für jedes Mitglied
+                        in Vereinsflieger eingerichtet sein. Hier wird die passende Bezeichtung des Benutzerdefinierten
+                        Feldes angegeben. Der Wert des Feldes muss true oder false sein.</p>
+
+                <!-- Einstellungen -->
+                    <p class="formularunterüberschrift">Einstellungen</p>
+
+                        <!-- Wartungsmodus -->
+                        <label>Wartungsmodus</label>
+                        <label class="switch">
+                            <input type="checkbox" id="wartungsmodus" ${config.wartungsmodus === "true" ? "checked" : ""}>
+                            <span class="slider round"></span>
+                        </label>
+                        <p class="beschreibung">Bei Aktivierung des Wartungsmodus, ist der Zugriff auf das Kassenmodul nicht möglich.
+                            Beim Aufrufen des Kassenmoduls wird ein Informationsfenster mit dem Hinweis auf den Wartungsmodus geöffnet.
+                            Auch offline ist die Bedienung dann nicht möglich.</p>
+
+                        <!-- Tagesabrechnung -->
+                        <label>Tagesabrechnung:</label>
+                        <label class="switch">
+                            <input type="checkbox" id="tagesabrechnung" ${config.tagesabrechnung === "true" ? "checked" : ""}>
+                            <span class="slider round"></span>
+                        </label>
+                        <p class="beschreibung">Bei Aktivierung besteht die Möglichkeit, in Kassenmodul sich eine aktuelle Tagesabrechnung
+                        anzeigen zu lassen.</p>
+
+                        <!-- tageszusammenfassung -->
+                        <label>Tageszusammenfassung</label>
+                        <label class="switch">
+                            <input type="checkbox" id="tageszusammenfassung" ${config.tageszusammenfassung === "true" ? "checked" : ""}>
+                            <span class="slider round"></span>
+                        </label>
+                        <p class="beschreibung">Bei Aktivierung besteht die Möglichkeit, in Kassenmodul sich eine aktuelle Tageszusammenfassung
+                        anzeigen zu lassen. Diese zeigt alle Verkäufe des Tages an, gruppiert nach Produkt.</p>
+ 
+                        <!-- kundentagesübersicht -->
+                        <label>Kundentagesübersicht</label>
+                        <label class="switch">
+                            <input type="checkbox" id="kundentagesübersicht" ${config.kundentagesübersicht === "true" ? "checked" : ""}>
+                            <span class="slider round"></span>
+                        </label>
+                        <p class="beschreibung">Bei Aktivierung besteht die Möglichkeit, in Kassenmodul sich eine Kundentagesübersicht
+                        anzeigen zu lassen. Diese zeigt alle Verkäufe des Tages an, gruppiert nach Kunde.</p>
+                        
+                        <!-- preisanpassungessen -->
+                        <label>Preisanpassungessen</label>
+                        <label class="switch">
+                            <input type="checkbox" id="preisanpassungessen" ${config.preisanpassungessen === "true" ? "checked" : ""}>
+                            <span class="slider round"></span>
+                        </label>
+                        <p class="beschreibung">Bei Aktivierung besteht die Möglichkeit, in Kassenmodul den Preis für das Essen anzupassen oder zu ändern.
+                        </p>
+
+                        <!-- Sanduhr -->
+                        <label>Sanduhr</label>
+                        <input type="text" id="sanduhrenZeit" value="${config.sanduhr}" class="inputfeld">
+                        <p class="beschreibung">Die Verzögerungszeit in Sekunden, die im Kassenmodul 
+                        nach dem Verkauf vor dem Wechsel der Ansicht pausiert.</p>
+
+                        <!-- Bildschrimschoner -->
+                        <label>Bildschirmschoner</label>
+                        <input type="text" id="bildschirmschonerZeit" value="${config.bildschirmschoner}" class="inputfeld">
+                        <p class="beschreibung">Die Verzögerungszeit in Minuten, die im Kassenmodul den Bildschirmschoner aktiviert.
+                        </p>
+
+                        <!-- Artiegelnummer -->
+                        <label>Artikelnummer VF</label>
+                        <input type="text" id="artikelnummerVF" value="${config.ArtikelnummerVF}" class="inputfeld">
+                        <p class="beschreibung">Die Artikelnummer, die in Vereinsflieger für die Verkäufe verwendet wird.
+                        Diese wird für die Übertragung der Verkaufsdaten an Vereinsflieger benötigt.</p>
+
+            </div>`;
+
+        portalmenu2.innerHTML = menu2;
+        portalInhalt.innerHTML = html;
+
+        console.log("Config Daten:", config);
+        console.log("Version:", config.Version);
+        console.log("Passwort: ", config.kassenpw);
+
+        // Event Listeners für Passwortfelder
+        const pw1Field = document.getElementById('kassenpw1');
+        const pw2Field = document.getElementById('kassenpw2');
+        const saveButton = document.getElementById('saveButtonConfig');
+
+        // Event Listener für beide Passwortfelder
+        pw1Field.addEventListener('input', validatePasswords);
+        pw2Field.addEventListener('input', validatePasswords);
+
+        // Event Listener für alle andere Felder, die nicht leer bleiben dürfen
+        ['appkey', 'gast', 'mitglied', 'verkäufer', 'admin', 'artikelnummerVF'].forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            field.addEventListener('input', () => {
+                // Validate that field is not empty
+                field.style.backgroundColor = field.value.trim() === '' ? '#ffcccc' : '';
+                // Disable save button if any required field is empty
+                saveButton.disabled = ['appkey', 'gast', 'mitglied', 'verkäufer', 'admin', 'artikelnummerVF'].some(id => 
+                    document.getElementById(id).value.trim() === ''
+                );
+            });
+            // Initial validation
+            field.dispatchEvent(new Event('input'));
+        });
+
+
+        // Initial validation
+        validatePasswords();
+
+    // Funktion zum Abrufen des Apache-kompatiblen Passwort-Hashes
+    async function getHashFromPHP(password) {
+        try {
+            const response = await fetch('generate_htpasswd.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'password=' + encodeURIComponent(password)
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                console.error('Fehler:', data.error);
+                return null;
+            }
+
+            return data.htpasswd;
+        } catch (error) {
+            console.error('Fehler bei Hash-Generierung:', error);
+            return null;
+        }
+    }
+
+    // Event Listener für den Speichern-Button
+    document.getElementById('saveButtonConfig').addEventListener('click', async () => {
+        console.log("Version: ", config.Version);
+        console.log("letzte Aktualisierung: ", config.letzteAktualisierung);
+
+        const pw1 = document.getElementById('kassenpw1').value;
+        let hashedPw;
+
+        if (pw1 === "") {
+            hashedPw = config.kassenpw; // Altes Passwort beibehalten
+            console.log("PW ist leer: ", hashedPw);
+        } else {
+            try {
+                hashedPw = await getHashFromPHP(pw1);
+                if (!hashedPw) {
+                    throw new Error("Failed to generate password hash.");
+                }
+            } catch (error) {
+                alert("Error: " + error.message);
+                return;
+            }
+            if (!hashedPw) {
+                alert("Fehler beim Generieren des Passwort-Hashes!");
+                return;
+            }
+            console.log("Hash für Weiterverarbeitung:", hashedPw);
+        }
+
+        const newConfig = {
+            // Zugriffsdaten 
+            appkey: document.getElementById('appkey').value,
+            kassenpw: hashedPw,
+
+            // Vereinsinformationen
+            Vereinsname: document.getElementById('vereinName').value,
+            VereinsnameAbk: document.getElementById('vereinAbkuerzel').value,
+            Straße: document.getElementById('vereinAdresse').value,
+            PLZ: document.getElementById('vereinPLZ').value,
+            Ort: document.getElementById('vereinOrt').value,
+            Telefon: document.getElementById('vereinTelefon').value,
+            Email: document.getElementById('vereinEmail').value,
+            Webseite: document.getElementById('vereinWebseite').value,
+            Kassenwart: document.getElementById('kassenwart').value,
+            Bankverbindung: document.getElementById('bankverbindung').value,
+            IBAN: document.getElementById('iban').value,
+            Kontoinhaber: document.getElementById('kontoinhaber').value,
+            Steuernummer: document.getElementById('steuernummer').value,
+            UStID: document.getElementById('ustIdNr').value,
+
+            // Rollen
+            cc_guest: document.getElementById('gast').value,
+            cc_member: document.getElementById('mitglied').value,
+            cc_seller: document.getElementById('verkäufer').value,
+            cc_admin: document.getElementById('admin').value,
+
+            // Einstellungen
+            wartungsmodus: document.getElementById('wartungsmodus').checked.toString(),
+            tagesabrechnung: document.getElementById('tagesabrechnung').checked.toString(),
+            tageszusammenfassung: document.getElementById('tageszusammenfassung').checked.toString(),
+            kundentagesübersicht: document.getElementById('kundentagesübersicht').checked.toString(),
+            preisanpassungessen: document.getElementById('preisanpassungessen').checked.toString(),
+            sanduhr: document.getElementById('sanduhrenZeit').value,
+            bildschirmschoner: document.getElementById('bildschirmschonerZeit').value,
+            ArtikelnummerVF: document.getElementById('artikelnummerVF').value,
+
+            // Übernommene Daten
+            Version: config.Version,
+            letzteAktualisierung: config.letzteAktualisierung
+        };
+
+        // An Server senden
+        fetch('json-schreiben.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                data: newConfig,
+                filename: 'daten/config.json'
+            })
+        })
+        .then(response => response.text())
+        .then(result => {
+            alert('Konfiguration erfolgreich gespeichert');
+            config = newConfig; // Update global config
+        })
+        .catch(error => {
+            alert('Fehler beim Speichern der Konfiguration: ' + error);
+        });
+    });
+
+    function validatePasswords() {
+
+        const pw1 = pw1Field.value;
+        const pw2 = pw2Field.value;
+
+        if (!pw1 && !pw2) {
+            return;
+        }
+        
+        // Password validation rules
+        const minLength = 12;
+        const hasLowerCase = /[a-z]/.test(pw1);
+        const hasUpperCase = /[A-Z]/.test(pw1);
+        const hasNumber = /[0-9]/.test(pw1);
+        
+        // Check all validation rules
+        const isValidFormat = pw1.length >= minLength && 
+                                hasLowerCase && 
+                                hasUpperCase && 
+                                hasNumber;
+        
+        // Check if passwords match and meet format requirements
+        const isValid = pw1 && pw2 && pw1 === pw2 && isValidFormat;
+        
+        // Set visual feedback
+        pw1Field.style.backgroundColor = isValid ? '' : '#ffcccc';
+        pw2Field.style.backgroundColor = isValid ? '' : '#ffcccc';
+        saveButton.disabled = !isValid;
+            
+    }
+
     }
 
 </script>
