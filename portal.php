@@ -166,13 +166,14 @@ if ($response !== false) {
         <li><a href="#" onclick="Programmeinstellungen()">Porgrammeinstellungen</a></li>
         <li><a href="#" onclick="Update()">Update</a></li>
         <li><a href="#" onclick="Systembackup()">Systembackup</a></li>
+        <li><a href="#" onclick="Sicherheitscheck()">Sicherheitscheck</a></li>
         <li><a href="#" class="disabled">alle Daten löschen</a></li>
       </ul>
     </li>
     <li>
       <a href="#" id="MenuDownload" style="display: none;">Download</a>
       <ul>
-        <li><a href="daten/produkte.json" >Produktliste CSV</a></li>
+        <li><a href="daten/produkte.json" >Produktliste JSON</a></li>
         <li><a href="daten/kunden.json" >Kundenliste JSON</a></li>
         <li><a href="daten/umsatz.csv" >umsatz CSV</a></li>
         <li><a href="#" onclick="backupliste()">Backups</a></li>
@@ -296,12 +297,16 @@ if ($response !== false) {
         }
 
         // Sollte gerade die Seite nach der Löschung eines Backupfiles aufgerufen werden, dann öffne die Backupliste
-            const urlParams = new URLSearchParams(window.location.search);
-            const action = urlParams.get('action');
-            // Prüfen, ob 'action' gesetzt ist und den Wert 'backupliste' hat
-            if (action === 'backupliste') {
+           const urlParams = new URLSearchParams(window.location.search);
+           const action = urlParams.get('action');
+        // Prüfen, ob 'action' gesetzt ist und den Wert 'backupliste' hat
+           if (action === 'backupliste') {
                 backupliste(); // JavaScript-Funktion aufrufen
-            }
+                // Danach 'action' aus der URL entfernen, ohne neu zu laden:
+                urlParams.delete('action');
+                const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+                window.history.replaceState({}, '', newUrl);
+           }
 
     function Preisliste_Eiskarte() {
         const heute = new Date();
@@ -1587,16 +1592,13 @@ if ($response !== false) {
     function Tagesumsätze() {
 
         let datum1 = heute; // Aktuelles Datum im Format YYYY-MM-DD
-
         let summe = 0;
-
         let menu2 = "";
         menu2 += `
             <h2 style="display: inline;">Tagesumsätze - ${datum1.toISOString().split('T')[0]}</h2>
         `;
 
         let html = "";
-
         html += `
         <table class="portal-table">
             <tr>
@@ -1651,10 +1653,7 @@ if ($response !== false) {
         } 
         
         let summe = 0;
-
         let menu2 = "";
-
-
         let html = "";
         menu2 += `
             <h2 style="display: inline;">Umsätze</h2>
@@ -1710,7 +1709,6 @@ if ($response !== false) {
                     <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
                 </tr>
             </tbody></table>`;
-
 
         //Tabelle2 - Übersicht nach Produkten
             html += `<hr><h2 style="display: inline;"><a id="TabellenLink2" style='text-decoration: none;' href='#' onclick='toggleTabelle("Tabelle2", "TabellenLink2")'>➡️</a> Übersicht nach Produkten</h2>
@@ -1776,9 +1774,7 @@ if ($response !== false) {
             `;
 
             summe = 0;
-
             let gruppensumme = 0;
-
             let gruppenanzahl = 0;
             let produktgruppen = [...new Set(produkte.map(produkt => produkt.Kategorie))]; // Einzigartige Produktgruppen extrahieren
 
@@ -1816,7 +1812,6 @@ if ($response !== false) {
 
         portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
-
 
         const btn = document.getElementById("bt_aktualisierung");
         btn.addEventListener("click", () => {
@@ -2181,6 +2176,7 @@ if ($response !== false) {
             // AJAX request to create backup
             var xhr = new XMLHttpRequest();
             xhr.open("GET", "create-system-backup.php", true);
+            xhr.withCredentials = true;
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4 && xhr.status === 200) {
                     portalInhalt.innerHTML = xhr.responseText;
@@ -2189,6 +2185,59 @@ if ($response !== false) {
             };
             xhr.send(); 
         }
+    }
+    
+    function Sicherheitscheck() {
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>Sicherheitscheck</h2>";
+        portalInhalt.innerHTML = "<p>Bitte warten, bis der Ceck durchgeführt wurde...</p>";
+        document.getElementById("preloader").style.display = "block";
+
+        fetch("sicherheitscheck.php", {
+            method: "GET",
+            credentials: "include" // damit Session-Cookie mitgeschickt wird
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Fehler beim Laden: " + response.status);
+            }
+            return response.text();
+        })
+        .then(data => {
+            portalInhalt.innerHTML = data;
+        })
+        .catch(error => {
+            portalInhalt.innerHTML = `<p>❌ ${error.message}</p>`;
+        })
+        .finally(() => {
+            preloader.style.display = "none";
+        });
+    }
+    
+    function absicherungStarten() {
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>Absicherung</h2>";
+        portalInhalt.innerHTML = "<p>Bitte warten, bis die Absicherung durchgeführt wurde...</p>";
+        document.getElementById("preloader").style.display = "block";
+    
+        fetch("absicherung.php", {
+            method: "GET",
+            credentials: "include" // damit Session-Cookie mitgeschickt wird
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Fehler beim Laden: " + response.status);
+            }
+            return response.text();
+        })
+        .then(data => {
+            portalInhalt.innerHTML = data;
+        })
+        .catch(error => {
+            portalInhalt.innerHTML = `<p>❌ ${error.message}</p>`;
+        })
+        .finally(() => {
+            preloader.style.display = "none";
+        });
+    
     }
 
 </script>

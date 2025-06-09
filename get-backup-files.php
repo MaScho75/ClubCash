@@ -25,7 +25,6 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
     exit();
 }
 
-
 $folderPath = 'backup'; // Der Ordner mit den Backups
 
 if (!is_dir($folderPath)) {
@@ -43,6 +42,7 @@ if (isset($_GET['delete'])) {
             // ✅ Erfolgreich gelöscht → weiterleiten zu portal.php mit Funktionsparameter
             header('Location: portal.php?action=backupliste');
             exit();
+            
         } else {
             echo "<p>❌ Fehler beim Löschen von '$deleteFile'.</p>";
         }
