@@ -80,7 +80,7 @@ Es handelt sich um keine offizielles Kassensystem nach der Kassensicherungsveror
 
 ---
 
-## Installationanleitung
+## 🛠️ Installationanleitung
 
 -	Vorbereitung Vereinsflieger.de
     - Generierung/Einrichtung einer APPKEY, soweit noch nicht vorhanden.
