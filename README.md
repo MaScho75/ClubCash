@@ -83,11 +83,11 @@ Es handelt sich um keine offizielles Kassensystem nach der Kassensicherungsveror
 ## Installationanleitung
 
 -	Vorbereitung Vereinsflieger.de
---	Generierung/Einrichtung einer APPKEY, soweit noch nicht vorhanden.
---	Einrichtung/Festlegen von benutzerdefinierten oder vorgegebenen Benutzerfeldern mit folgenden Informationen, wo alte Systeme oder vorhandene Systeme übernommen werden können.
----	Rollen (Gast, Mitglied, Verkäufer, Admin)
----	Schlüssel/Key/Chip
---	Anlegen und festlegen einer Artikelnummer  
+  -	Generierung/Einrichtung einer APPKEY, soweit noch nicht vorhanden.
+  -	Einrichtung/Festlegen von benutzerdefinierten oder vorgegebenen Benutzerfeldern mit folgenden Informationen, wo alte Systeme oder vorhandene Systeme übernommen werden können.
+    -	Rollen (Gast, Mitglied, Verkäufer, Admin)
+    -	Schlüssel/Key/Chip
+  -	Anlegen und festlegen einer Artikelnummer  
 -	Einrichten oder anmieten eines aus dem Internet erreichbaren Webservers vorzugsweise mit https-Verschlüsselung. 
 -	Herunterladen der Installationsdateien aus GitHub (Adresse) 
 -	Kopieren der Dateien auf dem Webserver.
@@ -96,20 +96,20 @@ Es handelt sich um keine offizielles Kassensystem nach der Kassensicherungsveror
 -	Anmeldung mit den persönlichen Anmeldedaten aus Vereinsflieger.de
 -	Menü - Einstellungen/Programmeinstellungen
 -	Eingabe der Verbindungs- und Kontaktdaten
---	APPKEY (s.o.)
---	Passwort für das Kassenmodul
---	Eingabe der zuvor in Vereinsflieger festgelegten Rollen aus den Benutzerfeldern (Gast, Mitglied, Verkäufer, Admin)
---	Artikelnummer
+  -	APPKEY (s.o.)
+  -	Passwort für das Kassenmodul
+  -	Eingabe der zuvor in Vereinsflieger festgelegten Rollen aus den Benutzerfeldern (Gast, Mitglied, Verkäufer, Admin)
+  -	Artikelnummer
 -	Menü - Einstellungen/Sicherheitscheck -> „Absichern!“
 -	Menü - Administration/Kundenliste aktualisieren
--•	Einrichtung des Kassenmoduls auf dem Bezahlsystem
---	Anschluss Strichcode- und Chipscanner
---	Es wird empfohlen, das System so eingerichtet wird, das beim Einschalten automatisch der Chromebrowser mit der folgenden Adresse gestartet wird.
---	[Zieladresse]/kasse
---	Sollten mehrere Kassen betrieben werden, kann zusätzlich für jede Kasse einen Namen vergeben werden, der sowohl im Kassenmodul als auch in der Abrechner erscheint. Dazu ist hinter der Adresse „?terminal=A“ einzugeben. Die Buchstabe A kann beliebig ausgetauscht werden. 
+-	Einrichtung des Kassenmoduls auf dem Bezahlsystem
+  -	Anschluss Strichcode- und Chipscanner
+  -	Es wird empfohlen, das System so eingerichtet wird, das beim Einschalten automatisch der Chromebrowser mit der folgenden Adresse gestartet wird.
+  -	[Zieladresse]/kasse
+  -	Sollten mehrere Kassen betrieben werden, kann zusätzlich für jede Kasse einen Namen vergeben werden, der sowohl im Kassenmodul als auch in der Abrechner erscheint. Dazu ist hinter der Adresse „?terminal=A“ einzugeben. Die Buchstabe A kann beliebig ausgetauscht werden. 
 [Zieladresse]/kasse/index.html?terminal=A
---	Benutzername: „kasse“
---	Passwort wie bei den Einstellungen eingegeben.
+  -	Benutzername: „kasse“
+  -	Passwort wie bei den Einstellungen eingegeben.
 
 ---
 
