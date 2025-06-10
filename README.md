@@ -83,8 +83,8 @@ Es handelt sich um keine offizielles Kassensystem nach der Kassensicherungsveror
 ## Installationanleitung
 
 -	Vorbereitung Vereinsflieger.de
- - Generierung/Einrichtung einer APPKEY, soweit noch nicht vorhanden.
-  - Einrichtung/Festlegen von benutzerdefinierten oder vorgegebenen Benutzerfeldern mit folgenden Informationen, wo alte Systeme oder vorhandene Systeme übernommen werden können.
+  -	Generierung/Einrichtung einer APPKEY, soweit noch nicht vorhanden.
+  -	Einrichtung/Festlegen von benutzerdefinierten oder vorgegebenen Benutzerfeldern mit folgenden Informationen, wo alte Systeme oder vorhandene Systeme übernommen werden können.
     - Rollen (Gast, Mitglied, Verkäufer, Admin)
     - Schlüssel/Key/Chip
   - Anlegen und festlegen einer Artikelnummer  
