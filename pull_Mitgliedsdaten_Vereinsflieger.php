@@ -42,33 +42,34 @@ if (!$config) {
 
 echo "<p>✅ Konfigurationsdatei erfolgreich geladen.</p>";
 
-// Lese die .env-Datei
-$env = parse_ini_file('daten/.env');  // Lädt die Umgebungsvariablen aus der .env-Datei
+// // Lese die .env-Datei
+// $env = parse_ini_file('daten/.env');  // Lädt die Umgebungsvariablen aus der .env-Datei
 
-if (!$env) {
-    die("<pre>❌ Fehler beim Laden der Umgebungsvariablen aus der .env-Datei.</pre>");
-}
+// if (!$env) {
+//     die("<pre>❌ Fehler beim Laden der Umgebungsvariablen aus der .env-Datei.</pre>");
+// }
 
 echo "<p>✅ Umgebungsvariablen erfolgreich geladen.</p>";
 
 // Wrapper-Datei einbinden
 require_once 'VereinsfliegerRestInterface.php';
 
-// Anmeldeinformationen
-$UserName = $env['USERNAME'];
-$Password = $env['PASSWORT'];
-$AppKey = $env['APPKEY'];
-$AuthSecret = $env['AUTRHSECRET'];
+// // Anmeldeinformationen
+// $UserName = $env['USERNAME'];
+// $Password = $env['PASSWORT'];
+// $AppKey = $env['APPKEY'];
+// $AuthSecret = $env['AUTRHSECRET'];
 
 // VereinsfliegerRestInterface-Instanz erstellen
 $restInterface = new VereinsfliegerRestInterface();
 
-
-// Anmeldung durchführen
-if ($restInterface->SignIn($UserName, $Password, 0, $AppKey, $AuthSecret)) {
-    echo "<p>✅ Anmeldung in Vereinsflieger war erfolgreich.</p>\n";
-
-    // Nutzer abrufen
+// Token-Handling
+if (isset($_SESSION['accessToken']) && isset($_SESSION['tokenExpiry']) && $_SESSION['tokenExpiry'] > time()) {
+    // Bestehenden Token weiterverwenden
+    $restInterface->SetAccessToken($_SESSION['accessToken']);
+    echo "<p>✅ Bestehender Token wiederverwendet.</p>\n";
+    
+    // Nutzer direkt abrufen
     if ($restInterface->GetUsers()) {
         echo "<p>✅ Die Mitgliederdaten wurden erfolgreich aus Vereinsflieger.de abgerufen.<p>\n";
 
@@ -120,7 +121,10 @@ if ($restInterface->SignIn($UserName, $Password, 0, $AppKey, $AuthSecret)) {
         echo "<p>❌ Fehler beim Abrufen der Daten.</p>\n";
     }
 } else {
-    echo "<p>❌ Anmeldung fehlgeschlagen.</p>\n";
+    // Kein gültiger Token vorhanden - Benutzer abmelden
+    session_destroy();
+    header('Location: index.php');
+    exit();
 }
 
 ?>

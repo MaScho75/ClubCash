@@ -26,9 +26,6 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
     exit();
 }
 
-//test
-echo crypt('test', '$apr1$12345678$');
-
 // Mitgliederdaten laden
 clearstatcache(true, "daten/kunden.json"); // Clear file cache for this specific file
 $jsonKundenDatei = file_get_contents("daten/kunden.json");
@@ -176,9 +173,10 @@ if ($response !== false) {
     <li>
       <a href="#" id="MenuDownload" style="display: none;">Download</a>
       <ul>
-        <li><a href="daten/produkte.json" >Produktliste JSON</a></li>
-        <li><a href="daten/kunden.json" >Kundenliste JSON</a></li>
-        <li><a href="daten/umsatz.csv" >Umsatz CSV</a></li>
+        <li><a href="#" onclick="downloadFile('produkte.json')">Produktliste JSON</a></li>
+        <li><a href="#" onclick="downloadFile('kunden.json')">Kundenliste JSON</a></li>
+        <li><a href="#" onclick="downloadFile('umsatz.csv')">Umsatz CSV</a></li>
+        <li><a href="#" onclick="Mitgliederdaten()">Mitgliederdaten</a></li>
         <li><a href="#" onclick="backupliste()">Backups</a></li>
       </ul>
     </li>
@@ -1298,6 +1296,7 @@ if ($response !== false) {
                 <tr>
                     <td>Mitgliedsnr</td>
                     <td>${kunde.memberid}</td>
+                </tr>
                 <tr>
                     <td>Email</td>
                     <td>${kunde.email}</td>
@@ -1488,7 +1487,7 @@ if ($response !== false) {
 
     function Mitgliedsdaten_ziehen() {
         portalmenu2.innerHTML = "<h2 style='display: inline;'>Vereinsflieger Datenimport</h2>";
-        portalInhalt.innerHTML = "<p>Bitte warten, die Mitgliederdaten werden aus Vereinsflieger abgerufen...</p>";
+        portalInhalt.innerHTML = "<p>Bitte warten, die Mitgliedsdaten werden aus Vereinsflieger abgerufen...</p>";
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "pull_Mitgliedsdaten_Vereinsflieger.php", true); 
         xhr.onreadystatechange = function () {
@@ -2562,7 +2561,27 @@ if ($response !== false) {
     }
 
     }
-
+	
+	function Mitgliederdaten() {
+		        portalmenu2.innerHTML = "<h2 style='display: inline;'>Vereinsflieger Datenimport</h2>";
+        portalInhalt.innerHTML = "<p>Bitte warten, die Mitgliederdaten werden aus Vereinsflieger abgerufen...</p>";
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "pull_Mitgliedsdaten_Vereinsflieger_alle.php", true); 
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                portalInhalt.innerHTML = xhr.responseText;
+            }
+        };
+        xhr.send();
+	}
+	
+	// Beispiel für einen Download-Link
+    function downloadFile(filename) {
+        if (confirm('Möchten Sie die Datei ' + filename + ' herunterladen?')) {
+            window.location.href = 'get-protected-file.php?file=' + encodeURIComponent(filename);
+        }
+}
+  
 </script>
 </body>
 </html>

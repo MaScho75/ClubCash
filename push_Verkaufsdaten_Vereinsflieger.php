@@ -43,12 +43,12 @@ if (!$config) {
 echo "<p>✅ Konfigurationsdatei geladen.</p>";
 
 // Lese die .env-Datei
-$env = parse_ini_file('daten/.env');  // Lädt die Umgebungsvariablen aus der .env-Datei
+// $env = parse_ini_file('daten/.env');  // Lädt die Umgebungsvariablen aus der .env-Datei
 
-if (!$env) {
-    die("<pre>❌ Fehler beim Laden der Umgebungsvariablen: " . json_last_error_msg() . "</pre>");
-}
-echo "<p>✅ Umgebungsvariablen geladen.</p>";
+// if (!$env) {
+//     die("<pre>❌ Fehler beim Laden der Umgebungsvariablen: " . json_last_error_msg() . "</pre>");
+// }
+// echo "<p>✅ Umgebungsvariablen geladen.</p>";
 
 // Wrapper-Datei einbinden
 
@@ -59,19 +59,25 @@ require_once 'VereinsfliegerRestInterface.php';
 
 echo "<p>✅ Wrapper-Datei VereinsfliegerRestInterface.php eingebunden.</p>";
 
-// Anmeldeinformationen
-$UserName = $env['USERNAME'];
-$Password = $env['PASSWORT'];
-$AppKey = $env['APPKEY'];
-$AuthSecret = $env['AUTRHSECRET'];
-
 // VereinsfliegerRestInterface-Instanz erstellen
 $restInterface = new VereinsfliegerRestInterface();
 
-// Anmeldung durchführen
-if ($restInterface->SignIn($UserName, $Password, 0, $AppKey, $AuthSecret)) {
-    echo "<p>✅ Anmeldung in Vereinsflieger war erfolgreich.</p>\n";
+// Token-Handling
+if (isset($_SESSION['accessToken']) && isset($_SESSION['tokenExpiry']) && $_SESSION['tokenExpiry'] > time()) {
+    // Bestehenden Token weiterverwenden
+    $restInterface->SetAccessToken($_SESSION['accessToken']);
+    echo "<p>✅ Bestehender Token wiederverwendet.</p>\n";
+    $tokenValid = true;
+} else {
+    // Kein gültiger Token vorhanden - Benutzer abmelden
+    session_destroy();
+    echo "<p>❌ Kein gültiger Token vorhanden - Sie werden abgemeldet.</p>\n";
+    header('Location: index.php');
+    exit();
+}
 
+// Nur fortfahren wenn Token valid
+if ($tokenValid) {
     // Abfragen der übertragenen Verkaufsdaten
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // JSON-Daten aus dem Request-Body lesen
@@ -126,8 +132,4 @@ if ($restInterface->SignIn($UserName, $Password, 0, $AppKey, $AuthSecret)) {
     }
     
 
-}else {
-    echo "<p>❌ Anmeldung in Vereinsflieger fehlgeschlagen.</p>\n";
 }
-
-?>

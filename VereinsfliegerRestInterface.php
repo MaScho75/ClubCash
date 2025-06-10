@@ -1,34 +1,41 @@
-<?php 
+<?php
+
 class VereinsfliegerRestInterface
 {
-	private $InterfaceUrl = 'https://www.vereinsflieger.de/interface/rest/';
-	// Flightcenter-Kunden müssen hier folgende URL nehmen 'https://www.flightcenterplus.de/interface/rest/'
-	// VereinsfliegerRestInterface->SetInterfaceUrl('https://www.flightcenterplus.de/interface/rest/');
-	private $AccessToken;
-	private $HttpStatusCode = 0;
-	private $aResponse = array();
-	
-	//=============================================================================================
-	// Anmelden
-	//=============================================================================================
-	public function SignIn($UserName, $Password, $Cid=0, $AppKey='', $AuthSecret='')
-	{
-		// Accesstoken holen
-		$this->SendRequest("GET", "auth/accesstoken", null);
-		if ($this->HttpStatusCode != 200 || !$this->aResponse) {
-			return false;
-		}
-		$this->AccessToken = $this->aResponse['accesstoken'];
-		$Password = mb_convert_encoding($Password, 'ISO-8859-1', 'UTF-8');
-		$PassWordHash = md5($Password);
-		// Anmelden
-		$Data = array(
-			'accesstoken' 	=> $this->AccessToken, 
-			'username' 		=> $UserName, 
-			'password' 		=> $PassWordHash,
-			'cid'      		=> $Cid,
-			'appkey'   		=> $AppKey,
-			'auth_secret' 	=> $AuthSecret);
+    private $InterfaceUrl = 'https://www.vereinsflieger.de/interface/rest/';
+    private $AccessToken;
+    private $HttpStatusCode = 0;
+    private $aResponse = array();
+
+    public function SetAccessToken($token) {
+        $this->AccessToken = $token;
+    }
+
+    public function GetAccessToken() {
+        return $this->AccessToken;
+    }
+
+    //=============================================================================================
+    // Anmelden
+    //=============================================================================================
+    public function SignIn($UserName, $Password, $Cid=0, $AppKey='', $AuthSecret='')
+    {
+        // Accesstoken holen
+        $this->SendRequest("GET", "auth/accesstoken", null);
+        if ($this->HttpStatusCode != 200 || !$this->aResponse) {
+            return false;
+        }
+        $this->AccessToken = $this->aResponse['accesstoken'];
+        $Password = mb_convert_encoding($Password, 'ISO-8859-1', 'UTF-8');
+        $PassWordHash = md5($Password);
+        // Anmelden
+        $Data = array(
+            'accesstoken' 	=> $this->AccessToken, 
+            'username' 		=> $UserName, 
+            'password' 		=> $PassWordHash,
+            'cid'      		=> $Cid,
+            'appkey'   		=> $AppKey,
+            'auth_secret' 	=> $AuthSecret);
 	
 		
 		$this->SendRequest("POST", "auth/signin", $Data);
@@ -277,6 +284,7 @@ class VereinsfliegerRestInterface
 		$this->SendRequest("DELETE", "calendar/delete/".intval($Apoid), $aData);
 		return (($this->HttpStatusCode) == 200);
 	}
+	
 	//=============================================================================================
 	// GetUsers
 	//=============================================================================================
@@ -589,14 +597,6 @@ class VereinsfliegerRestInterface
 	public function SetInterfaceUrl($InterfaceUrl)
 	{
 		return $this->InterfaceUrl = $InterfaceUrl;
-	}
-	
-	//=============================================================================================
-	// GetAccessToken
-	//=============================================================================================
-	public function GetAccessToken()
-	{
-		return $this->AccessToken;
 	}
 }
 ?>
