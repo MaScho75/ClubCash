@@ -17,7 +17,67 @@
  * along with ClubCash. If not, see <https://www.gnu.org/licenses/>.
  */
 
+/**
+ * Copies a directory and its contents recursively
+ */
+function copyDirectory($source, $destination) {
+    if (!is_dir($source)) {
+        return false;
+    }
+    
+    if (!is_dir($destination)) {
+        if (!mkdir($destination, 0755, true)) {
+            return false;
+        }
+    }
+    
+    $dir = opendir($source);
+    while (($file = readdir($dir)) !== false) {
+        if ($file != '.' && $file != '..') {
+            $srcFile = $source . '/' . $file;
+            $destFile = $destination . '/' . $file;
+            
+            if (is_dir($srcFile)) {
+                copyDirectory($srcFile, $destFile);
+            } else {
+                copy($srcFile, $destFile);
+            }
+        }
+    }
+    closedir($dir);
+    return true;
+}
+
 session_start();
+
+// prüfe ob der Ordner "daten" existiert
+if (!is_dir('daten')) {
+    //kopiere den Ordner "daten_template" und nenne ihn "daten"
+    if (!copyDirectory('daten_template', 'daten')) {
+        die('Fehler beim Kopieren des Template-Verzeichnisses');
+    }
+}
+
+// Prüfe, ob das Verzeichnis "backup" existiert, wenn nicht, erstelle es
+if (!is_dir('backup')) {
+    if (!mkdir('backup', 0755, true)) {
+        die('Fehler beim Erstellen des Backup-Verzeichnisses');
+    }
+}
+
+// Prüfe, ob die config.json-Datei einen Wert für "appkey" enthält
+// Lade die Konfigurationsdatei
+$configFile = 'daten/config.json';
+$configData = json_decode(file_get_contents($configFile), true);
+if (isset($configData['appkey']) && !empty($configData['appkey'])) {
+    // App-Key ist gesetzt, weiter mit dem Login
+} else {
+    // App-Key ist nicht gesetzt, leite zur Konfiguration weiter
+    header('Location: install.php');
+    exit();
+}
+
+
 
 // Basis-URL für Vereinsflieger
 $baseUrl = 'https://www.vereinsflieger.de';

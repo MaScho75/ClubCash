@@ -74,6 +74,16 @@ function checkPermissions($path, $expectedMode = '700') {
 
 // htaccess-geschützt kasse
 
+// überprüfen, ob in der config.JSON ein kassenpw gesetzt ist
+if (!file_exists('daten/config.json')) {
+    die("❌ Die Datei config.json existiert nicht.");
+}
+
+$config = json_decode(file_get_contents('daten/config.json'), true);
+if (!isset($config['kassenpw']) || empty($config['kassenpw'])) {
+    die("❌ In der config.json ist kein Passwort für das Kassenmodul gesetzt. Bitte wechsel in die Programmeinstellungen und setze ein Passwort ein.");
+}
+
 echo "Prüfung, ob das Verzeichnis <b>/kasse</b> ausreichen abgesichert ist:";
 
 $relativeUrl = '/kasse/';
@@ -106,15 +116,26 @@ if ($result === true) {
     echo "<p>⚠️ Ergebnis: $result</p>";
 }
 
-
 // Verzeichnisse prüfen ob 0700
 echo "<p>Überprüfung von <b>/backup</b>:<br>";
 echo checkPermissions('backup');
 echo "</p>";
+echo "<button class='kleinerBt' onclick=\"absicherungStarten()\">ABSICHERN</button></p>";
 
+// prüfen, ob die datei install.php existiert
+if (file_exists('install.php')) {
+    echo "<div class='warnung' style='padding: 10px; border-radius: 5px;'>";
+    echo " <p>⚠️ Achtung: Die Datei <b>install.php</b> existiert!<br>";
+    echo "Bitte löschen Sie diese Datei, um die Sicherheit zu erhöhen. Sie wird nicht durch die oben ausgelöste Absicherung entfernt.";
+    echo "Die Datei <b>install.php</b> sollte nicht mehr auf dem Server liegen, um Sicherheitsrisiken zu vermeiden.</p>";
+    echo "<button class='kleinerBt' onclick=\"installLöschen()\">LÖSCHEN</button></p>";
+    echo "</div>";
+}
+else {
+    echo "<p>✅ Die Datei <b>install.php</b> existiert nicht.</p>";
+}
 ?>
 
-    <button class='kleinerBt' onclick="absicherungStarten()">Absichern!</button>
 </body>
 </html>
 

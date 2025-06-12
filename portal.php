@@ -141,7 +141,7 @@ if ($response !== false) {
       <ul>
         <li><a href="#" onclick="Tagesumsätze()">Tagesumsätze</a></li>
         <li><a href="#" onclick="Tageszusammenfassung()">Tageszusammenfassung</a></li>
-        <li><a href="#" onclick="Kundentagesübersicht()">Kundentagesumsätze</a></li>     
+        <li><a href="#" onclick="Kundentagesübersicht()">Mitlgieder-Tagesumsätze</a></li>     
         <li><a href="#" onclick="Preisliste_drucken()">Preisliste</a></li>
         <li><a href="#" onclick="Preisliste_strichcode()">Strichcodeliste</a></li>
         <li><a href="#" onclick="Preisliste_Eiskarte()">Eiskarte</a></li></ul>
@@ -150,8 +150,8 @@ if ($response !== false) {
     <li>
       <a href="#" id="MenuAdministrator" style="display: none;">Administration</a>
       <ul>
-        <li><a href="#" onclick="Mitgliedsdaten_ziehen()">Kundenliste aktualisieren</a></li>
-        <li><a href="#" onclick="Mitgliederdaten_anzeigen()">Kundenliste</a></li>
+        <li><a href="#" onclick="Mitgliedsdaten_ziehen()">Mitgliederliste aktualisieren</a></li>
+        <li><a href="#" onclick="Mitgliederdaten_anzeigen()">Mitgliederliste anzeigen</a></li>
         <li><a href="#" onclick="Umsätze()">Umsätze</a></li>
         <li><a href="#" onclick="Produkte_editieren()">Produkte</a></li>
         <li><a href="#" onclick="Wareneingang()">Wareneingang</a></li>
@@ -254,42 +254,77 @@ if ($response !== false) {
         const portalMenu = document.getElementById('portal-menu');
 
     // Finde das angemeldete Mitglied anhand der Email-Adresse (case-insensitive)
-        const angemeldetesMitglied = kunden.find(kunde => 
+        let angemeldetesMitglied = kunden.find(kunde => 
             kunde.email.toLowerCase() === '<?php echo strtolower($_SESSION['username']); ?>');
+        
+        // Wenn kein Mitgleid gefunden wurde, setzte folgende Werte für angemeldetesMitglied
+        if (!angemeldetesMitglied) {
+            installansicht = true; // Setze installansicht auf true, wenn kein Mitglied gefunden wurde
+            //console.error("Angemeldetes Mitglied nicht gefunden.");
+            // Setze Standardwerte oder handle den Fehler entsprechend
+            angemeldetesMitglied = {
+                firstname: 'neuer',
+                lastname: 'Administrator',
+                cc_seller: false,
+                cc_admin: false,
+                cc_member: false,
+                cc_guest: false
+            };
+        }
+        
         document.getElementById('userName').textContent = angemeldetesMitglied.firstname + " " + angemeldetesMitglied.lastname;
     
     //Menu gemäß Rollen ein- und ausblenden
+
+        console.log("Zugriffseinschränkung: " + config.zugriffseinschränkung);
+        console.log("Benutzer ist eingeloggt: " + customer_login);
+        console.log("Angemeldetes Mitglied: ", angemeldetesMitglied);
+        console.log("Benutzer ist Admin: " + angemeldetesMitglied.cc_admin);    
+
         if (customer_login === true && angemeldetesMitglied.cc_seller === true) {
+            console.log("Benutzer ist Verkäufer. Login mit Schlüssel");
             document.getElementById('MenuMeinKonto').style.display = 'block';
             document.getElementById('MenuAuswertung').style.display = 'block';
             document.getElementById('MenuAdministrator').style.display = 'none';
             document.getElementById('MenuEinstellungen').style.display = 'none';
             document.getElementById('MenuDownload').style.display = 'none';
         } else if (customer_login === true ) {
+            console.log("Benutzer ist Kunde. Login mit Schlüssel");
             document.getElementById('MenuMeinKonto').style.display = 'block';
             document.getElementById('MenuAuswertung').style.display = 'none';
             document.getElementById('MenuAdministrator').style.display = 'none';
             document.getElementById('MenuEinstellungen').style.display = 'none';
             document.getElementById('MenuDownload').style.display = 'none';
+        } else if (config.zugriffseinschränkung === "false") {
+            console.log("Zugriffseinschränkung ist deaktiviert. Alle Menüpunkte werden angezeigt.");
+            document.getElementById('MenuMeinKonto').style.display = 'block';
+            document.getElementById('MenuAuswertung').style.display = 'block';
+            document.getElementById('MenuAdministrator').style.display = 'block';
+            document.getElementById('MenuEinstellungen').style.display = 'block';
+            document.getElementById('MenuDownload').style.display = 'block';
         } else if (angemeldetesMitglied.cc_admin === true) {
+            console.log("Zugriffseinschränkung ist aktiv. Benutzer ist Administrator.");
             document.getElementById('MenuMeinKonto').style.display = 'block';
             document.getElementById('MenuAuswertung').style.display = 'block';
             document.getElementById('MenuAdministrator').style.display = 'block';
             document.getElementById('MenuEinstellungen').style.display = 'block';
             document.getElementById('MenuDownload').style.display = 'block';
         } else if (angemeldetesMitglied.cc_seller === true) {
+            console.log("Zugriffseinschränkung ist aktiv. Benutzer ist Verkäufer.");
             document.getElementById('MenuMeinKonto').style.display = 'block';
             document.getElementById('MenuAuswertung').style.display = 'block';
             document.getElementById('MenuAdministrator').style.display = 'none';
             document.getElementById('MenuEinstellungen').style.display = 'none';
             document.getElementById('MenuDownload').style.display = 'none';
         } else if (angemeldetesMitglied.cc_member === true) {
+            console.log("Zugriffseinschränkung ist aktiv. Benutzer ist Mitglied.");
             document.getElementById('MenuMeinKonto').style.display = 'block';
             document.getElementById('MenuAuswertung').style.display = 'none';
             document.getElementById('MenuAdministrator').style.display = 'none';
             document.getElementById('MenuEinstellungen').style.display = 'none';
             document.getElementById('MenuDownload').style.display = 'none';
         } else if (angemeldetesMitglied.cc_guest === true) {
+            console.log("Zugriffseinschränkung ist aktiv. Benutzer ist Gast.");
             document.getElementById('MenuMeinKonto').style.display = 'block';
             document.getElementById('MenuAuswertung').style.display = 'none';
             document.getElementById('MenuAdministrator').style.display = 'none';
@@ -2170,6 +2205,16 @@ if ($response !== false) {
         let html = "";
 
         // Formularfelder für jede Konfigurationseinstellung
+        // Eingabefelder aktivieren, wenn der Benutzer Admin ist, sind die Eigenschaften nicht Rollen nichtr richtig deklariert, 
+        // kann das Feld vorsichtshalber nicht deaktiviert werden und der Benutzer kann sich nicht aus versehen ausschließen.
+        let inputdisabled = "disabled"; // Eingabefelder standardmäßig deaktiviert
+        if (angemeldetesMitglied.cc_admin === true) {
+            inputdisabled = ""; 
+        }
+
+        console.log("angemeldetesMitglied: ", angemeldetesMitglied);
+        console.log("angemeldetesMitglied.cc_admin: ", angemeldetesMitglied.cc_admin);
+
         html += `
 
             <p>⚠️ Bevor Änderungen vorgenommen werden, wird eine Systemsicherung empfohlen!</p>
@@ -2180,11 +2225,14 @@ if ($response !== false) {
 
                         <!-- APPKEY -->
                         <label>APPKEY</label>
-                        <input type="text" id="appkey" value="${config.appkey}" class="inputfeld">
+                        <input disabled type="text" id="appkey" value="${config.appkey}" class="inputfeld">
                         <p class="beschreibung">Jeder Verein kann sich in Vereinsflieger einen sogenannte APPKEY 
                             generieren zu lassen. Diese ist notwendig, um auf die Daten von Vereinflieger für die API zuzugreifen. 
-                            Die notwendigen Informationen erhält man bei Vereinsfleiger.de</p>  
-                            
+                            Die notwendigen Informationen erhält man bei Vereinsfleiger.de. Der KEY wurde beim Einrichten des 
+                            Systems eingegeben und sollte nicht geändert werden, da andernfalls der Zugriff auf Vereinsflieger.de 
+                            nicht mehr möglich ist. Der Wert ist in der Datei config.JSON gespeichert und kann dort ggf. 
+                            angepasst werden.</p>  
+
                         <!-- Passwort für das Kassenmodul -->
                         <label>Passwort Kassenmodul</label>
                         <input type="password" id="kassenpw1" value="" class="inputfeld">
@@ -2282,7 +2330,8 @@ if ($response !== false) {
                         <p class="beschreibung">Die Rollenbezeichnung für Zugriffsrechte der Gäste. 
                         Hierzu muss eine benutzerdefiniertes Feld bei der Mitgliederbereuung für jedes Mitglied 
                         in Vereinsflieger eingerichtet sein. Hier wird die passende Bezeichtung des Benutzerdefinierten 
-                        Feldes angegeben. Der Wert des Feldes muss true oder false sein.</p>
+                        Feldes angegeben. Der Wert des Feldes muss true oder false sein.
+                        Nach Änderung des Wertes müssen die Mitgliederdaten aus Vereinsflieger.de neu geladen werden.</p>
 
                         <!-- Mitglied -->
                         <label>Mitglied</label>
@@ -2290,7 +2339,8 @@ if ($response !== false) {
                         <p class="beschreibung">Die Rollenbezeichnung für Zugriffsrechte der Mitglieder.
                         Hierzu muss eine benutzerdefiniertes Feld bei der Mitgliederbereuung für jedes Mitglied
                         in Vereinsflieger eingerichtet sein. Hier wird die passende Bezeichtung des Benutzerdefinierten
-                        Feldes angegeben. Der Wert des Feldes muss true oder false sein.</p>
+                        Feldes angegeben. Der Wert des Feldes muss true oder false sein.
+                        Nach Änderung des Wertes müssen die Mitgliederdaten aus Vereinsflieger.de neu geladen werden.</p>
 
                         <!-- Verkäufer -->
                         <label>Verkäufer</label>
@@ -2298,7 +2348,8 @@ if ($response !== false) {
                         <p class="beschreibung">Die Rollenbezeichnung für Zugriffsrechte der Verkäufer.
                         Hierzu muss eine benutzerdefiniertes Feld bei der Mitgliederbereuung für jedes Mitglied
                         in Vereinsflieger eingerichtet sein. Hier wird die passende Bezeichtung des Benutzerdefinierten
-                        Feldes angegeben. Der Wert des Feldes muss true oder false sein.</p>
+                        Feldes angegeben. Der Wert des Feldes muss true oder false sein.
+                        Nach Änderung des Wertes müssen die Mitgliederdaten aus Vereinsflieger.de neu geladen werden.</p>
 
                         <!-- Admin -->
                         <label>Admin</label>
@@ -2306,10 +2357,20 @@ if ($response !== false) {
                         <p class="beschreibung">Die Rollenbezeichnung für Zugriffsrechte der Admins.
                         Hierzu muss eine benutzerdefiniertes Feld bei der Mitgliederbereuung für jedes Mitglied
                         in Vereinsflieger eingerichtet sein. Hier wird die passende Bezeichtung des Benutzerdefinierten
-                        Feldes angegeben. Der Wert des Feldes muss true oder false sein.</p>
+                        Feldes angegeben. Der Wert des Feldes muss true oder false sein.
+                        Nach Änderung des Wertes müssen die Mitgliederdaten aus Vereinsflieger.de neu geladen werden.</p>
 
                 <!-- Einstellungen -->
                     <p class="formularunterüberschrift">Einstellungen</p>
+                        <!-- Ansicht im Backend einschränkgen, kann nur editiert werden, wenn der Benutzer die Rolle Admin hat -->
+                        <label>Ansicht einschränken</label>
+                        <label class="switch">
+                            <input ${inputdisabled} type="checkbox" id="zugriffseinschränkung" ${config.zugriffseinschränkung === "true" ? "checked" : ""}>
+                        <span class="slider round"></span>
+                        </label>
+                        <p class="beschreibung">Bei Aktivierung wird die Ansicht im Backend für bestimmte Benutzer je nach Rolle eingeschränkt. 
+                        Nach den Einrichtigen sollte das Feld aktiviert sein. Achtung! Nur wenn du die Rolle ADMIN hast, 
+                        kannst du die Funktion aktivieren oder ändern</p>
 
                         <!-- Wartungsmodus -->
                         <label>Wartungsmodus</label>
@@ -2363,13 +2424,13 @@ if ($response !== false) {
                         <p class="beschreibung">Die Verzögerungszeit in Sekunden, die im Kassenmodul 
                         nach dem Verkauf vor dem Wechsel der Ansicht pausiert.</p>
 
-                        <!-- Bildschrimschoner -->
+                        <!-- Bildschirmschoner -->
                         <label>Bildschirmschoner</label>
                         <input type="text" id="bildschirmschonerZeit" value="${config.bildschirmschoner}" class="inputfeld">
                         <p class="beschreibung">Die Verzögerungszeit in Minuten, die im Kassenmodul den Bildschirmschoner aktiviert.
                         </p>
 
-                        <!-- Artiegelnummer -->
+                        <!-- Artikelnummer -->
                         <label>Artikelnummer VF</label>
                         <input type="text" id="artikelnummerVF" value="${config.ArtikelnummerVF}" class="inputfeld">
                         <p class="beschreibung">Die Artikelnummer, die in Vereinsflieger für die Verkäufe verwendet wird.
@@ -2379,10 +2440,6 @@ if ($response !== false) {
 
         portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
-
-        console.log("Config Daten:", config);
-        console.log("Version:", config.Version);
-        console.log("Passwort: ", config.kassenpw);
 
         // Event Listeners für Passwortfelder
         const pw1Field = document.getElementById('kassenpw1');
@@ -2407,7 +2464,6 @@ if ($response !== false) {
             // Initial validation
             field.dispatchEvent(new Event('input'));
         });
-
 
         // Initial validation
         validatePasswords();
@@ -2439,15 +2495,12 @@ if ($response !== false) {
 
     // Event Listener für den Speichern-Button
     document.getElementById('saveButtonConfig').addEventListener('click', async () => {
-        console.log("Version: ", config.Version);
-        console.log("letzte Aktualisierung: ", config.letzteAktualisierung);
 
         const pw1 = document.getElementById('kassenpw1').value;
         let hashedPw;
 
         if (pw1 === "") {
             hashedPw = config.kassenpw; // Altes Passwort beibehalten
-            console.log("PW ist leer: ", hashedPw);
         } else {
             try {
                 hashedPw = await getHashFromPHP(pw1);
@@ -2462,7 +2515,6 @@ if ($response !== false) {
                 alert("Fehler beim Generieren des Passwort-Hashes!");
                 return;
             }
-            console.log("Hash für Weiterverarbeitung:", hashedPw);
         }
 
         const newConfig = {
@@ -2493,6 +2545,7 @@ if ($response !== false) {
             cc_admin: document.getElementById('admin').value,
 
             // Einstellungen
+            zugriffseinschränkung: document.getElementById('zugriffseinschränkung').checked.toString(),
             wartungsmodus: document.getElementById('wartungsmodus').checked.toString(),
             tagesabrechnung: document.getElementById('tagesabrechnung').checked.toString(),
             tageszusammenfassung: document.getElementById('tageszusammenfassung').checked.toString(),
@@ -2523,6 +2576,8 @@ if ($response !== false) {
         .then(result => {
             alert('Konfiguration erfolgreich gespeichert');
             config = newConfig; // Update global config
+            // Aktualisiere die die Seite
+            location.reload();
         })
         .catch(error => {
             alert('Fehler beim Speichern der Konfiguration: ' + error);
@@ -2580,7 +2635,26 @@ if ($response !== false) {
         if (confirm('Möchten Sie die Datei ' + filename + ' herunterladen?')) {
             window.location.href = 'get-protected-file.php?file=' + encodeURIComponent(filename);
         }
-}
+    }
+
+    function installLöschen() {
+        if (confirm('Soll die Datei install.php gelöscht werden?')) {
+            portalmenu2.innerHTML = "<h2 style='display: inline;'>Installationsdatei löschen</h2>";
+            portalInhalt.innerHTML = "<p>Bitte warten, die Datei wird gelöscht...</p>";
+            document.getElementById("preloader").style.display = "block";
+
+            // AJAX request to delete the file
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "delete_install.php", true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    portalInhalt.innerHTML = xhr.responseText;
+                    document.getElementById("preloader").style.display = "none";
+                }
+            };
+            xhr.send(); 
+        }
+    }
   
 </script>
 </body>

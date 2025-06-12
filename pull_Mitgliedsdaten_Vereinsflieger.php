@@ -120,6 +120,9 @@ if (isset($_SESSION['accessToken']) && isset($_SESSION['tokenExpiry']) && $_SESS
     } else {
         echo "<p>❌ Fehler beim Abrufen der Daten.</p>\n";
     }
+    echo "<p>Bitte aktualisiere die Seite, um die Änderungen zu sehen.</p>\n";
+    echo "<button class='kleinerBt' onclick=\"window.location.href='index.php'\">Startseite</button>\n";
+
 } else {
     // Kein gültiger Token vorhanden - Benutzer abmelden
     session_destroy();
