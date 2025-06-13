@@ -1988,20 +1988,15 @@ if ($response !== false) {
                 <button class="kleinerBt" onclick="Abrechnung(heute, heute)">Tag</button>
                 <br>
                 <button id="bt-abrechnungExport" class="kleinerBt">Export an VF</button>
-                <button id="bt-Kontoausgleich" class="kleinerBt">zurücksetzen</button>
             </div>
 
             <table class="portal-table">
                 <tr>
-                    <th>bookingdate</th>
-                    <th>articleid</th>
-                    <th>memberid</th>
-                    <th>amount</th>
-                    <th>callsign</th>
-                    <th>saletax</th>
-                    <th>totalprice</th>
-                    <th>comment</th>
-                    <th>spid</th>
+                    <th>Datum</th>
+                    <th>Mitgliedsnr</th>
+                    <th>Buchungen</th>
+                    <th>Buchungstext</th>
+                    <th>Gesamtpreis</th>
                 </tr>
         `;
 
@@ -2015,14 +2010,10 @@ if ($response !== false) {
             html += `
                 <tr>
                     <td>${eintrag.bookingdate}</td>
-                    <td>${eintrag.articleid}</td>
                     <td>${eintrag.memberid}</td>
                     <td>${eintrag.amount}</td>
-                    <td>${eintrag.callsign}</td>
-                    <td>${eintrag.saletax}</td>
-                    <td class="rechts">${eintrag.totalprice} €</td>
                     <td class="links">${eintrag.comment}</td>
-                    <td>${eintrag.spid}</td>
+                    <td class="rechts">${eintrag.totalprice} €</td>
                 </tr>
             `;
         });
@@ -2048,15 +2039,6 @@ if ($response !== false) {
         exportBtn.addEventListener("click", () => {
                 abrechnungExport(abrechnung);
         });
-
-
-        // Event Listener für Kontoausgleichs-Button
-        const KontoausgleichBtn = document.getElementById("bt-Kontoausgleich");
-        KontoausgleichBtn.addEventListener("click", () => {
-                Kontoausgleich(datum2, abrechnung);
-        });
-
-
     }
 
     function abrechnungExport(abrechnungsdaten) {
