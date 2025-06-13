@@ -6,7 +6,7 @@
 - für das Bezahlen von beispielsweise Getränken, Eis, Süssigkeiten und Merchandise-Produkten
 - ausschließlich für **Vereinsmitglieder**
 - über **Bezahlterminals**
-- mit **Produktstrichcodes** und
+- mit **EAN Produktstrichcodes** und
 - kostengünstigen unverechlüsselten **RFID Chips**
 - mit direktem Anschluss an [Vereinsflieger.de](https://www.vereinsflieger.de).
 Bebötigt wird
@@ -38,15 +38,14 @@ Vorhandene Bezahlsysteme können integriert werden.
   - Open Source
   - Einfache Software-Updates
   - Datenexport-Funktion
-  - Geplante Datenimport-Funktion
-  - Verschiedene Backup-Möglichkeiten
+  - verschiedene Backup-Möglichkeiten
 
 ---
 
 ## ⚙️ Systemanforderungen
 
 - Der Verein benötigt ein aktives Konto bei [Vereinsflieger.de](https://www.vereinsflieger.de).
-- Mitgliederverwaltung und Gebührenabrechnung erfolgen über Vereinsflieger.de.
+- Mitgliederverwaltung und Einkaufsabrechnung erfolgen über Vereinsflieger.de.
 - Für die Anbindung muss bei Vereinsflieger.de ein **APPKEY** generiert werden.
   - Der Zugriff ist aktuell auf **500 API-Anfragen pro Tag pro APPKEY** begrenzt.
 - Die verwendeten Verzeichnisse sollten über `.htaccess` abgesichert werden können.
@@ -75,7 +74,7 @@ n.n.
 
 ## 📝 Hinweise
 
-Dieses Projekt befindet sich in aktiver Entwicklung. Die **Import-Funktion** ist aktuell geplant, aber noch nicht umgesetzt.
+Dieses Projekt befindet sich in aktiver Entwicklung. 
 Es handelt sich um keine offizielles Kassensystem nach der Kassensicherungsverordnung.
 
 ---
@@ -102,11 +101,12 @@ Es handelt sich um keine offizielles Kassensystem nach der Kassensicherungsveror
     - Artikelnummer
 -	Menü - Einstellungen/Sicherheitscheck -> „Absichern!“
 -	Menü - Administration/Kundenliste aktualisieren
+-	Menü - Einstellungen/Sicherheitscheck -> löschen der **install.php** -Datei
 -	Einrichtung des Kassenmoduls für das Bezahlsystem
     - Anschluss Strichcode- und Chipscanner
-    - Es wird empfohlen, das System so eingerichtet wird, das beim Einschalten automatisch der Chromebrowser mit der folgenden Adresse gestartet wird.
+    - Es wird empfohlen, dass das System so eingerichtet wird, dass beim Einschalten automatisch der Chromebrowser mit der folgenden Adresse gestartet wird.
     - [Zieladresse]/kasse
-    - Sollten mehrere Kassen betrieben werden, kann zusätzlich für jede Kasse einen Namen vergeben werden, der sowohl im Kassenmodul als auch in der Abrechner erscheint. Dazu ist hinter der Adresse „?terminal=A“ einzugeben. Die Buchstabe A kann beliebig ausgetauscht werden. 
+    - Sollten mehrere Kassen betrieben werden, kann zusätzlich für jede Kasse ein Namen vergeben werden, der sowohl im Kassenmodul als auch in der Abrechnung erscheint. Dazu ist hinter der Adresse „?terminal=A“ einzugeben. Die Buchstabe A kann beliebig ausgetauscht werden. 
 [Zieladresse]/kasse/index.html?terminal=A
     - Benutzername: „kasse“
     - Passwort wie bei den Einstellungen eingegeben.
