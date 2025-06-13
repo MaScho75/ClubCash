@@ -113,7 +113,7 @@ Es handelt sich **nicht** um ein offizielles Kassensystem im Sinne der **Kassens
   `[Zieladresse]/kasse/index.html?terminal=A` (Buchstabe kann frei gewählt werden)  
 - Benutzername: `kasse`  
 - Passwort: wie zuvor festgelegt
-- Tastatur und Maus kann nach der Installatione und Einrichtung des Automatischen Start enfernt werden. 
+- Tastatur und Maus kann nach der Installation und Einrichtung des automatischen Starts enfernt werden. 
 
 ---
 
