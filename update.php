@@ -163,7 +163,7 @@ if (file_exists($configPath)) {
     if (is_array($config)) {
         $config['Version'] = $tag;
         $config['letzteAktualisierung'] = date('Y-m-d H:i:s');
-        file_put_contents($configPath, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        file_put_contents($configPath, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         echo "✅ config.json aktualisiert.<br>";
     } else {
         echo "❌ Fehler beim Parsen von config.json: " . json_last_error_msg() . "<br>";

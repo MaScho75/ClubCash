@@ -150,11 +150,10 @@ if ($response !== false) {
     <li>
       <a href="#" id="MenuAdministrator" style="display: none;">Administration</a>
       <ul>
-        <li><a href="#" onclick="Mitgliedsdaten_ziehen()">Mitgliederliste aktualisieren</a></li>
-        <li><a href="#" onclick="Mitgliederdaten_anzeigen()">Mitgliederliste anzeigen</a></li>
-        <li><a href="#" onclick="Umsätze()">Umsätze</a></li>
+        <li><a href="#" onclick="Mitgliederdaten_anzeigen()">Mitgliederliste</a></li>
         <li><a href="#" onclick="Produkte_editieren()">Produkte</a></li>
         <li><a href="#" onclick="Wareneingang()">Wareneingang</a></li>
+        <li><a href="#" onclick="Umsätze()">Umsätze</a></li>
         <li><a href="#" onclick="Abrechnung()">Abrechnung</a></li>
       </ul>
     </li>
@@ -166,7 +165,6 @@ if ($response !== false) {
         <li><a href="#" onclick="Update()">Update</a></li>
         <li><a href="#" onclick="Systembackup()">Systembackup</a></li>
         <li><a href="#" onclick="Sicherheitscheck()">Sicherheitscheck</a></li>
-        <li><a href="#" class="disabled">alle Daten löschen</a></li>
         <li><a href="#" onclick="Farben()">Farben</a></li>
       </ul>
     </li>
@@ -1096,6 +1094,24 @@ if ($response !== false) {
                                     td.innerText = item[key];
                                     return;
                                 }
+                                if (key === 'Preis') {
+                                    let input = td.innerText.trim();
+
+                                    // Komma durch Punkt ersetzen
+                                    const normalizedInput = input.replace(',', '.');
+
+                                    const priceRegex = /^\d+([.,]\d{2})?$/;
+
+                                    if (!priceRegex.test(input) || parseFloat(normalizedInput) < 0) {
+                                        alert('Der Wert muss eine positive Zahl im Format 0.00 oder 0,00 sein.');
+                                        td.innerText = item[key]; // Ursprünglichen Wert wiederherstellen
+                                        return;
+                                    }
+
+                                    // Formatierung erzwingen: 2 Nachkommastellen, Punkt statt Komma
+                                    const number = parseFloat(normalizedInput);
+                                    td.innerText = number.toFixed(2); // z. B. "12.00"
+                                }
                                 if (key === 'EAN') {
                                     const newEAN = td.innerText;
                                     const isDuplicate = data.some((dataItem, dataIndex) => 
@@ -1233,8 +1249,11 @@ if ($response !== false) {
     }
 
     function Mitgliederdaten_anzeigen() {
-                
-        let menu2 = "<h2 style='display: inline;'>Kundenliste</h2> Rolle: K = Kassenwart / V = Verkäufer / M = Mitglied / G = Gast";
+
+        let menu2 = `<h2 style='display: inline;'>Kundenliste</h2> 
+                    Rolle: K = Kassenwart / V = Verkäufer / M = Mitglied / G = Gast 
+                    <button class='kleinerBt' style='width: auto;' onclick='Mitgliedsdaten_ziehen()'>aus VF aktualisieren</button>
+                    `;
 
         let html = '<table class="portal-table">';
         html += `
