@@ -47,6 +47,38 @@ Vorhandene Bezahlsysteme können integriert werden.
 
 ---
 
+## Grundlegende Funktionsweise
+
+Das System besteht aus zwei Modulen
+- **Kasse
+  - Scannen des EAN Strichcodes eines oder mehrerer Produkte oder
+  - Auswahl eines oder mehrere Produkte aus der Produktliste
+  - Bezahlvorgang: Auflegen des RFID Chips oder Scann des Strichcodes des Mitgliedsnummer
+  - Zusatzfunktionen
+    - Abfrage des Kontostandes und der bisher gekauften Produkte durch auflegen des RFID Chips oder Scann des Strichcodes des Mitgliedsnummer ohne verher einen Produkt ausgewähtl zu haben.
+    - verschiedene Übersichten über die Verkäufe des Tages (optional)
+    - Preisanpassung des aktuellen Tagespreises des Mittagessens (Sonderfunktionen)
+- **Portal
+  - Einwahl mit Email-Adresse und Schlüsselnummer (Kunden)
+  - Einwahl mit Zugriffsdaten aus Vereinsflieger (Administratoren)  
+  - Persönliche Einstellungen:
+    - Ansicht der eigenen Daten
+    - Ansicht der eigenen Käufe mit unterschiedlichen Filtermöglichkeiten
+  - Ansicht der Verkäufe des Tages und Generierung verschiedner Produktlisten (je nach Rolle)
+  - Administration:
+    - Mitlgiederliste aus Vereinsflieger.de importieren
+    - Produktliste verwalten und pflegen
+    - Wareneingang
+    - Umsatzlisten anzeigen mit unterschiedlichn Filtermöglichkeiten
+    - Abrechnung mit Vereinsflieger.de
+  - Einstellungen
+    - Programmeinstellungen
+    - Sicherheitschecks
+    - Systembackups
+    - Download und Export aller Datenbestände
+
+---
+
 ## ⚙️ Systemanforderungen
 
 - Ein aktives Konto bei [Vereinsflieger.de](https://www.vereinsflieger.de) ist erforderlich.  
