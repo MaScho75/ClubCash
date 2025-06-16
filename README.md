@@ -3,162 +3,165 @@
 **ClubCash** ist ein  
 - bargeldloses, webbasiertes **Bezahlsystem**,  
 - entwickelt für **Flugsport-Vereine**,  
-- zum Bezahlen von beispielsweise Getränken, Eis, Süßigkeiten und Merchandise-Produkten,  
+- zum Bezahlen von z. B. Getränken, Eis, Süßigkeiten und Merchandise-Produkten,  
 - ausschließlich für **Vereinsmitglieder**,  
 - über **Bezahlterminals**,  
 - mit **EAN-Produktstrichcodes** und  
 - kostengünstigen, unverschlüsselten **RFID-Chips**,  
 - mit direkter Anbindung an [Vereinsflieger.de](https://www.vereinsflieger.de).
 
+## Voraussetzungen
+
 Benötigt wird:  
-- ein Gerät mit **Webbrowser** und zumindest temporärer Internetverbindung (z. B. Android-Tablet, Raspberry Pi, Touchscreen-PC, Mausbedienung – betriebssystemunabhängig),  
+- ein Gerät mit **Webbrowser** und zumindest temporärer Internetverbindung (z. B. Android-Tablet, Raspberry Pi, Touchscreen-PC – betriebssystemunabhängig),  
 - ein **Strichcodescanner**,  
 - ggf. ein **RFID-Chipkartenlesegerät** sowie  
-- ein **Webserver** oder gemieteter **Webspace**.  
+- ein **Webserver** oder gemieteter **Webspace**.
 
-Vorhandene Bezahlsysteme können integriert werden.
+> Vorhandene Bezahlsysteme können integriert werden.
+
+---
+
+## 🔍 Demo
+
+[👉 LIVE DEMO Portal](https://demo.clubcash.net/)  
+[👉 LIVE DEMO Kassenmodul](https://demo.clubcash.net/kasse)  
+
+**Zugangsdaten für Demo:**  
+- Benutzername: `max@mustermann.de`  
+- Passwort: `123123123`
+
+> Die Demo wird täglich neu gestartet. Bitte keine Echtdaten verwenden.
 
 ---
 
 ## ✈️ Funktionen
 
 - **Integration mit Vereinsflieger.de**  
-  - Rollen- und Mitgliederverwaltung wird vollständig übernommen.  
-  - Abrechnung erfolgt über Vereinsflieger.de.
+  - Rollen- und Mitgliederverwaltung wird vollständig übernommen  
+  - Abrechnung erfolgt über Vereinsflieger.de
 
 - **Produktverwaltung**  
-  - Verwaltung und Pflege von Produkten und Warenbeständen.  
-  - Produkte können per EAN-Strichcode oder aus einem Katalog eingebucht werden.
+  - Verwaltung und Pflege von Produkten und Warenbeständen  
+  - Produkteingabe per EAN-Strichcode oder über Katalog
 
 - **Bezahlsystem**  
-  - Zahlungen über eigene Barcodes oder kostengünstige, unverschlüsselte RFID-Chips.  
-  - Kassen funktionieren auch **offline**.  
-  - Bestehende Hardware kann weiterverwendet werden.
+  - Zahlungen über RFID-Chip oder Mitgliedsstrichcode  
+  - Kassen funktionieren auch **offline**  
+  - Bestehende Hardware kann weiterverwendet werden
 
 - **Benutzerzugriff**  
-  - Mitglieder können ihre Buchungen und Kontostände am Terminal oder über das Webinterface einsehen.
+  - Mitglieder können Buchungen und Kontostände einsehen – über Terminal oder Webinterface
 
 - **Technische Vorteile**  
-  - Plattformunabhängig und webbasiert  
+  - Plattformunabhängig, webbasiert  
   - Open Source  
   - Einfache Software-Updates  
   - Datenexport-Funktion  
-  - Verschiedene Backup-Optionen
+  - Backup-Optionen verfügbar
 
 ---
 
-## Grundlegende Funktionsweise
+## ⚙️ Grundlegende Funktionsweise
 
-Das System besteht aus zwei Modulen
-- **Kasse
-  - Scannen des EAN Strichcodes eines oder mehrerer Produkte oder
-  - Auswahl eines oder mehrere Produkte aus der Produktliste
-  - Bezahlvorgang: Auflegen des RFID Chips oder Scann des Strichcodes des Mitgliedsnummer
-  - Zusatzfunktionen
-    - Abfrage des Kontostandes und der bisher gekauften Produkte durch auflegen des RFID Chips oder Scann des Strichcodes des Mitgliedsnummer ohne verher einen Produkt ausgewähtl zu haben.
-    - verschiedene Übersichten über die Verkäufe des Tages (optional)
-    - Preisanpassung des aktuellen Tagespreises des Mittagessens (Sonderfunktionen)
-- **Portal
-  - Einwahl mit Email-Adresse und Schlüsselnummer (Kunden)
-  - Einwahl mit Zugriffsdaten aus Vereinsflieger (Administratoren)  
-  - Persönliche Einstellungen:
-    - Ansicht der eigenen Daten
-    - Ansicht der eigenen Käufe mit unterschiedlichen Filtermöglichkeiten
-  - Ansicht der Verkäufe des Tages und Generierung verschiedner Produktlisten (je nach Rolle)
-  - Administration:
-    - Mitlgiederliste aus Vereinsflieger.de importieren
-    - Produktliste verwalten und pflegen
-    - Wareneingang
-    - Umsatzlisten anzeigen mit unterschiedlichn Filtermöglichkeiten
-    - Abrechnung mit Vereinsflieger.de
-  - Einstellungen
-    - Programmeinstellungen
-    - Sicherheitschecks
-    - Systembackups
-    - Download und Export aller Datenbestände
+### 1. Kassenmodul
+- Scannen eines oder mehrerer EAN-Strichcodes  
+- Produktauswahl aus einer Liste möglich  
+- Bezahlen durch RFID-Chip oder Mitgliedsstrichcode  
+- Zusatzfunktionen:
+  - Abfrage von Kontostand & Käufen ohne Produktscan
+  - Tagesübersicht über Verkäufe (optional)
+  - Preisaktualisierung (z. B. für Mittagessen)
+
+### 2. Portalmodul
+- Login mit E-Mail & Schlüsselnummer (Mitglieder)  
+- Login mit Vereinsflieger-Zugangsdaten (Administratoren)  
+- Persönliche Einstellungen:
+  - Eigene Daten & Käufe mit Filteroptionen  
+- Verwaltung & Analyse:
+  - Mitglieder- & Produktliste  
+  - Wareneingänge  
+  - Umsatzberichte mit Filterung  
+  - Abrechnung mit Vereinsflieger.de  
+  - Systemkonfiguration & Datenexport
 
 ---
 
-## ⚙️ Systemanforderungen
+## 🛠️ Systemanforderungen
 
-- Ein aktives Konto bei [Vereinsflieger.de](https://www.vereinsflieger.de) ist erforderlich.  
-- Die Mitgliederverwaltung sowie die Abrechnung der Einkäufe erfolgen über Vereinsflieger.de.  
-- Zur Anbindung muss ein **APPKEY** bei Vereinsflieger.de generiert werden.  
-  - Aktuell sind **500 API-Anfragen pro Tag pro APPKEY** möglich.  
-- Die verwendeten Webverzeichnisse sollten über `.htaccess` abgesichert werden können.
+- Aktives Konto bei [Vereinsflieger.de](https://www.vereinsflieger.de)  
+- Einrichtung eines **APPKEYs** für die API-Anbindung  
+- Aktuell erlaubt Vereinsflieger.de **500 API-Anfragen pro Tag/APPKEY**  
+- Absicherung des Webservers per `.htaccess` empfohlen
 
 ---
 
 ## 🛒 Kaufempfehlungen
 
-Die folgenden Komponenten werden empfohlen (konkrete Modelle folgen):
-
 - **Raspberry Pi** mit Touchscreen  
 - **Strichcodescanner**  
 - **RFID-Lesegerät**  
-- **RFID-Karten/Chips**  
-- **Webspace** (mit HTTPS-Unterstützung)
+- **RFID-Karten oder -Chips**  
+- **Webspace mit HTTPS-Unterstützung**
 
 ---
 
-## 📝 Hinweise
+## 📝 Hinweis
 
-Dieses Projekt befindet sich in aktiver Entwicklung.  
-Es handelt sich **nicht** um ein offizielles Kassensystem im Sinne der **Kassensicherungsverordnung (KassenSichV)**.
+> Dieses Projekt befindet sich in aktiver Entwicklung.  
+> Es handelt sich **nicht** um ein Kassensystem im Sinne der **Kassensicherungsverordnung (KassenSichV)**.
 
 ---
 
-## 🛠️ Installationsanleitung
+## 🔧 Installationsanleitung
 
-### 1. Vorbereitung bei Vereinsflieger.de  
-- Erzeuge oder konfiguriere einen **APPKEY**.  
-- Richte benutzerdefinierte Felder ein für:  
-  - **Rollen** (z. B. Gast, Mitglied, Verkäufer, Admin)  
-  - **Chip-IDs/EAN-Kundennummer**  
-  - **Artikelnummern** für Produkte
+### 1. Vorbereitung bei Vereinsflieger.de
+- APPKEY erzeugen  
+- Benutzerdefinierte Felder einrichten:
+  - Rollen (z. B. Gast, Mitglied, Verkäufer, Admin)  
+  - Chip-IDs / EAN-Kundennummer  
+  - Artikelnummern für Produkte
 
-### 2. Webserver einrichten  
-- Webserver (mit HTTPS-Verschlüsselung) einrichten oder mieten.  
-- Installationspaket von GitHub herunterladen. *(Link folgt)*  
-- Dateien auf den Webserver kopieren.  
+### 2. Webserver einrichten
+- Webserver mit HTTPS konfigurieren  
+- Installationspaket von GitHub herunterladen *(Link folgt)*  
+- Dateien hochladen
 
-### 3. Einrichtung über das Webinterface  
-- Rufe die Startseite im Browser auf.
-- Gege die **APPKEY** aus vereinsflieger.de ein.
-- Wähle **Admin-Login** aus.  
-- Melde dich mit deinen Vereinsflieger-Zugangsdaten an.  
-- Gehe zu **Menü → Einstellungen → Programmeinstellungen** und trage ein:  
-  - Passwort für das Kassenmodul  
-  - Benutzerrollen aus Vereinsflieger  
-  - Artikelnummer für die Datenbüertragung an Vereinsflieger 
+### 3. Einrichtung per Webinterface
+- Startseite im Browser öffnen  
+- APPKEY eingeben  
+- Admin-Login durchführen  
+- Unter Menü → Einstellungen → Programmeinstellungen:
+  - Kassenzugangsdaten & Rollen eintragen  
+  - Artikelnummern konfigurieren  
+- Danach:
+  - Menü → Sicherheitscheck → „Absichern!“ klicken  
+  - Menü → Administration → Kundenliste aktualisieren  
+  - Datei `install.php` löschen
 
-- Führe anschließend aus:  
-  - **Menü → Einstellungen → Sicherheitscheck → „Absichern!“**  
-  - **Menü → Administration → Kundenliste aktualisieren**  
-  - Lösche die Datei **install.php** über **Menü → Einstellungen → Sicherheitscheck**
+### 4. Kassenmodul einrichten
+- Scanner & RFID-Leser anschließen  
+- Browser beim Start automatisch aufrufen:  
+  `[Adresse]/kasse` oder  
+  `[Adresse]/kasse/index.html?terminal=A` (Mehrere Terminals möglich)
 
-### 4. Kassenmodul einrichten  
-- Schließe Strichcodescanner und RFID-Leser an.  
-- Richte das System so ein, dass beim Start automatisch der Browser mit der Adresse  
-  `[Zieladresse]/kasse` geöffnet wird.  
-- Für mehrere Terminals:  
-  `[Zieladresse]/kasse/index.html?terminal=A` (Buchstabe kann frei gewählt werden)  
 - Benutzername: `kasse`  
-- Passwort: wie zuvor festgelegt
-- Tastatur und Maus kann nach der Installation und Einrichtung des automatischen Starts enfernt werden. 
+- Passwort: wie in Einstellungen festgelegt  
+- Tastatur/Maus kann nach Einrichtung entfernt werden
 
 ---
 
 ## 📄 Lizenz
 
-Dieses Projekt steht unter der **GNU Affero General Public License v3.0 (AGPL-3.0)**.  
-Das bedeutet: Jede Person, die den Dienst über ein Netzwerk nutzt (z. B. per Webbrowser), muss Zugang zum vollständigen Quellcode erhalten.
+**GNU Affero General Public License v3.0 (AGPL-3.0)**  
+> Jede Person, die den Dienst über ein Netzwerk nutzt, muss Zugang zum vollständigen Quellcode erhalten.
 
-👉 Weitere Infos: [https://www.gnu.org/licenses/agpl-3.0.de.html](https://www.gnu.org/licenses/agpl-3.0.de.html)
+🔗 [Lizenztext auf Deutsch](https://www.gnu.org/licenses/agpl-3.0.de.html)
 
 ---
 
 ## 🤝 Mitwirken
 
-Beiträge, Ideen und Rückmeldungen sind herzlich willkommen!  
-Bitte eröffne ein [Issue](https://github.com/MaScho75/clubcash/issues) oder sende einen Pull Request.
+Beiträge und Rückmeldungen sind willkommen!  
+→ [GitHub Issues öffnen](https://github.com/MaScho75/clubcash/issues)  
+→ Pull Requests sind gern gesehen.
