@@ -33,7 +33,7 @@ Benötigt wird:
 
 > Die Demo wird täglich neu gestartet. Bitte keine Echtdaten verwenden.
 
-- Zur Simulation der Strichcodescanners und des RFID Lesegerätes im Kassenmodul können die Codes (EAN/Chipnummer) über die Tastatur eingegeben werden. Z.B kann zur Simulierung einer Bezahlung die Chipnummer "123123123" (+ Eingabe) eintippen werden.
+- Zur Simulation der Strichcodescanners und des RFID Lesegerätes im Kassenmodul können die Codes (EAN/Chipnummer) über die Tastatur eingegeben werden. Z.B kann zur Simulierung einer Bezahlung die Chipnummer "123123123" (+ Eingabe) eingetippen werden.
 
 ---
 
