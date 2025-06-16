@@ -20,33 +20,7 @@
 /**
  * Copies a directory and its contents recursively
  */
-function copyDirectory($source, $destination) {
-    if (!is_dir($source)) {
-        return false;
-    }
-    
-    if (!is_dir($destination)) {
-        if (!mkdir($destination, 0755, true)) {
-            return false;
-        }
-    }
-    
-    $dir = opendir($source);
-    while (($file = readdir($dir)) !== false) {
-        if ($file != '.' && $file != '..') {
-            $srcFile = $source . '/' . $file;
-            $destFile = $destination . '/' . $file;
-            
-            if (is_dir($srcFile)) {
-                copyDirectory($srcFile, $destFile);
-            } else {
-                copy($srcFile, $destFile);
-            }
-        }
-    }
-    closedir($dir);
-    return true;
-}
+
 
 session_start();
 
@@ -76,7 +50,6 @@ if (isset($configData['appkey']) && !empty($configData['appkey'])) {
     header('Location: install.php');
     exit();
 }
-
 
 
 // Basis-URL für Vereinsflieger
@@ -130,6 +103,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_message = "Bitte Email und Schlüsselnummer eingeben.";
     }
 }
+
+function copyDirectory($source, $destination) {
+    if (!is_dir($source)) {
+        return false;
+    }
+    
+    if (!is_dir($destination)) {
+        if (!mkdir($destination, 0755, true)) {
+            return false;
+        }
+    }
+    
+    $dir = opendir($source);
+    while (($file = readdir($dir)) !== false) {
+        if ($file != '.' && $file != '..') {
+            $srcFile = $source . '/' . $file;
+            $destFile = $destination . '/' . $file;
+            
+            if (is_dir($srcFile)) {
+                copyDirectory($srcFile, $destFile);
+            } else {
+                copy($srcFile, $destFile);
+            }
+        }
+    }
+    closedir($dir);
+    return true;
+}
+
+
+
 ?>
 
 <!DOCTYPE html>

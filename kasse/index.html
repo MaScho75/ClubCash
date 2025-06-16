@@ -126,7 +126,7 @@
                     <div id="offlineFenster" style="visibility: hidden;">
                         <p class="zentriert" style="padding: 10px; margin: 0px; color: var(--warning-color);"><b>System offline!</b> (<span id="offlineDS">0</span>)</p>
                     </div>
-                <button id="Bt_preisfenster" onclick="preisfenster_öffnen()">Preisliste</button>
+                <button id="Bt_preisfenster" onclick="preisfenster_öffnen()">Produkte</button>
                 <button id="Bt_manuelleBuchung" onclick="manuell();">manuelle Buchung</button>
                 <button id="abbruch" onclick="window.location.reload(true);">Abbruch</button>                
             </div>
@@ -393,7 +393,7 @@
             console.log("ProdukteX: ", produkte);
          
             produkte.forEach(produkt => {
-                if (produkt.Sortierung > 0 && produkt.Sortierung < 11) {
+                if (produkt.Sortierung > 0 && produkt.Sortierung < 12) {
                     let button = document.createElement("button");
                     button.innerText = produkt.Bezeichnung + " - " + produkt.Preis + " €";
                     button.onclick = function() {

@@ -528,6 +528,13 @@ button {
     color: var(--text-color-dark)
 }
 
+#vereinsnamen {
+    font-size: 1em;
+    text-align: left;
+    margin: 0px;
+    padding: 0px;
+}
+
 button:hover {
     background: var(--button-hover);
 }
@@ -537,11 +544,11 @@ button:hover {
 }
 
 #direktwahl button {
-    height: 65px;
-    width: 270px;
+    height: 50px;
+    width: 230px;
     margin: 5px 5px 0px 5px;
     font-weight: bold;
-    font-size: 20px;
+    font-size: 18px;
     background-color: var(--button-color);
     border: none;
     border-radius: 5px;

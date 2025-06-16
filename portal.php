@@ -27,37 +27,39 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
 }
 
 // Mitgliederdaten laden
-clearstatcache(true, "daten/kunden.json"); // Clear file cache for this specific file
-$jsonKundenDatei = file_get_contents("daten/kunden.json");
-$jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
-
-// Produkte laden
-clearstatcache(true, "daten/produkte.json"); // Clear file cache for this specific file
-$jsonProdukteDatei = file_get_contents("daten/produkte.json");
-$jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
-
-// wareneingang laden
-clearstatcache(true, "daten/wareneingang.json"); // Clear file cache for this specific file
-$jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
-$jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
-
-// Configurationsdatei einbinden
-    $jsonConfigDatei = file_get_contents("daten/config.json");
-    $jsonConfigDaten = json_decode($jsonConfigDatei, true); // true gibt ein assoziatives Array zurück
-    
-// Mitgliederdaten laden
+    clearstatcache(true, "daten/kunden.json"); // Clear file cache for this specific file
     $jsonKundenDatei = file_get_contents("daten/kunden.json");
     $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
 
 // Produkte laden
+    clearstatcache(true, "daten/produkte.json"); // Clear file cache for this specific file
     $jsonProdukteDatei = file_get_contents("daten/produkte.json");
     $jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
 
-// Wareneingang laden
+// wareneingang laden
+    clearstatcache(true, "daten/wareneingang.json"); // Clear file cache for this specific file
     $jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
     $jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
 
+// Configurationsdatei einbinden
+    clearstatcache(true, "daten/config.json"); // Clear file cache for this specific file
+    $jsonConfigDatei = file_get_contents("daten/config.json");
+    $jsonConfigDaten = json_decode($jsonConfigDatei, true); // true gibt ein assoziatives Array zurück
+    
+// // Mitgliederdaten laden
+//     $jsonKundenDatei = file_get_contents("daten/kunden.json");
+//     $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
+
+// // Produkte laden
+//     $jsonProdukteDatei = file_get_contents("daten/produkte.json");
+//     $jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
+
+// // Wareneingang laden
+//     $jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
+//     $jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
+
 // csv umsatz laden
+    clearstatcache(true, "daten/umsatz.csv"); // Clear file cache for this specific file
     $csvDatei2 = "daten/umsatz.csv"; 
     $verkäufe = [];
 
@@ -120,11 +122,16 @@ if ($response !== false) {
     </div>
 
      <div id="kopf" style="display: flex; align-items: center;">
-            <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px;  margin: 30px;">	   
-            <h1>ClubCash Portal</h1>
+                <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px;  margin: 30px;">
+                <div>
+                    <div style="display: flex; align-items: center;">
+                        <h1>ClubCash Portal</h1>
                         <p>&nbsp;<b><span id="Version">x.x.x</span></b></p>
-	</div>
-    
+                    </div>
+                    <p id="vereinsnamen">Vereinsnamen</p>
+                </div>
+            </div>
+
 <nav class="navbar">
   <ul>
     <li>
@@ -192,6 +199,7 @@ if ($response !== false) {
 
 <script>
 
+
     let portalmenu2 = document.getElementById('portalmenu2');
 
     // Datum mitteleuropäisch formatiert
@@ -233,6 +241,9 @@ if ($response !== false) {
 
     // Version anzeigen
         document.getElementById('Version').textContent = config.Version;
+
+    // Vereinsnamen anzeigen
+        document.getElementById('vereinsnamen').textContent = config.Vereinsname;
 
     // Bereinige die Schlüssel von BOM und unsichtbaren Zeichen
         wareneingang = wareneingang.map(item => {
@@ -279,7 +290,15 @@ if ($response !== false) {
         console.log("Angemeldetes Mitglied: ", angemeldetesMitglied);
         console.log("Benutzer ist Admin: " + angemeldetesMitglied.cc_admin);    
 
-        if (customer_login === true && angemeldetesMitglied.cc_seller === true) {
+        if (config.demo === "true") {
+            console.log("Demo-Modus ist aktiv. Alle Menüpunkte werden angezeigt.");
+            document.getElementById('MenuMeinKonto').style.display = 'block';
+            document.getElementById('MenuAuswertung').style.display = 'block';
+            document.getElementById('MenuAdministrator').style.display = 'block';
+            document.getElementById('MenuEinstellungen').style.display = 'block';
+            document.getElementById('MenuDownload').style.display = 'block';
+        }
+        else if (customer_login === true && angemeldetesMitglied.cc_seller === true) {
             console.log("Benutzer ist Verkäufer. Login mit Schlüssel");
             document.getElementById('MenuMeinKonto').style.display = 'block';
             document.getElementById('MenuAuswertung').style.display = 'block';
@@ -1251,7 +1270,7 @@ if ($response !== false) {
     function Mitgliederdaten_anzeigen() {
 
         let menu2 = `<h2 style='display: inline;'>Kundenliste</h2> 
-                    Rolle: K = Kassenwart / V = Verkäufer / M = Mitglied / G = Gast 
+                    Rolle: A = Administrator / V = Verkäufer / M = Mitglied / G = Gast 
                     <button class='kleinerBt' style='width: auto;' onclick='Mitgliedsdaten_ziehen()'>aus VF aktualisieren</button>
                     `;
 
@@ -1264,7 +1283,7 @@ if ($response !== false) {
             <th class="links">Nachname</th>
             <th class="links">Email</th>
             <th>Schlüssel</th>
-            <th>K</th>
+            <th>A</th>
             <th>V</th>
             <th>M</th>
             <th>G</th>
@@ -2469,152 +2488,153 @@ if ($response !== false) {
         // Initial validation
         validatePasswords();
 
-    // Funktion zum Abrufen des Apache-kompatiblen Passwort-Hashes
-    async function getHashFromPHP(password) {
-        try {
-            const response = await fetch('generate_htpasswd.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: 'password=' + encodeURIComponent(password)
-            });
+        // Funktion zum Abrufen des Apache-kompatiblen Passwort-Hashes
+        async function getHashFromPHP(password) {
+            try {
+                const response = await fetch('generate_htpasswd.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'password=' + encodeURIComponent(password)
+                });
 
-            const data = await response.json();
+                const data = await response.json();
 
-            if (data.error) {
-                console.error('Fehler:', data.error);
+                if (data.error) {
+                    console.error('Fehler:', data.error);
+                    return null;
+                }
+
+                return data.htpasswd;
+            } catch (error) {
+                console.error('Fehler bei Hash-Generierung:', error);
                 return null;
             }
-
-            return data.htpasswd;
-        } catch (error) {
-            console.error('Fehler bei Hash-Generierung:', error);
-            return null;
         }
-    }
 
-    // Event Listener für den Speichern-Button
-    document.getElementById('saveButtonConfig').addEventListener('click', async () => {
+        // Event Listener für den Speichern-Button
+        document.getElementById('saveButtonConfig').addEventListener('click', async () => {
 
-        const pw1 = document.getElementById('kassenpw1').value;
-        let hashedPw;
+            const pw1 = document.getElementById('kassenpw1').value;
+            let hashedPw;
 
-        if (pw1 === "") {
-            hashedPw = config.kassenpw; // Altes Passwort beibehalten
-        } else {
-            try {
-                hashedPw = await getHashFromPHP(pw1);
-                if (!hashedPw) {
-                    throw new Error("Failed to generate password hash.");
+            if (pw1 === "") {
+                hashedPw = config.kassenpw; // Altes Passwort beibehalten
+            } else {
+                try {
+                    hashedPw = await getHashFromPHP(pw1);
+                    if (!hashedPw) {
+                        throw new Error("Failed to generate password hash.");
+                    }
+                } catch (error) {
+                    alert("Error: " + error.message);
+                    return;
                 }
-            } catch (error) {
-                alert("Error: " + error.message);
-                return;
+                if (!hashedPw) {
+                    alert("Fehler beim Generieren des Passwort-Hashes!");
+                    return;
+                }
             }
-            if (!hashedPw) {
-                alert("Fehler beim Generieren des Passwort-Hashes!");
-                return;
-            }
-        }
 
-        const newConfig = {
-            // Zugriffsdaten 
-            appkey: document.getElementById('appkey').value,
-            kassenpw: hashedPw,
+            const newConfig = {
+                // Zugriffsdaten 
+                appkey: document.getElementById('appkey').value,
+                kassenpw: hashedPw,
 
-            // Vereinsinformationen
-            Vereinsname: document.getElementById('vereinName').value,
-            VereinsnameAbk: document.getElementById('vereinAbkuerzel').value,
-            Straße: document.getElementById('vereinAdresse').value,
-            PLZ: document.getElementById('vereinPLZ').value,
-            Ort: document.getElementById('vereinOrt').value,
-            Telefon: document.getElementById('vereinTelefon').value,
-            Email: document.getElementById('vereinEmail').value,
-            Webseite: document.getElementById('vereinWebseite').value,
-            Kassenwart: document.getElementById('kassenwart').value,
-            Bankverbindung: document.getElementById('bankverbindung').value,
-            IBAN: document.getElementById('iban').value,
-            Kontoinhaber: document.getElementById('kontoinhaber').value,
-            Steuernummer: document.getElementById('steuernummer').value,
-            UStID: document.getElementById('ustIdNr').value,
+                // Vereinsinformationen
+                Vereinsname: document.getElementById('vereinName').value,
+                VereinsnameAbk: document.getElementById('vereinAbkuerzel').value,
+                Straße: document.getElementById('vereinAdresse').value,
+                PLZ: document.getElementById('vereinPLZ').value,
+                Ort: document.getElementById('vereinOrt').value,
+                Telefon: document.getElementById('vereinTelefon').value,
+                Email: document.getElementById('vereinEmail').value,
+                Webseite: document.getElementById('vereinWebseite').value,
+                Kassenwart: document.getElementById('kassenwart').value,
+                Bankverbindung: document.getElementById('bankverbindung').value,
+                IBAN: document.getElementById('iban').value,
+                Kontoinhaber: document.getElementById('kontoinhaber').value,
+                Steuernummer: document.getElementById('steuernummer').value,
+                UStID: document.getElementById('ustIdNr').value,
 
-            // Rollen
-            cc_guest: document.getElementById('gast').value,
-            cc_member: document.getElementById('mitglied').value,
-            cc_seller: document.getElementById('verkäufer').value,
-            cc_admin: document.getElementById('admin').value,
+                // Rollen
+                cc_guest: document.getElementById('gast').value,
+                cc_member: document.getElementById('mitglied').value,
+                cc_seller: document.getElementById('verkäufer').value,
+                cc_admin: document.getElementById('admin').value,
 
-            // Einstellungen
-            zugriffseinschränkung: document.getElementById('zugriffseinschränkung').checked.toString(),
-            wartungsmodus: document.getElementById('wartungsmodus').checked.toString(),
-            tagesabrechnung: document.getElementById('tagesabrechnung').checked.toString(),
-            tageszusammenfassung: document.getElementById('tageszusammenfassung').checked.toString(),
-            kundentagesübersicht: document.getElementById('kundentagesübersicht').checked.toString(),
-            preisanpassungessen: document.getElementById('preisanpassungessen').checked.toString(),
-            sanduhr: document.getElementById('sanduhrenZeit').value,
-            bildschirmschoner: document.getElementById('bildschirmschonerZeit').value,
-            ArtikelnummerVF: document.getElementById('artikelnummerVF').value,
+                // Einstellungen
+                zugriffseinschränkung: document.getElementById('zugriffseinschränkung').checked.toString(),
+                wartungsmodus: document.getElementById('wartungsmodus').checked.toString(),
+                tagesabrechnung: document.getElementById('tagesabrechnung').checked.toString(),
+                tageszusammenfassung: document.getElementById('tageszusammenfassung').checked.toString(),
+                kundentagesübersicht: document.getElementById('kundentagesübersicht').checked.toString(),
+                preisanpassungessen: document.getElementById('preisanpassungessen').checked.toString(),
+                sanduhr: document.getElementById('sanduhrenZeit').value,
+                bildschirmschoner: document.getElementById('bildschirmschonerZeit').value,
+                ArtikelnummerVF: document.getElementById('artikelnummerVF').value,
 
-            // Übernommene Daten
-            Version: config.Version,
-            letzteAktualisierung: config.letzteAktualisierung
-        };
+                // Übernommene Daten
+                Version: config.Version,
+                letzteAktualisierung: config.letzteAktualisierung,
+                demo: config.demo
+            };
 
-        // An Server senden
-        fetch('json-schreiben.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                data: newConfig,
-                filename: 'daten/config.json'
+            // An Server senden
+            fetch('json-schreiben.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    data: newConfig,
+                    filename: 'daten/config.json'
+                })
             })
-        })
-        .then(response => response.text())
-        .then(result => {
-            alert('Konfiguration erfolgreich gespeichert');
-            config = newConfig; // Update global config
-            // Aktualisiere die die Seite
-            location.reload();
-        })
-        .catch(error => {
-            alert('Fehler beim Speichern der Konfiguration: ' + error);
+            .then(response => response.text())
+            .then(result => {
+                alert('Konfiguration erfolgreich gespeichert');
+                config = newConfig; // Update global config
+                // Aktualisiere die die Seite
+                location.reload();
+            })
+            .catch(error => {
+                alert('Fehler beim Speichern der Konfiguration: ' + error);
+            });
         });
-    });
 
-    function validatePasswords() {
+        function validatePasswords() {
 
-        const pw1 = pw1Field.value;
-        const pw2 = pw2Field.value;
+            const pw1 = pw1Field.value;
+            const pw2 = pw2Field.value;
 
-        if (!pw1 && !pw2) {
-            return;
-        }
-        
-        // Password validation rules
-        const minLength = 12;
-        const hasLowerCase = /[a-z]/.test(pw1);
-        const hasUpperCase = /[A-Z]/.test(pw1);
-        const hasNumber = /[0-9]/.test(pw1);
-        
-        // Check all validation rules
-        const isValidFormat = pw1.length >= minLength && 
-                                hasLowerCase && 
-                                hasUpperCase && 
-                                hasNumber;
-        
-        // Check if passwords match and meet format requirements
-        const isValid = pw1 && pw2 && pw1 === pw2 && isValidFormat;
-        
-        // Set visual feedback
-        pw1Field.style.backgroundColor = isValid ? '' : '#ffcccc';
-        pw2Field.style.backgroundColor = isValid ? '' : '#ffcccc';
-        saveButton.disabled = !isValid;
+            if (!pw1 && !pw2) {
+                return;
+            }
             
-    }
+            // Password validation rules
+            const minLength = 12;
+            const hasLowerCase = /[a-z]/.test(pw1);
+            const hasUpperCase = /[A-Z]/.test(pw1);
+            const hasNumber = /[0-9]/.test(pw1);
+            
+            // Check all validation rules
+            const isValidFormat = pw1.length >= minLength && 
+                                    hasLowerCase && 
+                                    hasUpperCase && 
+                                    hasNumber;
+            
+            // Check if passwords match and meet format requirements
+            const isValid = pw1 && pw2 && pw1 === pw2 && isValidFormat;
+            
+            // Set visual feedback
+            pw1Field.style.backgroundColor = isValid ? '' : '#ffcccc';
+            pw2Field.style.backgroundColor = isValid ? '' : '#ffcccc';
+            saveButton.disabled = !isValid;
+                
+        }
 
     }
 	
