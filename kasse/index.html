@@ -111,7 +111,7 @@
             </div>
 
             <div id="copyright">
-                <p class="zentriert" style="margin: 0px;">&copy; 2025 Marcel Schommer - Version: <span id="version">x.x.x</span></p>
+                <p class="zentriert" style="margin: 0px;"><span id="verein">VEREIN</span> - &copy; 2025 Marcel Schommer - Version: <span id="version">x.x.x</span></p>
             </div>
         </div>
 
@@ -180,7 +180,6 @@
     </div>
 
     <script>
-
         //Backup der umsatz.csv
             fetch("backup.php")
                 .then(response => {
@@ -277,7 +276,7 @@
                     produkte = geladeneProdukte;
                     kunden = geladeneKunden;
                     config = geladeneConfig;
-                    console.table("Config: ", config);
+                    document.getElementById("verein").innerText = config.VereinsnameAbk;
                     configuration();
                     preisliste();
                     direktwahl(); 
@@ -393,7 +392,7 @@
             console.log("ProdukteX: ", produkte);
          
             produkte.forEach(produkt => {
-                if (produkt.Sortierung > 0 && produkt.Sortierung < 12) {
+                if (produkt.Sortierung > 0 && produkt.Sortierung < 13) {
                     let button = document.createElement("button");
                     button.innerText = produkt.Bezeichnung + " - " + produkt.Preis + " €";
                     button.onclick = function() {
