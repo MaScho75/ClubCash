@@ -1385,7 +1385,7 @@ if ($response !== false) {
         printWindow.document.close();
     }
 
-    function MitgliederAusweise() {
+    function MitgliederAusweise(schlüsselDruck) {
 
         // Neues Fenster für die Ausweise öffnen
         let printWindow = window.open('', '_blank', 'width=800,height=600');
@@ -1418,6 +1418,13 @@ if ($response !== false) {
                 `;
         
         // Für jedes Mitglied einen Ausweis erstellen
+
+        // Prüfen, ob nnameDruck definiert sind, dann nur die die Einzelne Mitgliedskarte drucken
+        if (schlüsselDruck) {
+            console.log("Mitgliedsausweis für Einzelschlüssel: " + schlüsselDruck);
+            sortedKunden = sortedKunden.filter(kunde => kunde.key2designation && kunde.key2designation.trim() == schlüsselDruck);    
+        }
+
         sortedKunden.forEach(kunde => {
             html += `
                     <div class="no-break" style="border: 1px solid black; margin: 0px; padding: 0px; width: 8.5cm; height: 5.5cm;">
@@ -1492,7 +1499,10 @@ if ($response !== false) {
                 </tr> 
                 <tr>
                     <td>Schlüssel</td>
-                    <td>${kunde.key2designation}</td>
+                    <td>
+                        ${kunde.key2designation}
+                        <button onclick="MitgliederAusweise('${kunde.key2designation}')" class="kleinerBt" style="margin-left: 10px;">Bezahlkarte</button>
+                    </td>
                 </tr>
                 <tr>
                     <td>Rollen</td>
