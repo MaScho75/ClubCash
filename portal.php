@@ -1285,7 +1285,7 @@ if ($response !== false) {
                     Rolle: A = Administrator / V = Verkäufer / M = Mitglied / G = Gast 
                     <button class='kleinerBt' style='width: auto;' onclick='Mitgliedsdaten_ziehen()'>aus VF aktualisieren</button>
                     <button class='kleinerBt' style='width: auto;' onclick='MitgliederStrichcodeliste()'>Strichcodeliste</button>
-                    <button class='kleinerBt' style='width: auto;' onclick='MitgliederAusweise()'>Mitgliedsausweise</button>
+                    <button class='kleinerBt' style='width: auto;' onclick='MitgliederAusweise()'>Bezahlkarten</button>
                     `;
 
         let html = '<table class="portal-table">';
@@ -1312,7 +1312,7 @@ if ($response !== false) {
                 <td class="links">${kunde.firstname}</td>
                 <td class="links">${kunde.lastname}</td>
                 <td class="links">${kunde.email}</td>
-                <td>${kunde.key2designation}</td>`
+                <td>${kunde.schlüssel}</td>`
                 
                 html += kunde.cc_admin ? "<td>✔️</td>" : "<td></td>";
                 html += kunde.cc_seller ? "<td>✔️</td>" : "<td></td>";
@@ -1374,7 +1374,7 @@ if ($response !== false) {
             html += `   
                     <div class="no-break">
                         <div style="font-size: 1.5em;">${kunde.lastname}, ${kunde.firstname} </div>
-                        <div class="barcode" style="font-size: 3em;">*$${kunde.key2designation}*</div>
+                        <div class="barcode" style="font-size: 3em;">*$${kunde.schlüssel}*</div>
                     </div>`;
         });
         html += `
@@ -1422,7 +1422,7 @@ if ($response !== false) {
         // Prüfen, ob nnameDruck definiert sind, dann nur die die Einzelne Mitgliedskarte drucken
         if (schlüsselDruck) {
             console.log("Mitgliedsausweis für Einzelschlüssel: " + schlüsselDruck);
-            sortedKunden = sortedKunden.filter(kunde => kunde.key2designation && kunde.key2designation.trim() == schlüsselDruck);    
+            sortedKunden = sortedKunden.filter(kunde => kunde.schlüssel && kunde.schlüssel.trim() == schlüsselDruck);
         }
 
         sortedKunden.forEach(kunde => {
@@ -1436,7 +1436,7 @@ if ($response !== false) {
                             </div>
                         </div>        
                         <div style="font-size: 1.2em; margin: 15px; text-align: center; width: 100%;">${kunde.lastname}, ${kunde.firstname} </div>
-                        <div class="barcode" style="font-size: 2.5em; text-align: center; width: 100%;">*$${kunde.key2designation}*</div>  
+                        <div class="barcode" style="font-size: 2.5em; text-align: center; width: 100%;">*$${kunde.schlüssel}*</div>  
 
                     </div>`;
         });
@@ -1500,8 +1500,8 @@ if ($response !== false) {
                 <tr>
                     <td>Schlüssel</td>
                     <td>
-                        ${kunde.key2designation}
-                        <button onclick="MitgliederAusweise('${kunde.key2designation}')" class="kleinerBt" style="margin-left: 10px;">Bezahlkarte</button>
+                        ${kunde.schlüssel}
+                        <button onclick="MitgliederAusweise('${kunde.schlüssel}')" class="kleinerBt" style="margin-left: 10px;">Bezahlkarte</button>
                     </td>
                 </tr>
                 <tr>
@@ -2101,7 +2101,7 @@ if ($response !== false) {
                     bookingdate: datum2.toISOString().split('T')[0],
                     Zeit: datum2.toISOString().split('T')[1].substring(0, 5), // Nur Stunden und Minuten
                     Terminal: "Z",
-                    Schlüssel: kunde.key2designation,
+                    Schlüssel: kunde.schlüssel,
                     Uid: kunde.uid,
                     EAN: 9999, // Dummy EAN
                     Produkt: "Kontoausgleich-VF",
@@ -2361,6 +2361,10 @@ if ($response !== false) {
         console.log("angemeldetesMitglied: ", angemeldetesMitglied);
         console.log("angemeldetesMitglied.cc_admin: ", angemeldetesMitglied.cc_admin);
 
+        if (config.schlüssel == undefined || config.schlüssel === "") {
+            console.warn("Schlüssel ist nicht definiert oder leer. Setze den Standardwert.");
+            config.schlüssel = "key2designation";
+        }
         html += `
 
             <p>⚠️ Bevor Änderungen vorgenommen werden, wird eine Systemsicherung empfohlen!</p>
@@ -2582,6 +2586,12 @@ if ($response !== false) {
                         <p class="beschreibung">Die Artikelnummer, die in Vereinsflieger für die Verkäufe verwendet wird.
                         Diese wird für die Übertragung der Verkaufsdaten an Vereinsflieger benötigt.</p>
 
+                        <!-- Schlüsselbezeichnung aus Datensatz Vereinsflieger -->
+                        <label>Schlüsselbezeichnung</label>
+                        <input type="text" id="schlüssel" value="${config.schlüssel}" class="inputfeld" >
+                        <p class="beschreibung">Die Bezeichnung des Bezahlschlüssels, der in Vereinsflieger für die Verkäufe verwendet wird.
+                        Das ist die Nummer, mit der die Mitglieder bezahlen können.</p>
+
             </div>`;
 
         portalmenu2.innerHTML = menu2;
@@ -2597,13 +2607,13 @@ if ($response !== false) {
         pw2Field.addEventListener('input', validatePasswords);
 
         // Event Listener für alle andere Felder, die nicht leer bleiben dürfen
-        ['appkey', 'gast', 'mitglied', 'verkäufer', 'admin', 'artikelnummerVF'].forEach(fieldId => {
+        ['appkey', 'gast', 'mitglied', 'verkäufer', 'admin', 'artikelnummerVF', 'schlüssel'].forEach(fieldId => {
             const field = document.getElementById(fieldId);
             field.addEventListener('input', () => {
                 // Validate that field is not empty
                 field.style.backgroundColor = field.value.trim() === '' ? '#ffcccc' : '';
                 // Disable save button if any required field is empty
-                saveButton.disabled = ['appkey', 'gast', 'mitglied', 'verkäufer', 'admin', 'artikelnummerVF'].some(id => 
+                saveButton.disabled = ['appkey', 'gast', 'mitglied', 'verkäufer', 'admin', 'artikelnummerVF', 'schlüssel'].some(id => 
                     document.getElementById(id).value.trim() === ''
                 );
             });
@@ -2700,11 +2710,13 @@ if ($response !== false) {
                 sanduhr: document.getElementById('sanduhrenZeit').value,
                 bildschirmschoner: document.getElementById('bildschirmschonerZeit').value,
                 ArtikelnummerVF: document.getElementById('artikelnummerVF').value,
+                schlüssel: document.getElementById('schlüssel').value,
 
                 // Übernommene Daten
                 Version: config.Version,
                 letzteAktualisierung: config.letzteAktualisierung,
                 demo: config.demo
+                
             };
 
             // An Server senden

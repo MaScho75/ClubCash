@@ -42,23 +42,18 @@ if (!$config) {
 
 echo "<p>✅ Konfigurationsdatei erfolgreich geladen.</p>";
 
-// // Lese die .env-Datei
-// $env = parse_ini_file('daten/.env');  // Lädt die Umgebungsvariablen aus der .env-Datei
+echo "<p>Die Spalte für die Bezahlschlüssel in der Mitgliederverwaltung in Vereinsflieger ist: <strong>" . htmlspecialchars($config['schlüssel']) . "</strong></p>\n";
 
-// if (!$env) {
-//     die("<pre>❌ Fehler beim Laden der Umgebungsvariablen aus der .env-Datei.</pre>");
-// }
+$schlüsselbezeichnung = $config['schlüssel'] ?? null;
+
+if (!$schlüsselbezeichnung) {
+    die("<pre>❌ Kein Bezahlschlüssel in der Konfigurationsdatei gefunden.</pre>");
+}
 
 echo "<p>✅ Umgebungsvariablen erfolgreich geladen.</p>";
 
 // Wrapper-Datei einbinden
 require_once 'VereinsfliegerRestInterface.php';
-
-// // Anmeldeinformationen
-// $UserName = $env['USERNAME'];
-// $Password = $env['PASSWORT'];
-// $AppKey = $env['APPKEY'];
-// $AuthSecret = $env['AUTRHSECRET'];
 
 // VereinsfliegerRestInterface-Instanz erstellen
 $restInterface = new VereinsfliegerRestInterface();
@@ -77,8 +72,9 @@ if (isset($_SESSION['accessToken']) && isset($_SESSION['tokenExpiry']) && $_SESS
         $usersData = $restInterface->getResponse();
 
         // Nutzer filtern und verarbeiten
-        $filteredUsers = array_filter(array_map(function($user) use ($config) {
-            if (!empty($user['key2designation'])) {
+        $filteredUsers = array_filter(array_map(function($user) use ($config, $schlüsselbezeichnung) {
+
+            if (!empty($user[$schlüsselbezeichnung])) {
                 // Überprüfen, ob 'roles' ein Array ist oder ein JSON-String
                 $roles = isset($user['roles']) ? (is_array($user['roles']) ? $user['roles'] : json_decode($user['roles'], true)) : [];
         
@@ -93,7 +89,7 @@ if (isset($_SESSION['accessToken']) && isset($_SESSION['tokenExpiry']) && $_SESS
                     'lastname' => $user['lastname'] ?? null,
                     'email' => $user['email'] ?? null,
                     'memberid' => $user['memberid'] ?? null,
-                    'key2designation' => $user['key2designation'] ?? null,
+                    'schlüssel' => $user[$schlüsselbezeichnung] ?? null,
                     'roles' => json_encode($roles, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), // JSON korrekt formatieren
                     'cc_admin' => in_array($config['cc_admin'], $roles, true),
                     'cc_seller' => in_array($config['cc_seller'], $roles, true),

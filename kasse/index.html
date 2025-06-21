@@ -419,7 +419,7 @@
 
         function kundenprüfung(KundenNr) {
 
-            let kunde = kunden.find(kunden => kunden.key2designation === KundenNr); // key2designation ist die Kundennummer
+            let kunde = kunden.find(kunden => kunden.schlüssel === KundenNr); // schlüssel ist die Kundennummer
 
             if (kunde) {
                 if (!summe == 0) {
@@ -438,7 +438,7 @@
                             Datum: datum,
                             Zeit: zeit,
                             Terminal: terminal,
-                            Schlüssel: kunde.key2designation,
+                            Schlüssel: kunde.schlüssel,
                             Kundennummer: kunde.uid,
                             EAN: ds.EAN,
                             Produkt: ds.Bezeichnung,
@@ -613,7 +613,7 @@
 
                 data.data.forEach(row => {
 
-                    let kunde = kunden.find(kunden => kunden.key2designation === row.Schlüssel);
+                    let kunde = kunden.find(kunden => kunden.schlüssel === row.Schlüssel);
 
                     //let kunde = kunden.find(kunden => kunden.uid === row.Kundennummer);
 
