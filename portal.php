@@ -31,6 +31,11 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
     $jsonKundenDatei = file_get_contents("daten/kunden.json");
     $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
 
+// Externe Kunden laden
+    clearstatcache(true, "daten/externe.json"); // Clear file cache for this specific file
+    $jsonExterneDatei = file_get_contents("daten/externe.json");
+    $jsonExterneDaten = json_decode($jsonExterneDatei, true); // true gibt ein assoziatives Array zurück
+
 // Produkte laden
     clearstatcache(true, "daten/produkte.json"); // Clear file cache for this specific file
     $jsonProdukteDatei = file_get_contents("daten/produkte.json");
@@ -158,6 +163,7 @@ if ($response !== false) {
       <a href="#" id="MenuAdministrator" style="display: none;">Administration</a>
       <ul>
         <li><a href="#" onclick="Mitgliederdaten_anzeigen()">Mitgliederliste</a></li>
+        <li><a href="#" onclick="ExterneMitglieder()">externe Käufer</a></li>
         <li><a href="#" onclick="Produkte_editieren()">Produkte</a></li>
         <li><a href="#" onclick="Wareneingang()">Wareneingang</a></li>
         <li><a href="#" onclick="Umsätze()">Umsätze</a></li>
@@ -232,6 +238,7 @@ if ($response !== false) {
     
     // PHP-Variablen in JavaScript-Variablen umwandeln
         const kunden = <?php echo json_encode($jsonKundenDaten); ?>;
+        const externe = <?php echo json_encode($jsonExterneDaten); ?>;
         let produkte = <?php echo json_encode($jsonProdukteDaten); ?>;
         let verkäufe = <?php echo json_encode($verkäufe); ?>;
         let wareneingang = <?php echo json_encode($jsonWareneingangDaten); ?>;
@@ -361,6 +368,34 @@ if ($response !== false) {
                 const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
                 window.history.replaceState({}, '', newUrl);
            }
+
+    function ExterneMitglieder() {
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>Externe Kunden</h2>";
+        let html = "<p>Die folgenden Kunden haben keinen Vereinsfliegerzugang:</p>";
+        html += "<table class='portal-table'><thead><tr><th>Vorname</th><th>Nachname</th><th>Email</th><th>Schlüssel</th><th>BezugsID</th><th>Beziehung</th></tr></thead><tbody>";
+        externe.forEach(externer => {
+            // Finde den Bezug anhand der bezuguid
+            let bezugname = "kein Mitglied";
+            const mitglied = kunden.find(m => m.uid === externer.bezuguid);
+            if (mitglied) {
+                bezugname = `${mitglied.firstname} ${mitglied.lastname}`;
+            }
+
+            html += `<tr>
+                        <td>${externer.firstname}</td>
+                        <td>${externer.lastname}</td>
+                        <td>${externer.email}</td>
+                        <td>${externer.schlüssel || 'kein Schlüssel'}</td>
+                        <td>${externer.bezuguid || 'kein Bezug'}</td>
+                        <td>${bezugname}</td>
+                    </tr>`;
+        });
+        html += "</tbody></table>";
+        portalInhalt.innerHTML = html;
+
+        // Füge einen Button für das hinzufügen von externen Kunden hinzu
+        portalInhalt.innerHTML += "<button onclick='ExterneKundenHinzufuegen()'>Externen Kunden hinzufügen</button>";
+    }
 
     function Preisliste_Eiskarte() {
       
