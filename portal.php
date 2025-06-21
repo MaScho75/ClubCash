@@ -1072,9 +1072,17 @@ if ($response !== false) {
 
                         if (key === 'Bestand') {
                             td.contentEditable = !deletedRows.has(index);
-                            td.innerText = item[key] || '';
+
+                            //Sollte kein "Min" Wert gesetzt sein, dann soll der Bestand leer sein
+                            if (item.Min == 0) {
+                                td.innerText =  '';
+                            }
+                            else {
+                                td.innerText = item[key] || '';
+                            }
+                            
                             // Prüfe ob Bestand unter Mindestbestand
-                            if (item['Min'] && parseInt(item[key] || 0) < parseInt(item['Min'])) {
+                            if (item['Min'] && item['Min'] != 0 && parseInt(item[key] || 0) < parseInt(item['Min'])) {
                                 td.style.backgroundColor = '#ffcccc';
                             }
                             td.onblur = () => {
@@ -1106,7 +1114,12 @@ if ($response !== false) {
                             };
                         } else if (['Preis', 'Sortierung', 'MwSt', 'EAN', 'Min'].includes(key)) {
                             td.contentEditable = !deletedRows.has(index);
-                            td.innerText = item[key];
+                            if (key === 'Min' && item[key] == 0) {
+                                td.innerText = '';
+                            } else {
+                                td.innerText = item[key] || '';
+                            }
+ 
                             td.onblur = () => {
                                 if (isNaN(parseFloat(td.innerText)) && td.innerText !== '') {
                                     alert(`Bitte geben Sie eine gültige Zahl für ${key} ein.`);
@@ -1136,8 +1149,8 @@ if ($response !== false) {
                                     const isDuplicate = data.some((dataItem, dataIndex) => 
                                         dataIndex !== index && dataItem.EAN === newEAN
                                     );
-                                    if (isDuplicate || newEAN === '1' || newEAN === '9990000000000') {
-                                        alert('Diese EAN existiert bereits! Auch 1 und 9990000000000 sind nicht erlaubt. Bitte wählen Sie eine andere EAN.');
+                                    if (isDuplicate || newEAN === '1' || newEAN === '9990000000000' || newEAN === '9999') {
+                                        alert('Diese EAN existiert bereits! Auch 1, 9990000000000 und 9999 sind nicht erlaubt. Bitte wählen Sie eine andere EAN.');
                                         td.innerText = item[key];
                                     } else {
                                         markAsEdited(index, key, newEAN, td);
