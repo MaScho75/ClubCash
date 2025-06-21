@@ -363,8 +363,7 @@ if ($response !== false) {
            }
 
     function Preisliste_Eiskarte() {
-        const heute = new Date();
-
+      
         // Neues Fenster öffnen
         let printWindow = window.open('', '_blank', 'width=800,height=600');
 
@@ -1285,6 +1284,7 @@ if ($response !== false) {
         let menu2 = `<h2 style='display: inline;'>Kundenliste</h2> 
                     Rolle: A = Administrator / V = Verkäufer / M = Mitglied / G = Gast 
                     <button class='kleinerBt' style='width: auto;' onclick='Mitgliedsdaten_ziehen()'>aus VF aktualisieren</button>
+                    <button class='kleinerBt' style='width: auto;' onclick='MitgliederStrichcodeliste()'>Strichcodeliste</button>
                     `;
 
         let html = '<table class="portal-table">';
@@ -1337,6 +1337,52 @@ if ($response !== false) {
         portalInhalt.innerHTML = html;
 
     }	
+
+    function MitgliederStrichcodeliste() {
+
+        // Neues Fenster für die Strichcodeliste öffnen
+        let printWindow = window.open('', '_blank', 'width=800,height=600');
+
+        // Mitgleiderliste nach Nachnamen und Vornamen sortieren
+        let sortedKunden = [...kunden].sort((a, b) => {
+            if (a.lastname.toLowerCase() < b.lastname.toLowerCase()) return -1;
+            if (a.lastname.toLowerCase() > b.lastname.toLowerCase()) return 1;
+            if (a.firstname.toLowerCase() < b.firstname.toLowerCase()) return -1;
+            if (a.firstname.toLowerCase() > b.firstname.toLowerCase()) return 1;
+            return 0;
+        });
+
+        // HTML-Inhalt für die Strichcodeliste erstellen
+        let html = `
+            <html>
+            <head>
+                <title>Mitglieder Bezahlcodeliste</title>
+                <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+	            <link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
+            </head>
+            <body>
+                 <div style="text-align: center;">
+                    <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px; margin: 30px;">
+                    <h1>Mitglieder Bezahlcode</h1>
+                    <p>Stand: ${heute.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
+                </div>
+                <div  style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 20px;">
+                `;
+
+        sortedKunden.forEach(kunde => {
+            html += `   
+                    <div class="no-break">
+                        <div style="font-size: 1.5em;">${kunde.lastname}, ${kunde.firstname} </div>
+                        <div class="barcode" style="font-size: 3em;">*$${kunde.key2designation}*</div>
+                    </div>`;
+        });
+        html += `
+                </div>
+            </body>
+            </html>`;
+        printWindow.document.write(html);
+        printWindow.document.close();
+    }
 
     function Kundenübersicht(kundennummer,datum1,datum2) {
 
@@ -1583,6 +1629,7 @@ if ($response !== false) {
         };
         xhr.send();
     }
+
 
     function backupliste() {
         portalmenu2.innerHTML = "<h2 style='display: inline;'>gespeicherte Backups</h2>";
