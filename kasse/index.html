@@ -270,12 +270,21 @@
             Promise.all([
                     loadJSON("../daten/produkte.json"), 
                     loadJSON("../daten/kunden.json"),
-                    loadJSON("../daten/config.json")
+                    loadJSON("../daten/config.json"),
+                    loadJSON("../daten/externe.json")
                 ])
-                .then(([geladeneProdukte, geladeneKunden, geladeneConfig]) => {
+                .then(([geladeneProdukte, geladeneKunden, geladeneConfig, geladeneExterne]) => {
                     produkte = geladeneProdukte;
                     kunden = geladeneKunden;
                     config = geladeneConfig;
+                    externe = geladeneExterne;
+                    //Kopiere im Array externe die Spalte "Schlüssel" in die Spalte "uid"
+                        externe.forEach(kunde => {
+                            if (!kunde.uid) {
+                                kunde.uid = kunde.schlüssel;
+                            }
+                        });
+                    kunden = kunden.concat(externe); // Hänge die datensätze externe an die kunden an
                     document.getElementById("verein").innerText = config.VereinsnameAbk;
                     configuration();
                     preisliste();
@@ -432,6 +441,10 @@
                     let day = String(now.getDate()).padStart(2, '0'); // Den Tag immer auf 2 Stellen auffüllen
                     let datum = `${year}-${month}-${day}`;
                     let zeit = now.toTimeString().split(" ")[0].slice(0, 5);
+
+                    if (!kunde.uid) {
+                        kunde.uid = kunde.schlüssel; // Wenn keine Kundennummer vorhanden ist, setze den Schlüssel als Kundennummer
+                    }
 
                     for (ds of warenkorb) {
                         let ds2 = {

@@ -56,6 +56,6 @@ if (($handle = fopen($file, "r")) !== FALSE) {
         "data" => $todayData
     ]);
 } else {
-    echo json_encode(["status" => "error", "message" => "Die umsatz konnte nicht abegerufen werden!"]);
+    echo json_encode(["status" => "error", "message" => "Die umsatz konnte nicht abgerufen werden!"]);
 }
 ?>

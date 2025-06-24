@@ -50,18 +50,6 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
     clearstatcache(true, "daten/config.json"); // Clear file cache for this specific file
     $jsonConfigDatei = file_get_contents("daten/config.json");
     $jsonConfigDaten = json_decode($jsonConfigDatei, true); // true gibt ein assoziatives Array zurück
-    
-// // Mitgliederdaten laden
-//     $jsonKundenDatei = file_get_contents("daten/kunden.json");
-//     $jsonKundenDaten = json_decode($jsonKundenDatei, true); // true gibt ein assoziatives Array zurück
-
-// // Produkte laden
-//     $jsonProdukteDatei = file_get_contents("daten/produkte.json");
-//     $jsonProdukteDaten = json_decode($jsonProdukteDatei, true); // true gibt ein assoziatives Array zurück
-
-// // Wareneingang laden
-//     $jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
-//     $jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
 
 // csv umsatz laden
     clearstatcache(true, "daten/umsatz.csv"); // Clear file cache for this specific file
@@ -153,7 +141,7 @@ if ($response !== false) {
       <ul>
         <li><a href="#" onclick="Tagesumsätze()">Tagesumsätze</a></li>
         <li><a href="#" onclick="Tageszusammenfassung()">Tageszusammenfassung</a></li>
-        <li><a href="#" onclick="Kundentagesübersicht()">Mitlgieder-Tagesumsätze</a></li>     
+        <li><a href="#" onclick="Kundentagesübersicht()">Mitglieder-Tagesumsätze</a></li>     
         <li><a href="#" onclick="Preisliste_drucken()">Preisliste</a></li>
         <li><a href="#" onclick="Preisliste_strichcode()">Strichcodeliste</a></li>
         <li><a href="#" onclick="Preisliste_Eiskarte()">Eiskarte</a></li></ul>
@@ -163,7 +151,7 @@ if ($response !== false) {
       <a href="#" id="MenuAdministrator" style="display: none;">Administration</a>
       <ul>
         <li><a href="#" onclick="Mitgliederdaten_anzeigen()">Mitgliederliste</a></li>
-        <li><a href="#" onclick="ExterneMitglieder()">externe Käufer</a></li>
+        <li><a href="#" onclick="ExterneKunden()">Externe</a></li>
         <li><a href="#" onclick="Produkte_editieren()">Produkte</a></li>
         <li><a href="#" onclick="Wareneingang()">Wareneingang</a></li>
         <li><a href="#" onclick="Umsätze()">Umsätze</a></li>
@@ -237,8 +225,8 @@ if ($response !== false) {
         }
     
     // PHP-Variablen in JavaScript-Variablen umwandeln
-        const kunden = <?php echo json_encode($jsonKundenDaten); ?>;
-        const externe = <?php echo json_encode($jsonExterneDaten); ?>;
+        let kunden = <?php echo json_encode($jsonKundenDaten); ?>;
+        let externe = <?php echo json_encode($jsonExterneDaten); ?>;
         let produkte = <?php echo json_encode($jsonProdukteDaten); ?>;
         let verkäufe = <?php echo json_encode($verkäufe); ?>;
         let wareneingang = <?php echo json_encode($jsonWareneingangDaten); ?>;
@@ -369,32 +357,262 @@ if ($response !== false) {
                 window.history.replaceState({}, '', newUrl);
            }
 
-    function ExterneMitglieder() {
-        portalmenu2.innerHTML = "<h2 style='display: inline;'>Externe Kunden</h2>";
-        let html = "<p>Die folgenden Kunden haben keinen Vereinsfliegerzugang:</p>";
-        html += "<table class='portal-table'><thead><tr><th>Vorname</th><th>Nachname</th><th>Email</th><th>Schlüssel</th><th>BezugsID</th><th>Beziehung</th></tr></thead><tbody>";
-        externe.forEach(externer => {
-            // Finde den Bezug anhand der bezuguid
-            let bezugname = "kein Mitglied";
-            const mitglied = kunden.find(m => m.uid === externer.bezuguid);
-            if (mitglied) {
-                bezugname = `${mitglied.firstname} ${mitglied.lastname}`;
-            }
+    function ExterneKunden() {
+        let data = [...externe]; // Copy of original data
+        let originalData = [...externe];
+        let editedRows = new Set();
+        let newRows = new Set();
+        let deletedRows = new Set();
+        let sortColumn = '';
+        let sortAscending = true;
 
-            html += `<tr>
-                        <td>${externer.firstname}</td>
-                        <td>${externer.lastname}</td>
-                        <td>${externer.email}</td>
-                        <td>${externer.schlüssel || 'kein Schlüssel'}</td>
-                        <td>${externer.bezuguid || 'kein Bezug'}</td>
-                        <td>${bezugname}</td>
-                    </tr>`;
-        });
-        html += "</tbody></table>";
+        let menu2 = "<h2 style='display: inline;'>Externe Kunden</h2>";
+        menu2 += `
+            <button id="addButton" class="kleinerBt">hinzufügen</button>
+            <button id="saveButton" class="kleinerBt">speichern</button>
+            <button onclick="location.reload();" class="kleinerBt">abbruch</button>
+        `;
+
+        let html = "<p>Die folgenden Kunden haben keinen Vereinsfliegerzugang:</p>";
+        html += `
+            <table id="dataTable" class="portal-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-field="firstname">Vorname</th>
+                        <th class="sortable" data-field="lastname">Nachname</th>
+                        <th class="sortable" data-field="email">Email</th>
+                        <th>Schlüssel</th>
+                        <th>BezugsID</th>
+                        <th>Beziehung</th>
+                        <th>Aktionen</th>
+                        <th>Kontostand</th>
+                        <th>i</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>`;
+
+        portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
 
-        // Füge einen Button für das hinzufügen von externen Kunden hinzu
-        portalInhalt.innerHTML += "<button onclick='ExterneKundenHinzufuegen()'>Externen Kunden hinzufügen</button>";
+        // Add sorting functionality
+        document.querySelectorAll('.sortable').forEach(th => {
+            th.style.cursor = 'pointer';
+            th.addEventListener('click', () => {
+                const field = th.dataset.field;
+                if (sortColumn === field) {
+                    sortAscending = !sortAscending;
+                } else {
+                    sortColumn = field;
+                    sortAscending = true;
+                }
+                
+                data.sort((a, b) => {
+                    let valA = (a[field] || '').toLowerCase();
+                    let valB = (b[field] || '').toLowerCase();
+                    return sortAscending ? 
+                        valA.localeCompare(valB) : 
+                        valB.localeCompare(valA);
+                });
+                
+                // Update sort indicators
+                document.querySelectorAll('.sortable').forEach(header => {
+                    header.textContent = header.textContent.replace(/[▲▼]/, '');
+                });
+                th.textContent += sortAscending ? ' ▲' : ' ▼';
+                
+                renderTable();
+            });
+        });
+
+        function generateUniqueKey() {
+            let baseNum = 9900000000;
+            let existingKeys = new Set([
+                ...verkäufe.map(v => v.Schlüssel),
+                ...externe.map(e => e.schlüssel), 
+                ...kunden.map(k => k.schlüssel),
+                ...data.map(d => d.schlüssel) // Include current data
+            ].filter(Boolean));
+            
+            while (existingKeys.has(baseNum.toString())) {
+                baseNum++;
+            }
+            return baseNum.toString();
+        }
+
+        function validateData() {
+            // Check for empty required fields
+            const emptyFields = data.some((row, index) => {
+                if (deletedRows.has(index)) return false;
+                return !row.firstname || !row.lastname || !row.email;
+            });
+            
+            if (emptyFields) {
+                alert('Vorname, Nachname und Email müssen für alle Datensätze ausgefüllt sein!');
+                return false;
+            }
+
+            // Check for duplicate keys in new rows
+            const keys = new Set();
+            let hasDuplicates = false;
+            data.forEach((row, index) => {
+                if (!deletedRows.has(index)) {
+                    if (keys.has(row.schlüssel)) {
+                        hasDuplicates = true;
+                    }
+                    keys.add(row.schlüssel);
+                }
+            });
+
+            if (hasDuplicates) {
+                alert('Warnung: Es gibt doppelte Schlüssel in den Datensätzen!');
+                return false;
+            }
+
+            return true;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            data.forEach((externer, index) => {
+            const mitglied = kunden.find(m => m.uid === externer.bezuguid);
+            const bezugname = mitglied ? `${mitglied.firstname} ${mitglied.lastname}` : 'kein Mitglied';
+            
+            const tr = document.createElement('tr');
+            tr.classList.toggle('edited', editedRows.has(index));
+            tr.classList.toggle('new', newRows.has(index));
+            tr.classList.toggle('deleted', deletedRows.has(index));
+
+            // Durchstreichen-Style für gelöschte Zeilen
+            const tdStyle = deletedRows.has(index) ? 'text-decoration: line-through;' : '';
+
+            tr.innerHTML = `
+                <td contenteditable="${!deletedRows.has(index)}" class="${!externer.firstname ? 'error' : ''}" style="${tdStyle}">${externer.firstname || ''}</td>
+                <td contenteditable="${!deletedRows.has(index)}" class="${!externer.lastname ? 'error' : ''}" style="${tdStyle}">${externer.lastname || ''}</td>
+                <td contenteditable="${!deletedRows.has(index)}" class="${!externer.email ? 'error' : ''}" style="${tdStyle}">${externer.email || ''}</td>
+                <td contenteditable="${!deletedRows.has(index)}" style="${tdStyle}">${externer.schlüssel || ''}</td>
+                <td contenteditable="${!deletedRows.has(index)}" style="${externer.bezuguid && !kunden.find(m => m.uid === externer.bezuguid) ? 'background-color: var(--warning-color);' : ''} ${tdStyle}">${externer.bezuguid || ''}</td>
+                <td style="${tdStyle}">${bezugname}</td>
+                <td>
+                <a href="#" class="icon" onclick="return false;">${deletedRows.has(index) ? '🔄' : '🗑️'}</a>
+                ${(editedRows.has(index) || deletedRows.has(index) || newRows.has(index)) ? 
+                    '<a href="#" class="icon" onclick="return false;">↩️</a>' : ''}
+                </td>`;
+
+                // Add Kontostand cell
+                //berechne den akteullen Kontostand des externen Kunden
+                const aktuellerKontostand = kundenkontostand.find(k => k.Kundennummer === externer.schlüssel) || { Summe: '0.00' };
+                tr.innerHTML += `
+                    <td contenteditable="${!deletedRows.has(index)}" style="${tdStyle}">${aktuellerKontostand.Summe}</td>
+                    <td contenteditable="${!deletedRows.has(index)}" style="${tdStyle}">${externer.info || ''}</td>
+                `;
+
+            // Add event listeners
+            tr.querySelectorAll('td[contenteditable="true"]').forEach(td => {
+                td.addEventListener('blur', () => {
+                const field = ['firstname', 'lastname', 'email', 'schlüssel', 'bezuguid'][
+                    Array.from(td.parentElement.children).indexOf(td)
+                ];
+                if (data[index][field] !== td.textContent.trim()) {
+                    data[index][field] = td.textContent.trim();
+                    if (!newRows.has(index)) {
+                    editedRows.add(index);
+                    }
+                    renderTable();
+                }
+                });
+            });
+
+            // Delete/Restore button
+            tr.querySelector('a:first-child').addEventListener('click', () => {
+                if (deletedRows.has(index)) {
+                deletedRows.delete(index);
+                } else {
+                deletedRows.add(index);
+                }
+                renderTable();
+            });
+
+            // Undo button
+            const undoButton = tr.querySelector('a:nth-child(2)');
+            if (undoButton) {
+                undoButton.addEventListener('click', () => {
+                if (newRows.has(index)) {
+                    data.splice(index, 1);
+                    newRows.delete(index);
+                } else {
+                    data[index] = {...originalData[index]};
+                    editedRows.delete(index);
+                    deletedRows.delete(index);
+                }
+                renderTable();
+                });
+            }
+
+            tbody.appendChild(tr);
+            });
+        }
+
+        // Initial render
+        renderTable();
+
+        // Add new row
+        document.getElementById('addButton').addEventListener('click', () => {
+            const newIndex = data.length;
+            const newRow = {
+                firstname: '',
+                lastname: '',
+                email: '',
+                schlüssel: generateUniqueKey(),
+                bezuguid: ''
+            };
+            data.push(newRow);
+            originalData.push({...newRow});
+            newRows.add(newIndex);
+            renderTable();
+        });
+
+        // Save changes
+        document.getElementById('saveButton').addEventListener('click', () => {
+            if (!validateData()) {
+                return;
+            }
+
+            const savedData = data.filter((_, index) => !deletedRows.has(index));
+
+            fetch('json-schreiben.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    data: savedData,
+                    filename: 'daten/externe.json'
+                })
+            })
+            .then(response => response.text())
+            .then(result => {
+                alert('Externe Kunden erfolgreich gespeichert');
+                externe = savedData;
+                location.reload();
+            })
+            .catch(error => {
+                alert('Fehler beim Speichern: ' + error);
+            });
+        });
+
+        // Add CSS for error highlighting
+        const style = document.createElement('style');
+        style.textContent = `
+            .error {
+                background-color: #ffcccc;
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     function Preisliste_Eiskarte() {
@@ -942,9 +1160,12 @@ if ($response !== false) {
 
     function Kundentagesübersicht() {
 
+        käufer = MitgliederExterneZusammenführen();
+
         portalmenu2.innerHTML = "<h2 style='display: inline;'>Kundentagesübersicht</h2>";
         let html = "<table class='portal-table'>";
-        kunden.forEach(kunde => {
+
+        käufer.forEach(kunde => {
             let summe= 0;
             let htmlkunde = ""
             //htmlkunde += "<table class='portal-table'>";
@@ -1336,7 +1557,7 @@ if ($response !== false) {
             <th>V</th>
             <th>M</th>
             <th>G</th>
-            <th>Kontostand</h1>
+            <th>Kontostand</th>
             <th><i>i</i></th>
         </tr>`;
 
@@ -1742,7 +1963,23 @@ if ($response !== false) {
         .catch(error => console.error('Fehler beim Laden der Dateien:', error));
     }
 
+    function MitgliederExterneZusammenführen() {
+
+        let käufer = kunden;
+
+        //setzte im Array externe die uid auf schlüssel
+        externe.forEach(externer => {
+                externer.uid = externer.schlüssel;
+        });
+        // ergänze käufer mit den externen Mitgliedern
+        käufer = käufer.concat(externe);
+        console.log("Käufer: ", käufer);
+        return käufer;
+    }
+
     function Tagesumsätze() {
+
+        käufer = MitgliederExterneZusammenführen();
 
         let datum1 = heute; // Aktuelles Datum im Format YYYY-MM-DD
         let summe = 0;
@@ -1767,7 +2004,7 @@ if ($response !== false) {
     
             if (verkauf.Datum === datum1.toISOString().split('T')[0]) {
 
-                Kunde = kunden.find(kunde => kunde.uid === verkauf.Kundennummer);
+                Kunde = käufer.find(kunde => kunde.uid === verkauf.Kundennummer);
                 
                 html += `
                     <tr>
@@ -1805,6 +2042,8 @@ if ($response !== false) {
             datum2 = heute; // Aktuelles Datum
         } 
         
+        käufer = MitgliederExterneZusammenführen();
+
         let summe = 0;
         let menu2 = "";
         let html = "";
@@ -1839,8 +2078,8 @@ if ($response !== false) {
             
                 if (verkauf.Datum >= datum1.toISOString().split('T')[0] && verkauf.Datum <= datum2.toISOString().split('T')[0]) {
 
-                    Kunde = kunden.find(kunde => kunde.uid === verkauf.Kundennummer);
-                    
+                    Kunde = käufer.find(kunde => kunde.uid === verkauf.Kundennummer);
+
                     html += `
                         <tr>
                             <td>${verkauf.Terminal}</td>
@@ -2156,8 +2395,8 @@ if ($response !== false) {
         });
 
         // Tabelle erstellen und anzeigen
-        let html = `
-
+        let html2 = `
+            <h2 style='display: inline;'>Abrechnung - Mitglieder</h2>
             <div class="datumauswahl">
                 <input class="DatumInput" type="date" id="datum_anfang" value="${datum1.toISOString().split('T')[0]}">
                 <h2 style="display: inline;"> bis </h2>
@@ -2166,10 +2405,10 @@ if ($response !== false) {
                 <button class="kleinerBt" onclick="Abrechnung(monatsbeginn, heute)">Monat</button>
                 <button class="kleinerBt" onclick="Abrechnung(wochenbeginn, heute)">Woche</button>
                 <button class="kleinerBt" onclick="Abrechnung(heute, heute)">Tag</button>
-                <br>
                 <button id="bt-abrechnungExport" class="kleinerBt">Export an VF</button>
-            </div>
+            </div> `;
 
+            let html = `
             <table class="portal-table">
                 <tr>
                     <th>Datum</th>
@@ -2200,9 +2439,8 @@ if ($response !== false) {
         html += "</table>";
 
         // Anzeige im Portal
-        portalmenu2.innerHTML = "<h2 style='display: inline;'>Abrechnung</h2>";
+        portalmenu2.innerHTML = html2;
         portalInhalt.innerHTML = html;
-
 
         // Event Listener für Datumsauswahl
         const btn = document.getElementById("bt_aktualisierung");
