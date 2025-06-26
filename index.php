@@ -58,6 +58,35 @@ $baseUrl = 'https://www.vereinsflieger.de';
 // Kunden-Daten laden
 $kundenDaten = json_decode(file_get_contents('daten/kunden.json'), true);
 
+// Lade externe Kunendaten
+$externeKundenDaten = json_decode(file_get_contents('daten/externe.json'), true);
+
+// Füge externe Kundendaten zu den internen Kundendaten hinzu
+if (is_array($externeKundenDaten)) {
+    foreach ($externeKundenDaten as $externerKunde) {
+        // Überprüfen, ob der externe Kunde bereits in den internen Kundendaten existiert
+        $exists = false;
+        foreach ($kundenDaten as $internerKunde) {
+            if ($internerKunde['email'] === $externerKunde['email'] && $internerKunde['schlüssel'] === $externerKunde['schlüssel']) {
+                $exists = true;
+                break;
+            }
+        }
+        // Wenn der externe Kunde nicht existiert, füge ihn hinzu
+        if (!$exists) {
+            $kundenDaten[] = [
+                'email' => $externerKunde['email'],
+                'schlüssel' => $externerKunde['schlüssel'],
+                'uid' => $externerKunde['uid'] ?? null, // Optional
+                'cc_seller' => $externerKunde['cc_seller'] ?? false, // Standardwert
+                'cc_member' => $externerKunde['cc_member'] ?? false, // Standardwert
+                'cc_guest' => $externerKunde['cc_guest'] ?? true, // Standardwert
+                'cc_admin' => $externerKunde['cc_admin'] ?? false // Standardwert
+            ];
+        }
+    }
+}
+
 // Prüfen, ob Benutzer bereits eingeloggt ist
 if (isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] === true) {
     header('Location: portal.php');
@@ -90,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($KundenName) && !empty($Schlüsselnummer)) {
         $found = false;
         foreach ($kundenDaten as $kunde) {
-            if ($kunde['email'] === $KundenName && $kunde['key2designation'] === $Schlüsselnummer) {
+            if ($kunde['email'] === $KundenName && $kunde['schlüssel'] === $Schlüsselnummer) {
                 $_SESSION['user_authenticated'] = true;
                 $_SESSION['username'] = $KundenName;
                 $_SESSION['customer_login'] = true;

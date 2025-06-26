@@ -16,6 +16,40 @@
  * along with ClubCash. If not, see <https://www.gnu.org/licenses/>.
  */
 
+.Rechnung {
+    all: unset;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: var(--text-color-dark);
+    text-align: left;
+    margin: 40px;
+}
+
+.Rechnung p {
+    margin: 0px;
+    text-align: left;
+}
+
+.Rechnung table {
+    font-size: 14px;
+    border-collapse: collapse;
+    margin: 0 auto;
+    text-align: left;
+    margin-left: 0px;
+    margin-top: 20px;
+    max-width: none;    
+}
+
+.Rechnung th {
+    background: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+.Rechnung td {
+    padding-right: 20px;
+}
+
 @media print {
       .no-break {
         page-break-inside: avoid;
@@ -221,25 +255,6 @@ mark {
     text-align: left;
     overflow: auto;
     max-height: calc(100vh - 320px);
-}
-
-/* Für das portal-inhalt den Scrollbalken auf Standard zurücksetzen */
-#portal-inhalt::-webkit-scrollbar {
-    width: auto;  /* Standardgröße */
-}
-
-#portal-inhalt::-webkit-scrollbar-track {
-    background: auto; /* Standard Hintergrund */
-    border-radius: 0;  /* Standard-Rundung */
-}
-
-#portal-inhalt::-webkit-scrollbar-thumb {
-    background: auto;  /* Standard-Farbe */
-    border-radius: 0;   /* Standard-Rundung */
-}
-
-#portal-inhalt::-webkit-scrollbar-thumb:hover {
-    background: auto;  /* Standard Hover-Farbe */
 }
 
 
@@ -865,24 +880,24 @@ th {
 }
 
 /* Breite des Scrollbalkens */
-::-webkit-scrollbar {
+.scrollbalken::-webkit-scrollbar {
     width: 40px;
 }
 
 /* Hintergrund des Scrollbalkens */
-::-webkit-scrollbar-track {
+.scrollbalken::-webkit-scrollbar-track {
     background: var(--secondary-color);
     border-radius: 10px;
 }
 
 /* Farbe des Scrollbalkens */
-::-webkit-scrollbar-thumb {
+.scrollbalken::-webkit-scrollbar-thumb {
     background: var(--tertiary-color);
     border-radius: 10px;
 }
 
 /* Scrollbalken beim Hover */
-::-webkit-scrollbar-thumb:hover {
+.scrollbalken::-webkit-scrollbar-thumb:hover {
     background: var(--tertiary-color);
 }
 

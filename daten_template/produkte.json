@@ -8,5 +8,15 @@
         "Bemerkung": "",
         "Sortierung": "1",
         "Min": ""
+    },
+    {
+        "EAN": "9990000000000",
+        "Bezeichnung": "manuelle Buchung",
+        "Preis": "0.00",
+        "MwSt": 19,
+        "Kategorie": "manuelle Buchung",
+        "Bemerkung": "Platzhalter",
+        "Sortierung": 98,
+        "Min": ""
     }
 ]

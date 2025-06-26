@@ -71,7 +71,7 @@
 
     <div id="preisfenster">
 
-        <div id="preisfenster_inhalt">
+        <div class="scrollbalken" id="preisfenster_inhalt">
             <h1>Preisliste</h1>
             <button id="preisliste_schließen" onclick="preisfenster.style.display = 'none';">X</button>
             <table id="preislistentabelle" border="0">
@@ -95,7 +95,7 @@
                 Guten Tag!
             </div>
 
-            <div id="datenfeld">
+            <div class="scrollbalken" id="datenfeld">
                 <table id="warenkorbtabelle" border="0">
                     <thead></thead>
                     <tbody>
@@ -138,7 +138,7 @@
         </div>
 
         <div id=tastatur>
-            <p class="preiseingabe"><b><span id="zifferneingabefeld">0.00</span> €</b></p>
+            <p class="preiseingabe"><b><span id="zifferneingabefeld">0.00</span> <span id="einheit">€</span></b></p>
             <button onclick="meingabe(1)">1</button>
             <button onclick="meingabe(2)">2</button>
             <button onclick="meingabe(3)">3</button>
@@ -216,6 +216,8 @@
             let produkte = [];
             let kunden = [];
             let config = [];
+            let spritt = false; // Variable für die Spritt
+            let ProduktTemp = []; // Temporäre Variable für das Produkt, wenn es sich um ein Produkt mit Mengeneingabe handelt
 
             const datenfeld = document.getElementById("datenfeld");
             const warenkorbtabelle = document.getElementById("warenkorbtabelle");
@@ -419,6 +421,20 @@
             let produkt = produkte.find(produkte => produkte.EAN === EANr);
 
             if (produkt) {
+                console.log("Produkt gefunden: ", produkt);
+
+                if (produkt.Menge) {
+                    ProduktTemp = produkt;  // Speichert das Produkt in einer temporären Variable, um es später zu verwenden
+                    warenkorbüberschrift()
+                    document.getElementById("einheit").innerText = "l";
+                    //eingabestopp(); // Stoppt die Eingabe, wenn es sich um ein Produkt mit Mengeneingabe handelt
+                    //öffnet die Tastatur für die Mengeneingabe
+                    tastatur.style.display = 'block';
+                    statusfeld.innerHTML = "Bitte Menge für <b>&nbsp;" + produkt.Bezeichnung + "&nbsp;</b> in Litern eingeben";
+                    spritt = true;
+                    return
+                }
+
                 warenkorbüberschrift();
                 warenkorb.push(produkt);
                 warenkorbaddition(produkt);
@@ -628,9 +644,9 @@
 
                     let kunde = kunden.find(kunden => kunden.schlüssel === row.Schlüssel);
 
-                    //let kunde = kunden.find(kunden => kunden.uid === row.Kundennummer);
-
-                    tagessumme += parseFloat(row.Preis);
+                    if (!kunde) {
+                        return console.error("Kunde nicht gefunden für Schlüssel: " + row.Schlüssel);
+                    }
 
                     let tr = document.createElement("tr");
                     tr.innerHTML = `
@@ -894,7 +910,7 @@
 
         function manuell() {
             tastatur.style.display = "block";
-            statusfeld.innerText = "Direkte Buchung";
+            statusfeld.innerText = "manuelle Buchung";
             summenfeld.innerText = "0.00";
             document.querySelector(".menu").classList.remove("active");
             eingabestring = "";
@@ -902,18 +918,37 @@
         }
 
         function meingabe(x) {
+
+            let manuelles_Produkt = [];
+
             if (x == "E") {
                 if (eingabestring == "") {
                     statusfeld.innerText = "Keine Eingabe erfolgt.";
                     tastatur.style.display = "none";
                     return;
                 }
-                let manuelles_Produkt = {
-                    EAN: 9990000000000,
-                    Bezeichnung: "manuelle Buchung",
-                    Preis: (eingabestring / 100).toFixed(2),
-                    MwSt: 19,
-                    Kategorie: "manuelle Buchung"
+                if (spritt) {
+                    eingabestring = (eingabestring / 100).toFixed(2);
+                    eingabestring = parseFloat(eingabestring).toFixed(2);
+                    let sprittpreis = parseFloat(eingabestring);
+                    spritt = false; // Zurücksetzen der Spritt-Variable
+                    let Produkttext = ProduktTemp.Bezeichnung + " (" + ProduktTemp.Preis + "€/l * " + eingabestring + "l)";
+                    manuelles_Produkt = {
+                        EAN: ProduktTemp.EAN,
+                        Bezeichnung: Produkttext,
+                        Preis: (sprittpreis * ProduktTemp.Preis).toFixed(2),
+                        MwSt: 19,
+                        Kategorie: "Fuel"
+                    };
+                } else { 
+                    console.log("Test: ", eingabestring);
+                    manuelles_Produkt = {
+                        EAN: 9990000000000,
+                        Bezeichnung: "manuelle Buchung",
+                        Preis: (eingabestring / 100).toFixed(2),
+                        MwSt: 19,
+                        Kategorie: "manuelle Buchung"
+                    };
                 }
 
                 tastatur.style.display = "none";

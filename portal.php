@@ -233,6 +233,8 @@ if ($response !== false) {
         let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
         let config = <?php echo json_encode($jsonConfigDaten); ?>;
         const release = <?php echo json_encode($release); ?>;
+        let käufer = MitgliederExterneZusammenführen();
+        
 
     // Version anzeigen
         document.getElementById('Version').textContent = config.Version;
@@ -279,11 +281,6 @@ if ($response !== false) {
         document.getElementById('userName').textContent = angemeldetesMitglied.firstname + " " + angemeldetesMitglied.lastname;
     
     //Menu gemäß Rollen ein- und ausblenden
-
-        console.log("Zugriffseinschränkung: " + config.zugriffseinschränkung);
-        console.log("Benutzer ist eingeloggt: " + customer_login);
-        console.log("Angemeldetes Mitglied: ", angemeldetesMitglied);
-        console.log("Benutzer ist Admin: " + angemeldetesMitglied.cc_admin);    
 
         if (config.demo === "true") {
             console.log("Demo-Modus ist aktiv. Alle Menüpunkte werden angezeigt.");
@@ -506,8 +503,8 @@ if ($response !== false) {
                 //berechne den akteullen Kontostand des externen Kunden
                 const aktuellerKontostand = kundenkontostand.find(k => k.Kundennummer === externer.schlüssel) || { Summe: '0.00' };
                 tr.innerHTML += `
-                    <td contenteditable="${!deletedRows.has(index)}" style="${tdStyle}">${aktuellerKontostand.Summe}</td>
-                    <td contenteditable="${!deletedRows.has(index)}" style="${tdStyle}">${externer.info || ''}</td>
+                    <td style="text-align: right;">${aktuellerKontostand.Summe} €</td>
+                    <td><a style='text-decoration: none;' href='#' onclick='Kundenübersicht(${externer.schlüssel})'>ℹ️</a></td>
                 `;
 
             // Add event listeners
@@ -702,7 +699,7 @@ if ($response !== false) {
 
         // Produkte nach Kategorie sortieren
         const sortedProdukte = [...produkte]
-            .filter(p => p.Bezeichnung !== 'Direktbuchung' && p.Bezeichnung !== 'Essen')
+            .filter(p => p.Bezeichnung !== 'manuelle Buchung' && p.Bezeichnung !== 'Essen')
             .sort((a, b) => {
             if (a.Kategorie === b.Kategorie) {
             // Numerischer Vergleich der Sortierungswerte
@@ -772,7 +769,7 @@ if ($response !== false) {
 
         // Produkte nach Kategorie sortieren
         const sortedProdukte = [...produkte]
-            .filter(p => p.Bezeichnung !== 'Direktbuchung' && p.Bezeichnung !== 'Essen')
+            .filter(p => p.Bezeichnung !== 'manuelle Buchung' && p.Bezeichnung !== 'Essen')
             .sort((a, b) => {
             if (a.Kategorie === b.Kategorie) {
             // Numerischer Vergleich der Sortierungswerte
@@ -1089,7 +1086,7 @@ if ($response !== false) {
                 data = JSON.parse(JSON.stringify(savedData));
                 originalData = JSON.parse(JSON.stringify(savedData));
                 editedRows.clear();
-                newRows.clear();
+                newRows
                 deletedRows.clear();
                 renderTable();
 
@@ -1159,8 +1156,6 @@ if ($response !== false) {
     }
 
     function Kundentagesübersicht() {
-
-        käufer = MitgliederExterneZusammenführen();
 
         portalmenu2.innerHTML = "<h2 style='display: inline;'>Kundentagesübersicht</h2>";
         let html = "<table class='portal-table'>";
@@ -1561,7 +1556,7 @@ if ($response !== false) {
             <th><i>i</i></th>
         </tr>`;
 
-        kunden.forEach(kunde => {
+        käufer.forEach(kunde => {
             html += `<tr>
                 <td>${kunde.uid}</td>
                 <td class="links">${kunde.memberid}</td>
@@ -1575,7 +1570,7 @@ if ($response !== false) {
                 html += kunde.cc_member ? "<td>✔️</td>" : "<td></td>";
                 html += kunde.cc_guest ? "<td>✔️</td>" : "<td></td>";
 
-                kundenkontostandeinzeln = kundenkontostand.find(k => k.Kundennummer === kunde.uid);
+                let kundenkontostandeinzeln = kundenkontostand.find(k => k.Kundennummer === kunde.uid);
                 if (kundenkontostandeinzeln) {
                     kunde.Kontostand = kundenkontostandeinzeln.Summe;
                 } else {
@@ -1647,7 +1642,7 @@ if ($response !== false) {
         let printWindow = window.open('', '_blank', 'width=800,height=600');
 
         // Mitgleiderliste nach Nachnamen und Vornamen sortieren
-        let sortedKunden = [...kunden].sort((a, b) => {
+        let sortedKunden = [...käufer].sort((a, b) => {
             if (a.lastname.toLowerCase() < b.lastname.toLowerCase()) return -1;
             if (a.lastname.toLowerCase() > b.lastname.toLowerCase()) return 1;
             if (a.firstname.toLowerCase() < b.firstname.toLowerCase()) return -1;
@@ -1691,8 +1686,8 @@ if ($response !== false) {
                                 <span>Bezahlkarte</span><br>
                             </div>
                         </div>        
-                        <div style="font-size: 1.2em; margin: 15px; text-align: center; width: 100%;">${kunde.lastname}, ${kunde.firstname} </div>
-                        <div class="barcode" style="font-size: 2.5em; text-align: center; width: 100%;">*$${kunde.schlüssel}*</div>  
+                        <div style="font-size: 1.2em; margin: 15px; text-align: center;">${kunde.lastname}, ${kunde.firstname} </div>
+                        <div class="barcode" style="font-size: 2em; text-align: center;">*$${kunde.schlüssel}*</div>  
 
                     </div>`;
         });
@@ -1704,13 +1699,188 @@ if ($response !== false) {
         printWindow.document.close();
     }   
 
+    function KontostandUmbuchen(kundennummer, beziehunguid, vorname, nachname, kontostand) {
+        let menu2 = `<h2 style='display: inline;'>Kontostand umbuchen</h2>`;
+
+        let hauptkunde = käufer.find(k => k.uid == beziehunguid);
+
+        // Kontostand in eine Zahl umwandeln
+
+        const betrag1 = parseFloat(kontostand).toFixed(2);
+        const betrag2 = parseFloat(-kontostand).toFixed(2);
+
+        if (!confirm(`Soll der Kontostand von ${vorname} ${nachname} in Höhe von ${betrag1} € zu ${hauptkunde.firstname} ${hauptkunde.lastname} übertragen werden?`)) {
+            return;
+        }
+
+        // Umbuchung in der API durchführen
+        fetch('kasse/umsatz-api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify([
+                {
+                    Datum: heute.toISOString().split('T')[0],
+                    Zeit: heute.toTimeString().split(':').slice(0,2).join(':'),
+                    Terminal: 'Z',
+                    Schlüssel: '9999999999',
+                    Kundennummer: beziehunguid,
+                    EAN: '9999999999',
+                    Produkt: `Kontoausgleich von ${kundennummer} - ${vorname} ${nachname}`,
+                    Kategorie: 'Umbuchung',
+                    Preis: betrag1,
+                    MwSt: 0
+                },
+                {
+                    Datum: heute.toISOString().split('T')[0],
+                    Zeit: heute.toTimeString().split(':').slice(0,2).join(':'),
+                    Terminal: 'Z',
+                    Schlüssel: '9999999999',
+                    Kundennummer: kundennummer,
+                    EAN: '9999999999',
+                    Produkt: `Kontoausgleich zu ${beziehunguid} - ${hauptkunde.firstname} ${hauptkunde.lastname}`,
+                    Kategorie: 'Umbuchung',
+                    Preis: betrag2,
+                    MwSt: 0
+                }
+            ])
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Netzwerk-Antwort war nicht ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === "success") {
+                window.alert(`Kontostand erfolgreich umgebucht: ${betrag1} € von ${vorname} ${nachname} zu ${hauptkunde.firstname} ${hauptkunde.lastname}`);
+                location.reload();
+            } else {
+                throw new Error(data.message || 'Unbekannter Fehler');
+            }
+        })
+        .catch(error => {
+            portalmenu2.innerHTML = menu2;
+            portalInhalt.innerHTML = `<p>Fehler beim Umbuchen des Kontostands: ${error.message}</p>`;
+        });
+    }
+
+    function RechnungErstellen(kundennummer, datum1, datum2) {
+    
+        // Input validation
+        if (!kundennummer || !datum1 || !datum2) {
+            console.error('Missing required parameters');
+            return;
+        }
+
+        // Datum-Strings in Date-Objekte umwandeln
+        if (typeof datum1 === 'string') datum1 = new Date(datum1);
+        if (typeof datum2 === 'string') datum2 = new Date(datum2);
+
+        let kunde = käufer.find(k => String(k.uid) === String(kundennummer));
+        if (!kunde) {
+            console.error('Customer not found');
+            return;
+        }
+
+        // ein neues Fenster für die Rechnung in der Größe DIN A4 öffnen
+        let printWindow = window.open('', '_blank', 'width=800,height=1000');
+        if (!printWindow) {
+            console.error('Could not open print window - popup might be blocked');
+            return;
+        }
+
+        // HTML-Inhalt für die Rechnung erstellen
+        let html = `
+            <html>
+            <head>
+                <title>Abrechnung</title>
+                <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+                <link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
+
+            </head>
+            <body class="Rechnung">
+                <button style="position: absolute; top: 10px; right: 10px; media-print: none;" onclick="window.print();">drucken</button>
+                <button style="position: absolute; top: 100px; right: 10px; media-print: none;" onclick="sendEmail();">Email</button>
+                <div style="margin: 50px">
+                    <div style="text-align: center;">
+                        <p><b>${config.Vereinsname}</b></p>
+                        <p>${config.Straße}</p>
+                        <p>${config.PLZ} ${config.Ort}</p>
+                        <p>Telefon: ${config.Telefon}</p>
+                        <p>Email: ${config.Email}</p>
+                        <p>USt-IdNr: ${config.UStID}</p>
+                        <p>Bankverbindung: ${config.Bankverbindung}</p>
+                        <p>IBAN: ${config.IBAN}</p>
+                        <p>Kontoinhaber: ${config.Kontoinhaber}</p>
+
+                        <p style="margin: 50px 0 0 0;"><b>${kunde.firstname} ${kunde.lastname}</b></p>
+                        <p>${kunde.email}</p>
+                        <p>${kunde.memberid ? 'Mitgliedsnr: ' + kunde.memberid : 'ohne Mitgliedsnr'}</p>
+
+                        <p style="margin: 50px 0 0 0;"><b>Abrechnung ClubCash</b></p>
+                        <p>Umsätze von ${datum1.toLocaleDateString('de-DE')} bis ${datum2.toLocaleDateString('de-DE')}</p>
+                        <p>Stand: ${heute.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
+                    
+                    </div>
+
+                    <div style="margin: 50px 0 0 0;">
+                        <table>
+                            <thead>
+                                <tr>        
+                                    <th>Datum</th>
+                                    <th>Zeit</th>
+                                    <th>Buchungstext</th>
+                                    <th style="text-align: center;">Preis</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+        let KäufeFilter = verkäufe.filter(auswahl => auswahl.Kundennummer == kundennummer && auswahl.Datum >= datum1.toISOString().split('T')[0] && auswahl.Datum <= datum2.toISOString().split('T')[0]);
+        let summe = 0;
+        KäufeFilter.forEach(verkauf => {
+            html += `
+                <tr>
+                    <td style="vertical-align: top;">${verkauf.Datum}</td>
+                    <td style="vertical-align: top;">${verkauf.Zeit}</td>
+                    <td style="width: 300px;">${verkauf.Produkt}</td>
+                    <td style="text-align: right; vertical-align: bottom;">${parseFloat(verkauf.Preis).toFixed(2)} €</td>
+                </tr>`;
+            summe += parseFloat(verkauf.Preis);
+        });
+        html += `
+                    </tbody>
+                        <tfoot>
+                                <tr>
+                                    <td colspan="3" style="text-align: right;"><b>Summe</b></td>
+                                    <td style="text-align: right;"><b>${summe.toFixed(2)} €</b></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <hr>
+                    <div style="text-align: center;">
+                        <p style="margin-top: 30px; text-align: center;">Die Rechnung wurde automatisiert erstellt mit <br> ClubCash - Das bargeldlose Bezahlsystem für Flugsportvereine <br>&copy; 2025 Marcel Schommer</p>
+                    </div>
+                </div>    
+            </body>
+            </html>`;
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.onload = () => {
+            printWindow.focus(); // Fokus auf das neue Fenster setzen
+        };
+        
+
+    }
+
     function Kundenübersicht(kundennummer,datum1,datum2) {
 
         let menu2 = "<h2 style='display: inline;'>Übersicht</h2>";
         
         let html = '';
         
-        const kunde = kunden.find(kunde => kunde.uid == kundennummer);
+        const kunde = käufer.find(kunde => kunde.uid == kundennummer);
         
         if(!datum1 || !datum2) {
             let datumjahr = heute.getFullYear();
@@ -1719,6 +1889,12 @@ if ($response !== false) {
             datum2 = heute; // Aktuelles Datum
         } 
  
+        let beziehungstext = 'keine';
+        if (kunde.bezuguid) {
+            let beziehung = käufer.find(k => k.uid === kunde.bezuguid);
+            beziehungstext = beziehung.uid + " - " + beziehung.firstname + " " + beziehung.lastname;
+            beziehungstext += `<button class='kleinerBt' style='width: auto; margin-left: 10px; background-color: var(--warning-color);' onclick='KontostandUmbuchen("${kunde.uid}", "${beziehung.uid}", "${kunde.firstname}", "${kunde.lastname}", ${kunde.Kontostand})'>Kontostand übertragen</button>`;
+        }
 
         KäufeFilter = verkäufe.filter(auswahl => auswahl.Kundennummer == kundennummer && auswahl.Datum >= datum1.toISOString().split('T')[0] && auswahl.Datum <= datum2.toISOString().split('T')[0]);
 
@@ -1734,45 +1910,53 @@ if ($response !== false) {
             <button class="kleinerBt" onclick="Kundenübersicht(${kunde.uid}, heute, heute)">Tag</button>
         `;
 
-
         html += `
+
+            <button class="kleinerBt" onclick="RechnungErstellen('${kunde.uid}', '${datum1}', '${datum2}')" style="margin-left: 10px;">Rechnung</button>
+            <button class="kleinerBt" onclick="MitgliederAusweise('${kunde.schlüssel}')" style="margin-left: 10px;">Bezahlkarte</button>
+
             <table style="border-spacing: 10px;">
                 <tr>
-                    <td>Name</td>
+                    <td><b>Name</b></td>
                     <td>${kunde.firstname} ${kunde.lastname}</td>
                 </tr>                
                 <tr>
-                    <td>ID</td>
+                    <td><b>ID</b></td>
                     <td>${kunde.uid}</td>
                 </tr>
                 <tr>
-                    <td>Mitgliedsnr</td>
-                    <td>${kunde.memberid}</td>
+                    <td><b>Mitgliedsnr</b></td>
+                    <td>${kunde.memberid ? kunde.memberid : 'ohne'}</td>
                 </tr>
                 <tr>
-                    <td>Email</td>
+                    <td><b>Email</b></td>
                     <td>${kunde.email}</td>
                 </tr> 
                 <tr>
-                    <td>Schlüssel</td>
+                    <td><b>Schlüssel</b></td>
                     <td>
                         ${kunde.schlüssel}
-                        <button onclick="MitgliederAusweise('${kunde.schlüssel}')" class="kleinerBt" style="margin-left: 10px;">Bezahlkarte</button>
+                        
                     </td>
                 </tr>
                 <tr>
-                    <td>Rollen</td>
+                    <td><b>Rollen</b></td>
                     <td>${kunde.cc_admin ? "<mark>Kassenwart</mark>" : ""} ${kunde.cc_seller ? "<mark>Verkäufer</mark>" : ""} ${kunde.cc_member ? "<mark>Mitglied</mark>" : ""} ${kunde.cc_guest ? "<mark>Gast</mark>" : ""}</td>
                 </tr>
                 <tr>
-                    <td>Kontostand</td>
-                    <td>-${kunde.Kontostand} €</td>
+                    <td><b>Kontostand</b></td>
+                    <td>-${kunde.Kontostand ? kunde.Kontostand : 0} € </td>
                 </tr>
+                <tr>
+                    <td><b>Beziehung</b></td>
+                    <td>
+                        ${beziehungstext}
+                    </td>
+                </tr>
+                <tr>
             </table>
-            <hr>
 
-  
-           
+            <hr>
 
             <h2 style="display: inline;"><a id="TabellenLink1" style='text-decoration: none;' href='#' onclick='toggleTabelle("Tabelle1", "TabellenLink1")'>➡️</a> Umsätze</h2>
             <table id="Tabelle1" class="portal-table" style="display: none; margin-top: 20px;">
@@ -1803,14 +1987,7 @@ if ($response !== false) {
                 <td colspan="5" class="rechts"><b>Summe</b></td>
                 <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
             </tr>
-            <tr>
-                <td colspan="5" class="rechts"><b>Übertrag</b></td>
-                <td class="rechts"><b>-${(kunde.Kontostand - summe).toFixed(2)} €</b></td>
-            </tr>
-            <tr style="border-top: 1px solid black;">
-                <td colspan="5" class="rechts"><b>Kontostand</b></td>
-                <td class="rechts"><b>-${kunde.Kontostand} €</b></td>
-            </tr>    
+    
         </tbody>    
             </table>`;
 
@@ -1861,15 +2038,7 @@ if ($response !== false) {
             <tr style="border-top: 1px solid black;">
                 <td colspan="4" class="rechts"><b>Summe</b></td>
                 <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
-            </tr>
-            <tr>
-                <td colspan="4" class="rechts"><b>Übertrag</b></td>
-                <td class="rechts"><b>-${(kunde.Kontostand - summe).toFixed(2)} €</b></td>
-            </tr>
-            <tr style="border-top: 1px solid black;">
-                <td colspan="4" class="rechts"><b>Kontostand</b></td>
-                <td class="rechts"><b>-${kunde.Kontostand} €</b></td>
-            </tr>    
+            </tr>   
         </tbody></table>`;
 
         // Übersicht nach Produktengrupen
@@ -1918,16 +2087,8 @@ if ($response !== false) {
                 <td colspan="2" class="rechts"><b>Summe</b></td>
                 <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
             </tr>
-            <tr>
-                <td colspan="2" class="rechts"><b>Übertrag</b></td>
-                <td class="rechts"><b>-${(kunde.Kontostand - summe).toFixed(2)} €</b></td>
-            </tr>
-            <tr style="border-top: 1px solid black;">
-                <td colspan="2" class="rechts"><b>Kontostand</b></td>
-                <td class="rechts"><b>-${kunde.Kontostand} €</b></td>
-            </tr>
         </tbody></table>`;
-        
+    
 
         portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html 
@@ -1970,16 +2131,18 @@ if ($response !== false) {
         //setzte im Array externe die uid auf schlüssel
         externe.forEach(externer => {
                 externer.uid = externer.schlüssel;
+                externer.cc_admin = false;
+                externer.cc_guest = true;
+                externer.cc_member = false;
+                externer.cc_seller = false;
         });
         // ergänze käufer mit den externen Mitgliedern
         käufer = käufer.concat(externe);
-        console.log("Käufer: ", käufer);
         return käufer;
     }
 
-    function Tagesumsätze() {
 
-        käufer = MitgliederExterneZusammenführen();
+    function Tagesumsätze() {
 
         let datum1 = heute; // Aktuelles Datum im Format YYYY-MM-DD
         let summe = 0;
@@ -2041,8 +2204,6 @@ if ($response !== false) {
             datum1 = jahresbeginn
             datum2 = heute; // Aktuelles Datum
         } 
-        
-        käufer = MitgliederExterneZusammenführen();
 
         let summe = 0;
         let menu2 = "";
@@ -2483,6 +2644,7 @@ if ($response !== false) {
             portalInhalt.insertAdjacentHTML("beforeend", "<p>⚠️ Damit die neuen Buchungen sichtbar sind, muss die Seitenansicht mit F5 oder mit dem folgenden Button aktualisiert werden.</p>");    portalInhalt.insertAdjacentHTML("beforeend", "<button class='kleinerBt' onclick='location.reload();'>aktualisieren</button>");
             document.getElementById("preloader").style.display = "none";
             
+
             // Zurücksetzen der Variablen, um sicher zu stellen, dass sie nicht mehr verwendet werden, bis die Seite neu geladen wird
             verkäufe = [];
             produkte = [];
