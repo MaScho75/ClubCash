@@ -260,10 +260,10 @@ if ($response !== false) {
         const portalMenu = document.getElementById('portal-menu');
 
     // Finde das angemeldete Mitglied anhand der Email-Adresse (case-insensitive)
-        let angemeldetesMitglied = kunden.find(kunde => 
+        let angemeldetesMitglied = käufer.find(kunde => 
             kunde.email.toLowerCase() === '<?php echo strtolower($_SESSION['username']); ?>');
-        
-        // Wenn kein Mitgleid gefunden wurde, setzte folgende Werte für angemeldetesMitglied
+
+        // Wenn kein Mitglied gefunden wurde, setzt folgende Werte für angemeldetesMitglied
         if (!angemeldetesMitglied) {
             installansicht = true; // Setze installansicht auf true, wenn kein Mitglied gefunden wurde
             //console.error("Angemeldetes Mitglied nicht gefunden.");
@@ -1152,6 +1152,8 @@ if ($response !== false) {
 
     function Kontoübersicht() {
             Mitgliederdaten_anzeigen(); // Nur ausgeführt, um den aktuellen Kontostand zu aktualisieren
+            console.log("Kontoübersicht aufgerufen");
+
             Kundenübersicht(angemeldetesMitglied.uid);    
     }
 
@@ -1880,8 +1882,19 @@ if ($response !== false) {
         
         let html = '';
         
+        console.log("Kundenübersicht für Kundennummer: " + kundennummer);
+
+        // die akteullen anmeldedaten holen
+
+
         const kunde = käufer.find(kunde => kunde.uid == kundennummer);
-        
+        if (!kunde) {
+            portalmenu2.innerHTML = menu2;
+            portalInhalt.innerHTML = '<p>Fehler: Kunde nicht gefunden</p>';
+            return;
+        }
+
+    // Hier kann der Code für die Kundenübersicht fortgesetzt werden
         if(!datum1 || !datum2) {
             let datumjahr = heute.getFullYear();
             datum1 = new Date(datumjahr, 0, 1); // 1. Januar des aktuellen Jahres
@@ -1893,7 +1906,10 @@ if ($response !== false) {
         if (kunde.bezuguid) {
             let beziehung = käufer.find(k => k.uid === kunde.bezuguid);
             beziehungstext = beziehung.uid + " - " + beziehung.firstname + " " + beziehung.lastname;
-            beziehungstext += `<button class='kleinerBt' style='width: auto; margin-left: 10px; background-color: var(--warning-color);' onclick='KontostandUmbuchen("${kunde.uid}", "${beziehung.uid}", "${kunde.firstname}", "${kunde.lastname}", ${kunde.Kontostand})'>Kontostand übertragen</button>`;
+
+            if (angemeldetesMitglied.cc_admin == true) {
+                beziehungstext += `<button class='kleinerBt' style='width: auto; margin-left: 10px; background-color: var(--warning-color);' onclick='KontostandUmbuchen("${kunde.uid}", "${beziehung.uid}", "${kunde.firstname}", "${kunde.lastname}", ${kunde.Kontostand})'>Kontostand übertragen</button>`;
+            }
         }
 
         KäufeFilter = verkäufe.filter(auswahl => auswahl.Kundennummer == kundennummer && auswahl.Datum >= datum1.toISOString().split('T')[0] && auswahl.Datum <= datum2.toISOString().split('T')[0]);
