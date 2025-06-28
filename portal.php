@@ -355,8 +355,8 @@ if ($response !== false) {
            }
 
     function ExterneKunden() {
-        let data = [...externe]; // Copy of original data
-        let originalData = [...externe];
+        let data = externe ? [...externe] : []; // Copy of original data
+        let originalData = externe ? [...externe] : [];
         let editedRows = new Set();
         let newRows = new Set();
         let deletedRows = new Set();
@@ -2143,6 +2143,8 @@ if ($response !== false) {
     function MitgliederExterneZusammenführen() {
 
         let käufer = kunden;
+        
+        if (!externe) return käufer;
 
         //setzte im Array externe die uid auf schlüssel
         externe.forEach(externer => {
