@@ -25,6 +25,20 @@
     <!-- Skalierbarkeit für mobile Geräte sicherstellen -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+        <!-- Lokale Schriftart einbinden -->
+    <style>
+        @font-face {
+            font-family: 'Carlito';
+            src: url('./fonts/carlito-v3-latin-regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
+
+    <!-- Lokales jQuery einbinden -->
+    <script src="./lib/jquery-3.6.0.min.js"></script>
+
     <title>ClubCash</title>
 
     <!-- Anweisung an Suchmaschinen, die Seite NICHT zu indexieren -->
@@ -45,8 +59,6 @@
         });
     </script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="manifest" href="../manifest.json">
 
 </head>
@@ -66,7 +78,7 @@
             <button id="bt_kundentagesübersicht" onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
             <button id="bt_mittagspreis" onclick="mittagspreis();">Preisanpassung Essen</button>
             <button id="bt_info" onclick="info();">Programminfos</button>
-            <button id="bt_systeminfo" conlick="">Systeminfo</button>
+            <button id="bt_systeminfo" onclick="systeminfo()">Systeminfo2</button>
         </div>
     </div>
 
@@ -290,12 +302,6 @@
                     config = geladeneConfig;
                     externe = geladeneExterne;
 
-                    //Schlüsselbezeichung umbenennen:
-                    kunden.forEach(kunde => {
-                        kunde.schlüssel = kunde[config.schlüssel];
-                    });
-                    
-                    
                     //Kopiere im Array externe die Spalte "Schlüssel" in die Spalte "uid"
                         externe.forEach(kunde => {
                             if (!kunde.uid) {
@@ -328,23 +334,35 @@
             const offlineFenster = document.getElementById('offlineFenster');
             const OfflineBildschirm = document.getElementById('OfflineBildschirm')
 
-        // Check initial online status
-            if (!navigator.onLine) {
-                console.log("!Offline - Initialprüfung!");
-                console.log(config);
+        // Laden der Konfiguration vor der Offline-Prüfung
+            fetch('../daten/config.json', {
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache, must-revalidate',
+                    'Pragma': 'no-cache' 
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                config = data;
+           
+                // Offline-Prüfung erst nach dem Laden der Config
+                if (!navigator.onLine) {
+     
                 if (config.OfflineErlaubt == 'false') {
-                    console.log("Offline nicht erlaugt");
+                    console.log("Offline nicht erlaubt");
                     OfflineBildschirm.style.display = 'block';
                     eingabestopp();
                 }
                 isOnline = false;
                 offlineFenster.style.visibility = 'visible';
-                let oV = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
-                document.getElementById('offlineDS').innerText = oV.length; 
-            }
+                }
+            })
+            .catch(error => {
+                console.error("Fehler beim Laden der Config:", error);
+            });
 
             window.addEventListener('online', () => {
-                console.log("!Online! - geändert");
                 isOnline = true;
                 offlineFenster.style.visibility = 'hidden';
                 OfflineBildschirm.style.display = 'none';
@@ -353,7 +371,6 @@
 
             window.addEventListener('offline', () => {
                 if (config.OfflineErlaubt == 'false') {
-                    console.log("Offline - geändert")
                     OfflineBildschirm.style.display = 'block';
                     eingabestopp();
                 }
@@ -361,6 +378,55 @@
                 offlineFenster.style.visibility = 'visible';
             });
             
+
+        function systeminfo() {
+            preisfenster.style.display = 'none'; //sollte das Preisfenster noch offen sein, wird es geschlossen
+            tastatur.style.display = 'none'; //sollte die Tastatur noch offen sein, wird sie geschlossen
+            statusfeld.innerText = "Systeminformationen";
+            html = `
+                
+                    <h1>Systeminformationen</h1>
+                    <p>Terminal: <b>${terminal}</b></p>
+                    <p>Version: <b>${config.Version}</b></p>
+                    <p>Vereinsname: <b>${config.Vereinsname}</b></p>
+                    <p>Vereinsname Abk.: <b>${config.VereinsnameAbk}</b></p>
+                    <p>Wartungsmodus: <b>${config.wartungsmodus}</b></p>
+                    <p>Tagesabrechnung: <b>${config.tagesabrechnung}</b></p>
+                    <p>Tageszusammenfassung: <b>${config.tageszusammenfassung}</b></p>
+                    <p>Kundentagesübersicht: <b>${config.kundentagesübersicht}</b></p>
+                    <p>Preisanpassung Essen: <b>${config.preisanpassungessen}</b></p>
+                    <p>Bildschirmschoner: <b>${config.bildschirmschoner} Minuten</b></p>
+                    <p>Offline erlaubt: <b>${config.OfflineErlaubt}</b></p>
+                    <h1>Test für Offlinefähigkeit:</h1>
+               `;
+
+            // Prüfung, ob das System im Offlinemodus die erfoderlicher Daten speichern kann, auch wenn das System neu gestartet wird.
+                    const testKey = "speicherTestKey";
+                    const testValue = "test123";
+
+                    try {
+                    // Testwert speichern
+                    localStorage.setItem(testKey, testValue);
+
+                    // Testwert abrufen
+                    const retrieved = localStorage.getItem(testKey);
+
+                    if (retrieved === testValue) {
+                        html += "<p>✅ Lokale Speicherung funktioniert. Die Daten bleiben auch nach einem Neustart erhalten.</p>";
+                    } else {
+                        html += "<p>⚠️ Lokale Speicherung scheint nicht zu funktionieren.</p>";
+                    }
+
+                    // Optional: Testeintrag entfernen
+                    // localStorage.removeItem(testKey);
+                    } catch (e) {
+                    html += "<p>❌ Fehler beim Zugriff auf LocalStorage: " + e.message + "</p>";
+                    document.getElementById("status").classList.add("fail");
+                    }
+
+                html +="<p>Test abgeschlossen.</p>";
+                datenfeld.innerHTML = html;    
+        }   
         
         function configuration() {
             // Konfigutarionen - Ansicht anpassen je nach Benutzergruppe
@@ -557,7 +623,7 @@
             }
         }
 
-        async function kundenkontoübersicht(KundenNr) {
+        async function kundenkontoübersicht(Schlüsselnummer) {
             document.getElementById('abbruch').innerText="zurück";
             eingabestopp();
 
@@ -566,17 +632,21 @@
                 return;
             }
 
-
             let kontosumme = 0.0;
+            let kunde = kunden.find(kunden => kunden.schlüssel === Schlüsselnummer);
+
+            console.log("Kundenkontoübersicht startet....");
+            console.log("Schlüsselnummer: ", Schlüsselnummer);
+            console.log("Kunde gefunden: ", kunde);
+            console.log("kundenuid: ", kunde.uid);
 
             try {
-
                 let response = await fetch("kundenkontouebersicht-cvs.php", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify(KundenNr)
+                    body: JSON.stringify(kunde.uid) // Sende die Kundennummer als JSON
                 });
 
                 if (!response.ok) {
@@ -1248,6 +1318,8 @@
                 console.log("Fehler bei der Synchronisation");
             }
         }
+
+
             
     </script>
 

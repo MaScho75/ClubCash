@@ -131,7 +131,7 @@ if ($response !== false) {
       <a href="#" id="MenuMeinKonto" style="display: none;">Mein Konto</a>
       <ul>
         <li><a href="" onclick="location.reload()">Programminfo</a></li>
-        <li><a href="#" onclick="Kontoübersicht()">Übersicht</a></li>
+        <li><a href="#" onclick="Kundenübersicht(angemeldetesMitglied.uid)">Übersicht</a></li>
         <li><a href="logout.php" >Abmelden</a></li>
       </ul>
     </li>   
@@ -174,6 +174,7 @@ if ($response !== false) {
       <ul>
         <li><a href="#" onclick="downloadFile('produkte.json')">Produktliste JSON</a></li>
         <li><a href="#" onclick="downloadFile('kunden.json')">Kundenliste JSON</a></li>
+        <li><a href="#" onclick="downloadFile('externe.json')">Externe Kunden JSON</a></li>
         <li><a href="#" onclick="downloadFile('umsatz.csv')">Umsatz CSV</a></li>
         <li><a href="#" onclick="Mitgliederdaten()">Mitgliederdaten</a></li>
         <li><a href="#" onclick="backupliste()">Backups</a></li>
@@ -192,7 +193,6 @@ if ($response !== false) {
 
 
 <script>
-
 
     let portalmenu2 = document.getElementById('portalmenu2');
 
@@ -233,9 +233,27 @@ if ($response !== false) {
         let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
         let config = <?php echo json_encode($jsonConfigDaten); ?>;
         const release = <?php echo json_encode($release); ?>;
-        let käufer = MitgliederExterneZusammenführen();
-        
 
+    // Mitglieder und externe Kunden zusammenführen    
+        let käufer = MitgliederExterneZusammenführen();
+    
+    //aktuelle Kontostände der Kunden berechnen und in die Kundenliste einfügen
+        let kundenkontostand = Kundenkontostand(verkäufe);
+        käufer.forEach(kunde => {
+            const kontostand = kundenkontostand.find(k => k.Kundennummer === kunde.uid);
+            kunde.Kontostand = parseFloat(kontostand?.Summe || 0); // Add Kontostand to kunde object
+            kunde.Kategorien = kontostand?.Kategorien || []; // Add full transaction data as sub-array
+        });
+
+    // Debug-Ausgaben in der Konsole
+        console.log("Käufer (Mitglieder + Externe):");
+        console.log(käufer);
+
+    //Schlüsselbezeichung umbenennen:
+        kunden.forEach(kunde => {
+            kunde.schlüssel = kunde[config.schlüssel];
+        });
+        
     // Version anzeigen
         document.getElementById('Version').textContent = config.Version;
 
@@ -253,9 +271,7 @@ if ($response !== false) {
             return cleanItem;
         });
 
-
-    //aktuelle Kontostände der Kunden berechnen
-        let kundenkontostand = Kundenkontostand(verkäufe);
+    //Elemente für die Anzeige im Portal    
         const portalInhalt = document.getElementById('portal-inhalt');
         const portalMenu = document.getElementById('portal-menu');
 
@@ -494,19 +510,15 @@ if ($response !== false) {
                 <td contenteditable="${!deletedRows.has(index)}" style="${externer.bezuguid && !kunden.find(m => m.uid === externer.bezuguid) ? 'background-color: var(--warning-color);' : ''} ${tdStyle}">${externer.bezuguid || ''}</td>
                 <td style="${tdStyle}">${bezugname}</td>
                 <td>
-                <a href="#" class="icon" onclick="return false;">${deletedRows.has(index) ? '🔄' : '🗑️'}</a>
-                ${(editedRows.has(index) || deletedRows.has(index) || newRows.has(index)) ? 
+                    <a href="#" class="icon" onclick="return false;">${deletedRows.has(index) ? '🔄' : '🗑️'}</a>
+                         ${(editedRows.has(index) || deletedRows.has(index) || newRows.has(index)) ? 
                     '<a href="#" class="icon" onclick="return false;">↩️</a>' : ''}
-                </td>`;
-
-                // Add Kontostand cell
-                //berechne den akteullen Kontostand des externen Kunden
-                const aktuellerKontostand = kundenkontostand.find(k => k.Kundennummer === externer.schlüssel) || { Summe: '0.00' };
-                tr.innerHTML += `
-                    <td style="text-align: right;">${aktuellerKontostand.Summe} €</td>
-                    <td><a style='text-decoration: none;' href='#' onclick='Kundenübersicht(${externer.schlüssel})'>ℹ️</a></td>
-                `;
-
+                </td>
+                <td style="${tdStyle}">${externer.Kontostand ? externer.Kontostand.toFixed(2) + ' €' : '0,00 €'}</td>
+                <td style="${tdStyle}"><a href="#" class="icon" onclick="Kundenübersicht('${externer.uid}')">ℹ️</a></td>
+            `;
+                console.log("Externer Kunde:", externer);
+                
             // Add event listeners
             tr.querySelectorAll('td[contenteditable="true"]').forEach(td => {
                 td.addEventListener('blur', () => {
@@ -1150,25 +1162,28 @@ if ($response !== false) {
             .replace(/'/g, "&#039;");
     }
 
-    function Kontoübersicht() {
-            Mitgliederdaten_anzeigen(); // Nur ausgeführt, um den aktuellen Kontostand zu aktualisieren
-            console.log("Kontoübersicht aufgerufen");
-
-            Kundenübersicht(angemeldetesMitglied.uid);    
-    }
-
     function Kundentagesübersicht() {
 
         portalmenu2.innerHTML = "<h2 style='display: inline;'>Kundentagesübersicht</h2>";
+
         let html = "<table class='portal-table'>";
 
+        console.log("Kundentagesübersicht laden...");
+        console.log("Käufer", käufer);
+
+        html = "";
+
+        let datensatzsichtbar = false;
+
         käufer.forEach(kunde => {
+            console.log("Kunde:", kunde);
             let summe= 0;
             let htmlkunde = ""
-            //htmlkunde += "<table class='portal-table'>";
+            htmlkunde += "<table class='portal-table'>";
             htmlkunde += "<tr><th colspan='5' class='links'>" + kunde.firstname + " " + kunde.lastname + " - " + kunde.uid + "</th></tr>";
 
             verkäufe.filter(verkauf => verkauf.Kundennummer == kunde.uid && verkauf.Datum == heute.toISOString().split('T')[0]).forEach(verkauf => {
+            
                 summe += parseFloat(verkauf.Preis);
                 htmlkunde += `
                     <tr>
@@ -1179,20 +1194,19 @@ if ($response !== false) {
                         <td class="rechts">${verkauf.Preis} €</td>
                     </tr>
                 `;
+                datensatzsichtbar = true;
             });
             htmlkunde += `
                 <tr class="summenzeile">
                     <td colspan="4" class="rechts"><b>Summe</b></td>
                     <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
                 </tr>
-                <tr style="height: 10px;">
-                    <td colspan="5"></td>
-                </tr>
-                
+                </table>
+
             `;
-            if (summe > 0) {
-                html += htmlkunde; // Nur anzeigen, wenn es Verkäufe gibt
-            } 
+
+            if (datensatzsichtbar) html += htmlkunde;
+            datensatzsichtbar = false; // Reset für den nächsten Kunden
            
         });
         html += '</table>';
@@ -1322,7 +1336,27 @@ if ($response !== false) {
                             td.classList.add('links'); 
                         }
 
-                        if (key === 'Bestand') {
+                        if (key === 'Menge') {
+                            const label = document.createElement('label');
+                            label.className = 'switch';
+                            
+                            const input = document.createElement('input');
+                            input.type = 'checkbox';
+                            input.checked = item[key] === "true";
+                            input.disabled = deletedRows.has(index);
+                            
+                            const span = document.createElement('span');
+                            span.className = 'slider round';
+                            
+                            label.appendChild(input);
+                            label.appendChild(span);
+                            td.appendChild(label);
+
+                            input.onchange = () => {
+                                markAsEdited(index, key, input.checked.toString(), td);
+                            };
+
+                        } else if (key === 'Bestand') {
                             td.contentEditable = !deletedRows.has(index);
 
                             //Sollte kein "Min" Wert gesetzt sein, dann soll der Bestand leer sein
@@ -1394,7 +1428,7 @@ if ($response !== false) {
 
                                     // Formatierung erzwingen: 2 Nachkommastellen, Punkt statt Komma
                                     const number = parseFloat(normalizedInput);
-                                    td.innerText = number.toFixed(2); // z. B. "12.00"
+                                    td.innerText = number.toFixed(2); // z. B. "12.00"
                                 }
                                 if (key === 'EAN') {
                                     const newEAN = td.innerText;
@@ -1571,16 +1605,7 @@ if ($response !== false) {
                 html += kunde.cc_seller ? "<td>✔️</td>" : "<td></td>";
                 html += kunde.cc_member ? "<td>✔️</td>" : "<td></td>";
                 html += kunde.cc_guest ? "<td>✔️</td>" : "<td></td>";
-
-                let kundenkontostandeinzeln = kundenkontostand.find(k => k.Kundennummer === kunde.uid);
-                if (kundenkontostandeinzeln) {
-                    kunde.Kontostand = kundenkontostandeinzeln.Summe;
-                } else {
-                    kunde.Kontostand = 0; // Standardwert, falls kein Kontostand gefunden wird
-                }
-
-                html += `<td class="rechts">${kunde.Kontostand} €</td>`;
-
+                html += `<td class="rechts">${(-kunde.Kontostand).toFixed(2)} €</td>`;
                 html += `<td><a style='text-decoration: none;' href='#' onclick='Kundenübersicht(${kunde.uid})'>ℹ️</a></td>`;                
                 html += "</tr>";
         });
@@ -1700,6 +1725,65 @@ if ($response !== false) {
         printWindow.document.write(html);
         printWindow.document.close();
     }   
+
+    function KontoAusgleichen(kundennummer, betrag) {
+        let menu2 = `<h2 style='display: inline;'>Konto ausgleichen</h2>`;
+        let kunde = käufer.find(k => k.uid == kundennummer);
+        
+        if (!kunde) {
+            portalmenu2.innerHTML = menu2;
+            portalInhalt.innerHTML = '<p>Fehler: Kunde nicht gefunden</p>';
+            return;
+        }
+
+        // Kontostand in eine Zahl umwandeln
+        const betrag1 = parseFloat(betrag).toFixed(2);
+        const betrag2 = parseFloat(-betrag).toFixed(2);
+
+        if (!confirm(`Soll der Kontostand von ${kunde.firstname} ${kunde.lastname} in Höhe von ${betrag1} € ausgeglichen werden?`)) {
+            return;
+        }
+
+        // Umbuchung in der API durchführen
+        fetch('kasse/umsatz-api.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify([
+                {
+                    Datum: heute.toISOString().split('T')[0],
+                    Zeit: heute.toTimeString().split(':').slice(0,2).join(':'),
+                    Terminal: 'Z',
+                    Schlüssel: '9999999999',
+                    Kundennummer: kundennummer,
+                    EAN: '9999999999',
+                    Produkt: `Kontoausgleich von ${kundennummer} - ${kunde.firstname} ${kunde.lastname}`,
+                    Kategorie: 'Buchung',
+                    Preis: betrag2,
+                    MwSt: 0
+                }
+            ])
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Netzwerk-Antwort war nicht ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === "success") {
+                window.alert(`Kontostand erfolgreich ausgeglichen: ${betrag1} € von ${kunde.firstname} ${kunde.lastname}`);
+                location.reload();
+            } else {
+                throw new Error(data.message || 'Unbekannter Fehler');
+            }
+        })
+        .catch(error => {
+            portalmenu2.innerHTML = menu2;
+            portalInhalt.innerHTML = `<p>Fehler beim Ausgleichen des Kontostands: ${error.message}</p>`;
+        });
+    }
 
     function KontostandUmbuchen(kundennummer, beziehunguid, vorname, nachname, kontostand) {
         let menu2 = `<h2 style='display: inline;'>Kontostand umbuchen</h2>`;
@@ -1888,13 +1972,18 @@ if ($response !== false) {
 
 
         const kunde = käufer.find(kunde => kunde.uid == kundennummer);
+
+        //Kontostand berechnen
+        let kundenkontostandeinzeln = kundenkontostand.find(k => k.Kundennummer === kundennummer);
+        console.log("Kundenkontostand: " + JSON.stringify(kundenkontostandeinzeln));
+
         if (!kunde) {
             portalmenu2.innerHTML = menu2;
             portalInhalt.innerHTML = '<p>Fehler: Kunde nicht gefunden</p>';
             return;
         }
 
-    // Hier kann der Code für die Kundenübersicht fortgesetzt werden
+        // Hier kann der Code für die Kundenübersicht fortgesetzt werden
         if(!datum1 || !datum2) {
             let datumjahr = heute.getFullYear();
             datum1 = new Date(datumjahr, 0, 1); // 1. Januar des aktuellen Jahres
@@ -1929,13 +2018,18 @@ if ($response !== false) {
         html += `
 
             <button class="kleinerBt" onclick="RechnungErstellen('${kunde.uid}', '${datum1}', '${datum2}')" style="margin-left: 10px;">Rechnung</button>
-            <button class="kleinerBt" onclick="MitgliederAusweise('${kunde.schlüssel}')" style="margin-left: 10px;">Bezahlkarte</button>
+                `;
+        if (angemeldetesMitglied.cc_admin == true) {
+            html += `<button class="kleinerBt" onclick="MitgliederAusweise('${kunde.schlüssel}')" style="margin-left: 10px;">Bezahlkarte</button>`;
+            html += `<button class="kleinerBt" style="width: auto;" onclick="KontoAusgleichen('${kunde.uid}', ${kunde.Kontostand})" style="margin-left: 10px;">Konto ausgleichen</button>`;
+        }
 
+        html += `
             <table style="border-spacing: 10px;">
                 <tr>
                     <td><b>Name</b></td>
                     <td>${kunde.firstname} ${kunde.lastname}</td>
-                </tr>                
+                </tr>
                 <tr>
                     <td><b>ID</b></td>
                     <td>${kunde.uid}</td>
@@ -2158,7 +2252,6 @@ if ($response !== false) {
         käufer = käufer.concat(externe);
         return käufer;
     }
-
 
     function Tagesumsätze() {
 
@@ -3045,10 +3138,11 @@ if ($response !== false) {
                         <p class="beschreibung">Die Bezeichnung des Bezahlschlüssels, der in Vereinsflieger für die Verkäufe verwendet wird.
                         Das ist die Nummer, mit der die Mitglieder bezahlen können.</p>
                         
+
                         <!-- Offline erlaubt -->
                         <label>Offline erlaubt</label>
                         <label class="switch">
-                            <input type="checkbox" id="kundentagesübersicht" ${config.OfflineErlaubt === "true" ? "checked" : ""}>
+                            <input type="checkbox" id="offlineErlaubt" ${config.OfflineErlaubt === "true" ? "checked" : ""}>
                             <span class="slider round"></span>
                         </label>
                         <p class="beschreibung">Erlauben, dass die Kasse auch offline Buchungen vornimmt. Die Kasse muss die Funktion unterstützen, die auch getestet werden sollte.</p>
@@ -3172,6 +3266,7 @@ if ($response !== false) {
                 bildschirmschoner: document.getElementById('bildschirmschonerZeit').value,
                 ArtikelnummerVF: document.getElementById('artikelnummerVF').value,
                 schlüssel: document.getElementById('schlüssel').value,
+                OfflineErlaubt: document.getElementById('offlineErlaubt').checked.toString(),
 
                 // Übernommene Daten
                 Version: config.Version,
@@ -3238,7 +3333,7 @@ if ($response !== false) {
     }
 	
 	function Mitgliederdaten() {
-		        portalmenu2.innerHTML = "<h2 style='display: inline;'>Vereinsflieger Datenimport</h2>";
+		portalmenu2.innerHTML = "<h2 style='display: inline;'>Vereinsflieger Datenimport</h2>";
         portalInhalt.innerHTML = "<p>Bitte warten, die Mitgliederdaten werden aus Vereinsflieger abgerufen...</p>";
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "pull_Mitgliedsdaten_Vereinsflieger_alle.php", true); 

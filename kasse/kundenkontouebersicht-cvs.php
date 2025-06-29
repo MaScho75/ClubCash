@@ -39,10 +39,9 @@ if (($handle = fopen($file, "r")) !== FALSE) {
 
     // Zeilen durchgehen
     while (($data = fgetcsv($handle, 1000, ";")) !== FALSE) {
-        // Datum aus der CSV-Datei (erste Spalte)
-        $kundeDS = $data[3];
+   
+        $kundeDS = $data[4];
 
-        // Wenn das Datum mit dem heutigen übereinstimmt, fügen wir es zum Array hinzu
         if ($kundennummer == $kundeDS) {
             $kundenData[] = array_combine($headers, $data);
         }

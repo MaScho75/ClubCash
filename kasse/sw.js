@@ -15,81 +15,71 @@
  * along with ClubCash. If not, see <https://www.gnu.org/licenses/>.
  */
 
-const CACHE_NAME = 'clubcash-v13'; // Cache-Version anpassen bei Updates
-const urlsToCache = [
-  `/kasse/`,
-  `/kasse/index.html`,
-  `/style.css`,
-  `/farben.css`,
-  `/config.js`,
-  `/grafik/ClubCashLogo-gelbblauschwarz.svg`,
-  `/grafik/ClubCashLogo-gelbblauweiss.svg`,
-  `/daten/produkte.json`,
-  `/daten/kunden.json`
+const CACHE_NAME = 'clubcash-v1';
+const ASSETS = [
+  './',
+  './index.html',
+  '../style.css',
+  '../farben.css',
+  '../daten/config.json',
+  './fonts/carlito-v3-latin-regular.woff2',
+  './lib/jquery-3.6.0.min.js',
+  '../grafik/ClubCashLogo-gelbblauschwarz.svg',
+  '../grafik/ClubCashLogo-gelbblauweiss.svg'
 ];
 
-// Hilfsfunktion: URL ohne Query-Parameter zurückgeben
-function stripQueryString(url) {
-  const u = new URL(url);
-  u.search = '';
-  return u.toString();
-}
-
-// Installation: Cache mit wichtigen Dateien füllen
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installieren und Cache füllen');
-  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return Promise.all(
-        urlsToCache.map(url =>
-          fetch(url).then(response => {
-            if (!response.ok) throw new Error(`Fehler beim Laden von ${url}: ${response.statusText}`);
-            return cache.put(url, response);
-          }).catch(err => {
-            console.warn(`[ServiceWorker] Konnte ${url} nicht cachen:`, err);
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        return Promise.all(
+          ASSETS.map(url => {
+            return fetch(url)
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error(`Failed to fetch ${url}`);
+                }
+                return cache.put(url, response);
+              })
+              .catch(err => {
+                console.log('Cache error for:', url, err);
+              });
           })
-        )
-      );
-    })
+        );
+      })
   );
 });
 
-// Aktivierung: Alte Caches löschen
-self.addEventListener('activate', event => {
-  console.log('[ServiceWorker] Aktivieren und alte Caches löschen');
-  event.waitUntil(
-    caches.keys().then(cacheNames =>
-      Promise.all(
-        cacheNames.map(name => {
-          if (name !== CACHE_NAME) {
-            console.log('[ServiceWorker] Lösche alten Cache:', name);
-            return caches.delete(name);
-          }
-        })
-      )
-    ).then(() => self.clients.claim())
-  );
-});
-
-// Fetch-Event: Network-first Strategie
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-
-  const cacheUrl = stripQueryString(event.request.url);
-
-  event.respondWith(
-    caches.open(CACHE_NAME).then(cache => {
-      return fetch(event.request).then(networkResponse => {
-        // Bei erfolgreichem Netzwerk-Response Cache aktualisieren
-        if (networkResponse && networkResponse.ok) {
-          cache.put(cacheUrl, networkResponse.clone());
+  // Spezielle Behandlung für config.json
+  if (event.request.url.includes('config.json')) {
+    event.respondWith(
+      fetch(event.request, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, must-revalidate',
+          'Pragma': 'no-cache'
         }
-        return networkResponse;
-      }).catch(() => {
-        // Netzwerk fehlgeschlagen -> Cache als Fallback
-        return cache.match(cacheUrl);
-      });
-    })
+      })
+      .then(response => {
+        // Erfolgreiche Antwort vom Server - Cache aktualisieren
+        const responseClone = response.clone();
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, responseClone);
+        });
+        return response;
+      })
+      .catch(() => {
+        // Bei Offline-Zugriff oder Fehler - aus Cache laden
+        return caches.match(event.request);
+      })
+    );
+    return;
+  }
+
+  // Standard Cache-Strategie für andere Ressourcen
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => response || fetch(event.request))
   );
 });

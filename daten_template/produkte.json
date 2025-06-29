@@ -7,7 +7,8 @@
         "Kategorie": "Speisen",
         "Bemerkung": "",
         "Sortierung": "1",
-        "Min": ""
+        "Min": "",
+        "Menge":"false"
     },
     {
         "EAN": "9990000000000",
@@ -17,6 +18,7 @@
         "Kategorie": "manuelle Buchung",
         "Bemerkung": "Platzhalter",
         "Sortierung": 98,
-        "Min": ""
+        "Min": "",
+        "Menge": "false"
     }
 ]
