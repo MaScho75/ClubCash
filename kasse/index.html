@@ -329,6 +329,9 @@
                 });
             }
 
+        // Eventhandler für das X
+        document.getElementById('BT_Abbruch').onclick = function() {window.location.reload(true)};
+
         // Offline-Funktionalität
             let isOnline = navigator.onLine;
             const offlineFenster = document.getElementById('offlineFenster');
@@ -515,7 +518,6 @@
             let produkt = produkte.find(produkte => produkte.EAN === EANr);
 
             if (produkt) {
-                console.log("Produkt gefunden: ", produkt);
 
                 if (produkt.Menge) {
                     ProduktTemp = produkt;  // Speichert das Produkt in einer temporären Variable, um es später zu verwenden
@@ -526,6 +528,7 @@
                     tastatur.style.display = 'block';
                     statusfeld.innerHTML = "Bitte Menge für <b>&nbsp;" + produkt.Bezeichnung + "&nbsp;</b> in Litern eingeben";
                     spritt = true;
+                    document.getElementById('BT_Abbruch').onclick = function() {tastatur.style.display = "none"};
                     return
                 }
 
@@ -577,10 +580,10 @@
                     tbody.innerHTML = `
 			        <tr>
 			            <td class="zentriert">
-			                <p style="font-size: 35px; ">Alle Produkte aus dem Warenkorb
+			                <p style="font-size: 30px; ">Alle Produkte aus dem Warenkorb
 			                <br>wurden dem Kundenkonto von</p>
 			                <h1><b>` + kunde.firstname + ` ` + kunde.lastname + `</b></h1>
-			                <p style="margin: 20px; font-size: 35px"; >übertragen.</p>
+			                <p style="font-size: 30px"; >übertragen.</p>
 			            </td>
 			        </tr> 
                     <tr>

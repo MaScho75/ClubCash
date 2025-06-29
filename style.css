@@ -653,7 +653,7 @@ button:hover {
 }
 
 #direktwahl {
-    height: 340px;
+    height: 330px;
     display: flex;
     flex-direction: row;
     align-items: center;
