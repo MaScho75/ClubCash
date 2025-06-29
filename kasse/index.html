@@ -47,7 +47,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Carlito&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="../manifest.json">
 
 </head>
 
@@ -66,6 +66,7 @@
             <button id="bt_kundentagesübersicht" onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
             <button id="bt_mittagspreis" onclick="mittagspreis();">Preisanpassung Essen</button>
             <button id="bt_info" onclick="info();">Programminfos</button>
+            <button id="bt_systeminfo" conlick="">Systeminfo</button>
         </div>
     </div>
 
@@ -166,6 +167,14 @@
             <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" style="margin: 50px ; height: 200px;">
          <h1>System ist im Wartungsmodus!</h1>
     </div>
+
+    <!-- Offline Bildschrim  -->
+    <div id="OfflineBildschirm">
+            <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" style="margin: 50px ; height: 200px;">
+         <h1>System ist Offline</h1>
+         <p>Bitte stellen Sie die Internetverbindung her...</p>
+    </div>
+
 
     <div id="checkmark-container" style="display: none;">
         <svg width="200" height="200" viewBox="0 0 100 100">
@@ -280,6 +289,13 @@
                     kunden = geladeneKunden;
                     config = geladeneConfig;
                     externe = geladeneExterne;
+
+                    //Schlüsselbezeichung umbenennen:
+                    kunden.forEach(kunde => {
+                        kunde.schlüssel = kunde[config.schlüssel];
+                    });
+                    
+                    
                     //Kopiere im Array externe die Spalte "Schlüssel" in die Spalte "uid"
                         externe.forEach(kunde => {
                             if (!kunde.uid) {
@@ -310,9 +326,17 @@
         // Offline-Funktionalität
             let isOnline = navigator.onLine;
             const offlineFenster = document.getElementById('offlineFenster');
+            const OfflineBildschirm = document.getElementById('OfflineBildschirm')
 
         // Check initial online status
             if (!navigator.onLine) {
+                console.log("!Offline - Initialprüfung!");
+                console.log(config);
+                if (config.OfflineErlaubt == 'false') {
+                    console.log("Offline nicht erlaugt");
+                    OfflineBildschirm.style.display = 'block';
+                    eingabestopp();
+                }
                 isOnline = false;
                 offlineFenster.style.visibility = 'visible';
                 let oV = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
@@ -320,15 +344,23 @@
             }
 
             window.addEventListener('online', () => {
+                console.log("!Online! - geändert");
                 isOnline = true;
                 offlineFenster.style.visibility = 'hidden';
+                OfflineBildschirm.style.display = 'none';
                 syncOfflineData();
             });
 
             window.addEventListener('offline', () => {
+                if (config.OfflineErlaubt == 'false') {
+                    console.log("Offline - geändert")
+                    OfflineBildschirm.style.display = 'block';
+                    eingabestopp();
+                }
                 isOnline = false;
                 offlineFenster.style.visibility = 'visible';
             });
+            
         
         function configuration() {
             // Konfigutarionen - Ansicht anpassen je nach Benutzergruppe
@@ -346,8 +378,6 @@
                 document.addEventListener('scroll', resetTimer);
                 resetTimer(); // aktiviert den Bildschirmschoner
             }
-            console.log("Konfiguration: ", config);
-            console.log("Version: ", config.Version);
             document.getElementById("version").innerText = config.Version;
         }
             
@@ -400,8 +430,6 @@
 
         function direktwahl() {
 
-            console.log("ProdukteX: ", produkte);
-         
             produkte.forEach(produkt => {
                 if (produkt.Sortierung > 0 && produkt.Sortierung < 13) {
                     let button = document.createElement("button");
@@ -600,6 +628,7 @@
         }
         
         async function tagesabrechnung() {
+            
             document.getElementById('abbruch').innerText="zurück";
             tastatur.style.display = 'none';
 
@@ -614,6 +643,7 @@
 
             try {
                 let response = await fetch("tagesabrechnung-csv.php");
+                console.log(response);
                 if (!response.ok) {
                     throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
                 }
@@ -636,9 +666,7 @@
             <th class="preisspalte">Preis</th>
             </tr>
             `;
-            
-                console.log("Data: ", data.data );
-                console.log("Kunden: ", kunden);
+    
 
                 data.data.forEach(row => {
 

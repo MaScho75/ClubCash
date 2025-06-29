@@ -3044,6 +3044,14 @@ if ($response !== false) {
                         <input type="text" id="schlüssel" value="${config.schlüssel}" class="inputfeld" >
                         <p class="beschreibung">Die Bezeichnung des Bezahlschlüssels, der in Vereinsflieger für die Verkäufe verwendet wird.
                         Das ist die Nummer, mit der die Mitglieder bezahlen können.</p>
+                        
+                        <!-- Offline erlaubt -->
+                        <label>Offline erlaubt</label>
+                        <label class="switch">
+                            <input type="checkbox" id="kundentagesübersicht" ${config.OfflineErlaubt === "true" ? "checked" : ""}>
+                            <span class="slider round"></span>
+                        </label>
+                        <p class="beschreibung">Erlauben, dass die Kasse auch offline Buchungen vornimmt. Die Kasse muss die Funktion unterstützen, die auch getestet werden sollte.</p>
 
             </div>`;
 
