@@ -244,15 +244,6 @@ if ($response !== false) {
             kunde.Kontostand = parseFloat(kontostand?.Summe || 0); // Add Kontostand to kunde object
             kunde.Kategorien = kontostand?.Kategorien || []; // Add full transaction data as sub-array
         });
-
-    // Debug-Ausgaben in der Konsole
-        console.log("Käufer (Mitglieder + Externe):");
-        console.log(käufer);
-
-    //Schlüsselbezeichung umbenennen:
-        // kunden.forEach(kunde => {
-        //     kunde.schlüssel = kunde[config.schlüssel];
-        // });
         
     // Version anzeigen
         document.getElementById('Version').textContent = config.Version;
