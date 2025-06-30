@@ -508,7 +508,6 @@ if ($response !== false) {
                 <td style="${tdStyle}">${externer.Kontostand ? externer.Kontostand.toFixed(2) + ' €' : '0,00 €'}</td>
                 <td style="${tdStyle}"><a href="#" class="icon" onclick="Kundenübersicht('${externer.uid}')">ℹ️</a></td>
             `;
-                console.log("Externer Kunde:", externer);
                 
             // Add event listeners
             tr.querySelectorAll('td[contenteditable="true"]').forEach(td => {
@@ -2225,24 +2224,24 @@ if ($response !== false) {
         .catch(error => console.error('Fehler beim Laden der Dateien:', error));
     }
 
-    function MitgliederExterneZusammenführen() {
+function MitgliederExterneZusammenführen() {
+    let käufer = [...kunden];
 
-        let käufer = kunden;
-        
-        if (!externe) return käufer;
+    if (!externe) return käufer;
 
-        //setzte im Array externe die uid auf schlüssel
-        externe.forEach(externer => {
-                externer.uid = externer.schlüssel;
-                externer.cc_admin = false;
-                externer.cc_guest = true;
-                externer.cc_member = false;
-                externer.cc_seller = false;
-        });
-        // ergänze käufer mit den externen Mitgliedern
-        käufer = käufer.concat(externe);
-        return käufer;
-    }
+    //Kopie der externen Kunden mit angepassten Eigenschaften
+    let externeTemp = externe.map(externer => ({
+        ...externer,
+        uid: externer.schlüssel,
+        cc_admin: false,
+        cc_guest: true,
+        cc_member: false,
+        cc_seller: false
+    }));
+
+    // käufer Array um externe Kunden erweitern
+    return [...käufer, ...externeTemp];
+}
 
     function Tagesumsätze() {
 
