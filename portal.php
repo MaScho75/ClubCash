@@ -250,9 +250,9 @@ if ($response !== false) {
         console.log(käufer);
 
     //Schlüsselbezeichung umbenennen:
-        kunden.forEach(kunde => {
-            kunde.schlüssel = kunde[config.schlüssel];
-        });
+        // kunden.forEach(kunde => {
+        //     kunde.schlüssel = kunde[config.schlüssel];
+        // });
         
     // Version anzeigen
         document.getElementById('Version').textContent = config.Version;
