@@ -22,10 +22,15 @@
     <!-- Zeichensatz auf UTF-8 setzen -->
     <meta charset="UTF-8">
 
+    <!-- Cache-Control Header setzen -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <!-- Skalierbarkeit für mobile Geräte sicherstellen -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <!-- Lokale Schriftart einbinden -->
+    <!-- Lokale Schriftart einbinden -->
     <style>
         @font-face {
             font-family: 'Carlito';
@@ -163,7 +168,7 @@
             <button onclick="meingabe(9)">9</button>
             <button onclick="meingabe(0)">0</button>
             <button id="BT_EingabeBestätigt" class="BT_Eingabe" onclick="meingabe('E')">E</button>
-            <button id="BT_Abbruch">X</button>
+            <button id="BT_Abbruch" onclick="window.location.reload(true);">X</button>
         </div>
 
     </div>
@@ -328,9 +333,6 @@
                     console.log('ServiceWorker Fehler: ', err);
                 });
             }
-
-        // Eventhandler für das X
-        document.getElementById('BT_Abbruch').onclick = function() {window.location.reload(true)};
 
         // Offline-Funktionalität
             let isOnline = navigator.onLine;
@@ -512,23 +514,24 @@
         }
 
         function produktprüfung(EANr) {
-
+            console.log("Produktprüfung für EAN: " + EANr);
             document.querySelector(".menu").classList.remove("active"); //Menu ausblenden, sollte es geöffnet sein. 
 
             let produkt = produkte.find(produkte => produkte.EAN === EANr);
 
             if (produkt) {
-
-                if (produkt.Menge) {
+                console.log("Produkt gefunden: ", produkt);
+                if (produkt.Menge == "true") {
+                    console.log("Produktmenge: " + produkt.Menge);
                     ProduktTemp = produkt;  // Speichert das Produkt in einer temporären Variable, um es später zu verwenden
                     warenkorbüberschrift()
                     document.getElementById("einheit").innerText = "l";
-                    //eingabestopp(); // Stoppt die Eingabe, wenn es sich um ein Produkt mit Mengeneingabe handelt
+                    eingabestopp(); 
                     //öffnet die Tastatur für die Mengeneingabe
                     tastatur.style.display = 'block';
                     statusfeld.innerHTML = "Bitte Menge für <b>&nbsp;" + produkt.Bezeichnung + "&nbsp;</b> in Litern eingeben";
                     spritt = true;
-                    document.getElementById('BT_Abbruch').onclick = function() {tastatur.style.display = "none"};
+
                     return
                 }
 
@@ -1015,7 +1018,6 @@
             summenfeld.innerText = "0.00";
             document.querySelector(".menu").classList.remove("active");
             eingabestring = "";
-            document.getElementById('BT_Abbruch').onclick = function() {tastatur.style.display = "none"};
         }
 
         function meingabe(x) {
@@ -1165,8 +1167,6 @@
             tastatur.style.display = 'block';
 
             datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Bitte gebe den neuen Preis für das Essen ein.</h1></div>`;
-        
-            document.getElementById('BT_Abbruch').onclick = function() {window.location.reload(true);}
         
             document.getElementById('BT_EingabeBestätigt').onclick = function() {
                 let preisNum = parseFloat(zifferneingabefeld.firstChild.nodeValue);
