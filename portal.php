@@ -1748,7 +1748,7 @@ if ($response !== false) {
                     Schlüssel: '9999999999',
                     Kundennummer: kundennummer,
                     EAN: '9999999999',
-                    Produkt: `Kontoausgleich von ${kundennummer} - ${kunde.firstname} ${kunde.lastname}`,
+                    Produkt: `Kontoausgleich`,
                     Kategorie: 'Buchung',
                     Preis: betrag2,
                     MwSt: 0
@@ -2269,7 +2269,17 @@ function MitgliederExterneZusammenführen() {
             if (verkauf.Datum === datum1.toISOString().split('T')[0]) {
 
                 Kunde = käufer.find(kunde => kunde.uid === verkauf.Kundennummer);
+
+                console.log("Kunde: " + JSON.stringify(Kunde));
                 
+                if (!Kunde) {
+                    console.warn(`Kunde mit UID ${verkauf.Kundennummer} nicht gefunden.`);
+                    Kunde = {
+                        lastname: "GELÖSCHT", // Fallback für unbekannte Kunden
+                        firstname: ""  // Fallback für unbekannte Kunden
+                    };
+                }
+
                 html += `
                     <tr>
                         <td>${verkauf.Terminal}</td>

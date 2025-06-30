@@ -42,14 +42,6 @@ if (!$config) {
 
 echo "<p>✅ Konfigurationsdatei geladen.</p>";
 
-// Lese die .env-Datei
-// $env = parse_ini_file('daten/.env');  // Lädt die Umgebungsvariablen aus der .env-Datei
-
-// if (!$env) {
-//     die("<pre>❌ Fehler beim Laden der Umgebungsvariablen: " . json_last_error_msg() . "</pre>");
-// }
-// echo "<p>✅ Umgebungsvariablen geladen.</p>";
-
 // Wrapper-Datei einbinden
 
 if (!file_exists('VereinsfliegerRestInterface.php')) {
@@ -86,11 +78,6 @@ if ($tokenValid) {
 
         if (json_last_error() === JSON_ERROR_NONE) {
             echo "<p>✅ Empfangene JSON-Daten</p>";
-            //für den Debugging-Zweck:
-            // echo "<pre>Folgede Daten wurden empfangen:<br>";
-            // echo "----------------------------------------<br>";
-            // print_r($data);
-            // echo "</pre>";
         } else {
             echo "<p>❌Fehler beim Parsen der JSON-Daten:</p>";
             echo json_last_error_msg();
@@ -102,6 +89,11 @@ if ($tokenValid) {
     $erfolg = false; // Variable für den Erfolg der Übertragung
 
     foreach ($data as $key => $value) {
+        if ($value['totalprice'] == 0) {
+            // Wenn der Preis 0 ist, überspringen
+            echo "<p>❌ Datensatz <i>" . ($value['comment']) . "</i> übersprungen, da keine Buchungen vorliegen.</p>";
+            continue;
+        }
         echo "<p><b>Beginn der Übertragung des Datensatzes Nummer: </b>";
         print_r($key+1);
         echo "<br><b> Daten: </b>";   
@@ -113,11 +105,35 @@ if ($tokenValid) {
             echo "<br>✅ Datensatz wurde erfolgreich übertragen.";
             // Jetzt soll ein neuer Datensatz in der Datenbank daten/umsatz.csv mit dem datensatz erstellt werden
             $csvFile = 'daten/umsatz.csv';
-            $csvData = array_values($value); // Convert associative array to indexed array
-            $csvData = array_slice($csvData, 0, 10); // Take only the first 10 elements
-            $csvLine = implode(';', $csvData); // Create CSV line with semicolon separator
-            
-            if (file_put_contents($csvFile, $csvLine . PHP_EOL, FILE_APPEND) !== false) {
+            // Passe das Format der CSV-Datei an: Datum;Zeit;Terminal;Schlüssel;Kundennummer;EAN;Produkt;Kategorie;Preis;MwSt
+            // Erstelle eine neue Zeile für die CSV-Datei
+            $date = $value['bookingdate'];
+            $time = $value['Zeit'];
+            $terminal = 'Z'; 
+            $key = 9999999999; // Schlüssel
+            $kundennummer = $value['Uid'] ; // Kundennummer
+            $ean = 9999999999; // EAN
+            $produkt = 'Kontoausgleich-VF'; // Produkt
+            $kategorie = 'Buchung'; // Kategorie
+            $preis = number_format(-$value['totalprice'], 2, '.', ''); // Preis mit 2 Dezimalstellen (negativ)
+            $mwst = 0; // MwSt
+
+            // Erstelle die CSV-Zeile
+            $csvLine = implode(';', [
+                $date,
+                $time,
+                $terminal,
+                $key,
+                $kundennummer,
+                $ean,
+                $produkt,
+                $kategorie,
+                $preis,
+                $mwst
+            ]) . PHP_EOL;
+
+            // Schreibe die CSV-Zeile in die Datei
+            if (file_put_contents($csvFile, $csvLine, FILE_APPEND) !== false) {
                 echo "<br>✅ Kontoausgleich wurde in ClubCash gespeichert.";
             } else {
                 echo "<br>❌ Fehler beim Speichern in der umsatz.csv.";
