@@ -493,6 +493,8 @@ if ($response !== false) {
             // Durchstreichen-Style für gelöschte Zeilen
             const tdStyle = deletedRows.has(index) ? 'text-decoration: line-through;' : '';
 
+            console.log("Externer Kunde:", externer);    
+
             tr.innerHTML = `
                 <td contenteditable="${!deletedRows.has(index)}" class="${!externer.firstname ? 'error' : ''}" style="${tdStyle}">${externer.firstname || ''}</td>
                 <td contenteditable="${!deletedRows.has(index)}" class="${!externer.lastname ? 'error' : ''}" style="${tdStyle}">${externer.lastname || ''}</td>
@@ -506,7 +508,7 @@ if ($response !== false) {
                     '<a href="#" class="icon" onclick="return false;">↩️</a>' : ''}
                 </td>
                 <td style="${tdStyle}">${externer.Kontostand ? externer.Kontostand.toFixed(2) + ' €' : '0,00 €'}</td>
-                <td style="${tdStyle}"><a href="#" class="icon" onclick="Kundenübersicht('${externer.uid}')">ℹ️</a></td>
+                <td style="${tdStyle}"><a href="#" class="icon" onclick="Kundenübersicht('${externer.schlüssel}')">ℹ️</a></td>
             `;
                 
             // Add event listeners
@@ -1582,7 +1584,7 @@ if ($response !== false) {
             <th><i>i</i></th>
         </tr>`;
 
-        käufer.forEach(kunde => {
+        kunden.forEach(kunde => {
             html += `<tr>
                 <td>${kunde.uid}</td>
                 <td class="links">${kunde.memberid}</td>
@@ -1960,11 +1962,17 @@ if ($response !== false) {
 
         // die akteullen anmeldedaten holen
 
+        console.log("Käufer: " + JSON.stringify(käufer));
 
         const kunde = käufer.find(kunde => kunde.uid == kundennummer);
 
+        console.log("Kunde: " + JSON.stringify(kunde));
+
+        console.log("Kundennummer: " + kundennummer);
+
         //Kontostand berechnen
         let kundenkontostandeinzeln = kundenkontostand.find(k => k.Kundennummer === kundennummer);
+
         console.log("Kundenkontostand: " + JSON.stringify(kundenkontostandeinzeln));
 
         if (!kunde) {
@@ -2225,6 +2233,7 @@ if ($response !== false) {
     }
 
 function MitgliederExterneZusammenführen() {
+
     let käufer = [...kunden];
 
     if (!externe) return käufer;
