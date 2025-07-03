@@ -172,10 +172,10 @@ if ($response !== false) {
     <li>
       <a href="#" id="MenuDownload" style="display: none;">Download</a>
       <ul>
-        <li><a href="#" onclick="downloadFile('produkte.json')">Produktliste JSON</a></li>
-        <li><a href="#" onclick="downloadFile('kunden.json')">Kundenliste JSON</a></li>
-        <li><a href="#" onclick="downloadFile('externe.json')">Externe Kunden JSON</a></li>
-        <li><a href="#" onclick="downloadFile('umsatz.csv')">Umsatz CSV</a></li>
+        <li><a href="#" onclick="downloadFile('daten/produkte.json')">Produktliste JSON</a></li>
+        <li><a href="#" onclick="downloadFile('daten/kunden.json')">Kundenliste JSON</a></li>
+        <li><a href="#" onclick="downloadFile('daten/externe.json')">Externe Kunden JSON</a></li>
+        <li><a href="#" onclick="downloadFile('daten/umsatz.csv')">Umsatz CSV</a></li>
         <li><a href="#" onclick="Mitgliederdaten()">Mitgliederdaten</a></li>
         <li><a href="#" onclick="backupliste()">Backups</a></li>
       </ul>
@@ -3357,10 +3357,31 @@ function MitgliederExterneZusammenführen() {
 	
 	// Beispiel für einen Download-Link
     function downloadFile(filename) {
-        if (confirm('Möchten Sie die Datei ' + filename + ' herunterladen?')) {
-            window.location.href = 'get-protected-file.php?file=' + encodeURIComponent(filename);
-        }
+
+    // Erstellung des Download Links
+    const downloadUrl = `download.php?file=${encodeURIComponent(filename)}`;
+
+    // Erstelle ein unsichtbares <a> Element
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = filename.split('/').pop(); // Extrahiere den Dateinamen ohne Pfad
+    
+    // Füge das Element zum DOM hinzu
+    document.body.appendChild(link);
+    
+    try {
+        // Klicke den Link programmatisch
+        link.click();
+        
+        // Entferne den Link wieder nach kurzer Verzögerung
+        setTimeout(() => {
+            document.body.removeChild(link);
+        }, 100);
+    } catch (error) {
+        console.error('Fehler beim Download:', error);
+        alert('Fehler beim Download der Datei');
     }
+}
 
     function installLöschen() {
         if (confirm('Soll die Datei install.php gelöscht werden?')) {
