@@ -2352,6 +2352,16 @@ function MitgliederExterneZusammenführen() {
 
                     Kunde = käufer.find(kunde => kunde.uid === verkauf.Kundennummer);
 
+                    let KNummer = String(verkauf.Kundennummer);
+
+                    if (!Kunde) {
+                        console.warn(`Kunde mit UID ${verkauf.Kundennummer} nicht gefunden.`);
+                        Kunde = {
+                            lastname: "GELÖSCHT", // Fallback für unbekannte Kunden
+                            firstname: KNummer  // Fallback für unbekannte Kunden
+                        };
+                    }
+
                     html += `
                         <tr>
                             <td>${verkauf.Terminal}</td>

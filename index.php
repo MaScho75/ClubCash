@@ -133,6 +133,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+
+
 function copyDirectory($source, $destination) {
     if (!is_dir($source)) {
         return false;
@@ -161,7 +163,11 @@ function copyDirectory($source, $destination) {
     return true;
 }
 
-
+// Lade config.json
+$config = json_decode(file_get_contents('daten/config.json'), true);
+if ($config === null) {
+    die('Fehler beim Lesen der config.json');
+}
 
 ?>
 
@@ -177,8 +183,13 @@ function copyDirectory($source, $destination) {
 </head>
 <body class="portal">
     <div id="login-container">
-        <div id="kopf" style="display: flex; align-items: center;">
-            <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px; margin: 30px;">
+        <div id="kopf" style="display: block; align-items: center;">
+            <a href="https://clubcash.net/"><img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px; "></a>
+
+        <p><b><a href="<?php echo $config['Webseite']; ?>" target="_blank" style="text-decoration: none; margin: 0px;">
+                <span style="font-size: 24px; color: var(--warning-color););"><?php echo $config['Vereinsname']; ?></span>
+            </a></b></p>
+        <p><b>Kunden-Login</b></p>
         </div>
 
         <?php if (!empty($error_message)): ?>
@@ -187,8 +198,6 @@ function copyDirectory($source, $destination) {
 
         <form method="POST" action="">
             <div class="grid-container" style="display: grid; grid-template-columns: auto auto; gap: 10px; padding: 20px;">
-                <p></p><p style="margin: 0px;"><b>Kunden-Login</b></p>
-
                 <div style="padding: 5px; text-align: right; width: 250px;">Email</div>
                 <div style="padding: 5px; text-align: center;">
                     <input type="text" name="kundenname" id="kundenname" style="font-size: 20px; border: none; font-family: 'Carlito', sans-serif; width: 300px;">
@@ -201,7 +210,7 @@ function copyDirectory($source, $destination) {
             </div>
 
             <div style="text-align: center;">
-                <input class="button" type="submit" value="Anmelden">
+                <input class="green button" type="submit" value="Anmelden">
                 <br>
                 <button class="button" type="button" onclick="window.location.href='admin.php';">Admin-Login</button>
             </div>

@@ -51,23 +51,35 @@ if (isset($_GET['delete'])) {
     }
 }
 
-// Dateien anzeigen (optional)
-$files = scandir($folderPath);
-$files = array_filter($files, fn($file) => is_file($folderPath . '/' . $file));
-
-if (empty($files)) {
-    echo "<p>Keine Backups gefunden.</p>";
-} else {
-    echo "<p>📦 Backups gefunden: " . count($files) . "</p>";
-    foreach ($files as $file) {
-        $fileUrl = $folderPath . '/' . $file;
-        $deleteLink = $_SERVER['PHP_SELF'] . '?delete=' . urlencode($file);
-        echo "<p>
-                <a href=\"$deleteLink\" onclick=\"return confirm('Wirklich löschen?');\">🗑️</a>
-                &nbsp;
-                <a href=\"$fileUrl\" download>$file</a>
-              </p>";
+// Dateien anzeigen mit Fehlerbehandlung
+try {
+    $files = @scandir($folderPath);
+    
+    if ($files === false) {
+        throw new Exception("Konnte Verzeichnis nicht lesen");
     }
+    
+    // Filtere nur echte Dateien (keine . und ..)
+    $backupFiles = array_filter($files, function($file) use ($folderPath) {
+        return is_file($folderPath . '/' . $file);
+    });
+
+    if (empty($backupFiles)) {
+        echo "<p>Keine Backups gefunden.</p>";
+    } else {
+        echo "<p>📦 Backups gefunden: " . count($backupFiles) . "</p>";
+        foreach ($backupFiles as $file) {
+            $deleteLink = $_SERVER['PHP_SELF'] . '?delete=' . urlencode($file);
+            $downloadLink = 'download.php?file=' . urlencode($file);
+            echo "<p>
+                    <a href=\"$deleteLink\" onclick=\"return confirm('Wirklich löschen?');\">🗑️</a>
+                    &nbsp;
+                    <a href=\"$downloadLink\">" . htmlspecialchars($file) . "</a>
+                  </p>";
+        }
+    }
+} catch (Exception $e) {
+    echo "<p>❌ Fehler: " . htmlspecialchars($e->getMessage()) . "</p>";
 }
 
 ?>

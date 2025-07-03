@@ -67,6 +67,7 @@
     margin: 10px;
  }
 
+
 .switch {
     position: relative;
     display: inline-block;
@@ -1002,3 +1003,8 @@ th {
         width: 150px;
         margin: 0px 20px;
     }
+
+     .green {
+    background-color: var(--success-color);
+    color: var(--text-color-light);
+ }

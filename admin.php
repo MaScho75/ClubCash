@@ -93,17 +93,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="portal">
     <div id="login-container">
-       <div id="kopf" style="display: flex; align-items: center;">
-            <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px;  margin: 30px;">	   
+       <div id="kopf" style="display: block; align-items: center;">
+            <a href="https://clubcash.net/"><img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px; "></a>
+
+        <p><b><a href="<?php echo $config['Webseite']; ?>" target="_blank" style="text-decoration: none; margin: 0px;">
+                <span style="font-size: 24px; color: var(--warning-color););"><?php echo $config['Vereinsname']; ?></span>
+            </a></b></p>
+        <p><b>Admin-Login</b></p>
         </div>
-        
         <?php if (isset($error_message)) echo "<p style='text-align: center; color: var(--error-color);'>$error_message</p>"; ?>
         
         <form method="POST" action="">
 
                 <div class="grid-container" style="display: grid; grid-template-columns: auto auto; gap: 10px; margin-bottom: 20px;">
 
-                    <p></p><p style="margin: 0px; "><b>Admin-Login</b></p>
+                    
 
                     <div style=" padding: 5px; text-align: right; width: 250px;">Email</div>
                     
@@ -120,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
             <div style="text-align: center;">
-                <input class="button" type="submit" value="Anmelden">
+                <input class="green button" type="submit" value="Anmelden">
                 <br>
                 <button class="button" type="button" onclick="window.location.href='index.php';">Kunden-Login</button>
             </div>
