@@ -3411,6 +3411,40 @@ function MitgliederExterneZusammenführen() {
         }
     }
   
+    function downloadBackup(filename) {
+
+        fetch('download.php?file=' + encodeURIComponent(filename), {
+            method: 'GET',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Download fehlgeschlagen');
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }, 100);
+        })
+        .catch(error => {
+            console.error('Download Fehler:', error);
+            alert('Fehler beim Download: ' + error.message);
+        });
+        
+        return false;
+    }
 </script>
 </body>
 </html>

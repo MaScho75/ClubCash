@@ -68,13 +68,15 @@ try {
         echo "<p>Keine Backups gefunden.</p>";
     } else {
         echo "<p>📦 Backups gefunden: " . count($backupFiles) . "</p>";
+        
+        // Dateien anzeigen
         foreach ($backupFiles as $file) {
             $deleteLink = $_SERVER['PHP_SELF'] . '?delete=' . urlencode($file);
-            $downloadLink = 'download.php?file=' . urlencode($file);
             echo "<p>
-                    <a href=\"$deleteLink\" onclick=\"return confirm('Wirklich löschen?');\">🗑️</a>
+                    <a href=\"{$deleteLink}\" onclick=\"return confirm('Wirklich löschen?');\">🗑️</a>
                     &nbsp;
-                    <a href=\"$downloadLink\">" . htmlspecialchars($file) . "</a>
+                    <a href=\"javascript:void(0)\" onclick=\"return downloadBackup('" . htmlspecialchars($file, ENT_QUOTES) . "');\">" . 
+                    htmlspecialchars($file) . "</a>
                   </p>";
         }
     }
