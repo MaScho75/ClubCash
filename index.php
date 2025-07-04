@@ -24,6 +24,12 @@
 
 session_start();
 
+// Login-Versuche tracken
+if (!isset($_SESSION['login_attempts'])) {
+    $_SESSION['login_attempts'] = 0;
+    $_SESSION['last_attempt'] = 0;
+}
+
 // prüfe ob der Ordner "daten" existiert
 if (!is_dir('daten')) {
     //kopiere den Ordner "daten_template" und nenne ihn "daten"
@@ -111,26 +117,51 @@ if (!isset($_SESSION['accessToken']) || !isset($_SESSION['tokenExpiry']) || $_SE
     }
 }
 
+// Wartezeit berechnen (5 * 2^versuche Sekunden)
+$waitTime = 5 * pow(2, $_SESSION['login_attempts']); 
+$remainingTime = ($_SESSION['last_attempt'] + $waitTime) - time();
+
 // Wenn POST-Formular gesendet wurde
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $KundenName = trim($_POST['kundenname'] ?? '');
-    $Schlüsselnummer = trim($_POST['schlüsselnummer'] ?? '');
-
-    if (!empty($KundenName) && !empty($Schlüsselnummer)) {
-        $found = false;
-        foreach ($kundenDaten as $kunde) {
-            if ($kunde['email'] === $KundenName && $kunde['schlüssel'] === $Schlüsselnummer) {
-                $_SESSION['user_authenticated'] = true;
-                $_SESSION['username'] = $KundenName;
-                $_SESSION['customer_login'] = true;
-                header('Location: portal.php');
-                exit();
-            }
-        }
-        $error_message = "Ungültige Email oder Schlüsselnummer!";
+    // Prüfen ob Wartezeit vorbei ist
+    if ($remainingTime > 0) {
+        $error_message = "Bitte warten Sie noch {$remainingTime} Sekunden vor dem nächsten Versuch.";
     } else {
-        $error_message = "Bitte Email und Schlüsselnummer eingeben.";
+        $KundenName = trim($_POST['kundenname'] ?? '');
+        $Schlüsselnummer = trim($_POST['schlüsselnummer'] ?? '');
+
+        if (!empty($KundenName) && !empty($Schlüsselnummer)) {
+            $found = false;
+            foreach ($kundenDaten as $kunde) {
+                if ($kunde['email'] === $KundenName && $kunde['schlüssel'] === $Schlüsselnummer) {
+                    // Login erfolgreich
+                    $_SESSION['user_authenticated'] = true;
+                    $_SESSION['username'] = $KundenName;
+                    $_SESSION['customer_login'] = true;
+                    $_SESSION['login_attempts'] = 0;
+                    $_SESSION['last_attempt'] = 0;
+                    header('Location: portal.php');
+                    exit();
+                }
+            }
+            // Login fehlgeschlagen
+            $_SESSION['login_attempts']++;
+            $_SESSION['last_attempt'] = time();
+            $waitTime = 5 * pow(2, $_SESSION['login_attempts']); 
+            
+            // Seite sofort neu laden um den Countdown anzuzeigen
+            header('Location: ' . $_SERVER['PHP_SELF'] . '?error=' . urlencode("Ungültige Email oder Schlüsselnummer!"));
+            exit();
+        } else {
+            $error_message = "Bitte Email und Schlüsselnummer eingeben.";
+        }
     }
+}
+
+// Fehlermeldung aus URL-Parameter auslesen (am Anfang der Datei nach session_start())
+if (isset($_GET['error'])) {
+    $error_message = $_GET['error'];
+    $remainingTime = ($_SESSION['last_attempt'] + $waitTime) - time();
 }
 
 
@@ -210,11 +241,47 @@ if ($config === null) {
             </div>
 
             <div style="text-align: center;">
-                <input class="green button" type="submit" value="Anmelden">
+                <input id="submit-button" class="green button" type="submit" value="Anmelden">
                 <br>
                 <button class="button" type="button" onclick="window.location.href='admin.php';">Admin-Login</button>
             </div>
         </form>
+
+        <?php if ($remainingTime > 0): ?>
+            <p style="text-align: center; color: var(--warning-color); margin-top: 30px;" id="countdown-container">
+                Nächster Versuch in <span id="countdown"><?= $remainingTime ?></span> Sekunden möglich.
+            </p>
+            <script>
+                // Sofort ausführende Funktion (IIFE)
+                (function() {
+                    let timeLeft = <?= $remainingTime ?>;
+                    const countdownElement = document.getElementById('countdown');
+                    const countdownContainer = document.getElementById('countdown-container');
+                    const loginForm = document.querySelector('form');
+                    const submitButton = loginForm.querySelector('input[type="submit"]');
+                    
+                    // Login-Button sofort deaktivieren
+                    submitButton.disabled = true;
+                    
+                    // Countdown-Funktion
+                    function updateCountdown() {
+                        if (timeLeft > 0) {
+                            countdownElement.textContent = timeLeft;
+                            timeLeft--;
+                            setTimeout(updateCountdown, 1000);
+                            document.getElementById('submit-button').style= 'background-color: var(--border-color);';
+                        } else {
+                            submitButton.disabled = false;
+                            countdownContainer.style.display = 'none';
+                            document.getElementById('submit-button').style= 'background-color: var(--success-color);';
+                        }
+                    }
+                    
+                    // Countdown sofort starten
+                    updateCountdown();
+                })();
+            </script>
+        <?php endif; ?>
     </div>
 </body>
 </html>

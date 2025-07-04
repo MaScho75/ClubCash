@@ -74,12 +74,57 @@ if ($zip->open($backupFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE
     }
 
     $zip->close();
-
-    $downloadUrl = $backupDir . '/' . basename($backupFile);
-
+    
+    $backupFileName = basename($backupFile);
+    
     echo "<p>✅ Backup erfolgreich erstellt:</p>";
-    echo "<a class='kleinerBt' href='" . htmlspecialchars($downloadUrl) . "' download>ClubCash_Systembackup_" . $timestamp . ".zip</a>";
- 
+    echo "<a class='kleinerBt' href='javascript:void(0)' onclick='return downloadBackup(\"" . 
+         htmlspecialchars($backupFileName, ENT_QUOTES) . "\");'>" . 
+         htmlspecialchars($backupFileName) . "</a>";
+    
+    // JavaScript für sicheren Download
+    echo <<<HTML
+    <script>
+        function downloadBackup(filename) {
+            if (!confirm('Möchten Sie das Backup ' + filename + ' herunterladen?')) {
+                return false;
+            }
+            
+            fetch('download.php?file=' + encodeURIComponent(filename), {
+                method: 'GET',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Download fehlgeschlagen');
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                }, 100);
+            })
+            .catch(error => {
+                console.error('Download Fehler:', error);
+                alert('Fehler beim Download: ' + error.message);
+            });
+            
+            return false;
+        }
+    </script>
+HTML;
+
 } else {
     echo "<p>❌ Fehler beim Erstellen des Backups.</p>";
 }

@@ -44,31 +44,61 @@ if ($config === null) {
     die('Fehler beim Lesen der config.json');
 }
 
-// Falls das Login-Formular abgeschickt wurde
+// Nach session_start() einfügen:
+// Login-Versuche tracken
+if (!isset($_SESSION['admin_login_attempts'])) {
+    $_SESSION['admin_login_attempts'] = 0;
+    $_SESSION['admin_last_attempt'] = 0;
+}
+
+// Wartezeit berechnen (5 * 2^versuche Sekunden)
+$waitTime = 5 * pow(2, $_SESSION['admin_login_attempts']); 
+$remainingTime = ($_SESSION['admin_last_attempt'] + $waitTime) - time();
+
+// Login-Logik anpassen (vor dem HTML-Teil):
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $UserName = trim($_POST['username'] ?? '');
-    $Password = trim($_POST['password'] ?? '');
-    $Authentifizier = trim($_POST['authentifizier'] ?? '');
-
-    if (!empty($UserName) && !empty($Password)) {
-        $api = new VereinsfliegerRestInterface();
-        
-        if ($api->SignIn($UserName, $Password, 0, $config['appkey'], $Authentifizier)) {
-            // Login erfolgreich - Token speichern
-            $_SESSION['accessToken'] = $api->GetAccessToken();
-            $_SESSION['tokenExpiry'] = time() + 3600; // Token für 1 Stunde gültig
-            $_SESSION['user_authenticated'] = true;
-            $_SESSION['username'] = $UserName;
-            $_SESSION['customer_login'] = false;
-
-            header('Location: portal.php');
-            exit();
-        } else {
-            $error_message = "Ungültiger Benutzername/ungültiges Passwort/ungültige Authentifizierung!<br>Bitte gebe deine Zugangsdaten von Vereinsflieger.de ein.<br>Wenn du keinen Zugang hast, wende dich bitte an den Administrator.";
-        }
+    // Prüfen ob Wartezeit vorbei ist
+    if ($remainingTime > 0) {
+        $error_message = "Bitte warten Sie noch {$remainingTime} Sekunden vor dem nächsten Versuch.";
     } else {
-        $error_message = "Bitte Benutzername und Passwort und ggf. den temporären Authentifizierungscode eingeben.";
+        $UserName = trim($_POST['username'] ?? '');
+        $Password = trim($_POST['password'] ?? '');
+        $Authentifizier = trim($_POST['authentifizier'] ?? '');
+
+        if (!empty($UserName) && !empty($Password)) {
+            $api = new VereinsfliegerRestInterface();
+            
+            if ($api->SignIn($UserName, $Password, 0, $config['appkey'], $Authentifizier)) {
+                // Login erfolgreich
+                $_SESSION['accessToken'] = $api->GetAccessToken();
+                $_SESSION['tokenExpiry'] = time() + 3600;
+                $_SESSION['user_authenticated'] = true;
+                $_SESSION['username'] = $UserName;
+                $_SESSION['customer_login'] = false;
+                $_SESSION['admin_login_attempts'] = 0;
+                $_SESSION['admin_last_attempt'] = 0;
+                header('Location: portal.php');
+                exit();
+            } else {
+                // Login fehlgeschlagen
+                $_SESSION['admin_login_attempts']++;
+                $_SESSION['admin_last_attempt'] = time();
+                $waitTime = 5 * pow(2, $_SESSION['admin_login_attempts']);
+                
+                // Seite neu laden für sofortige Countdown-Anzeige
+                header('Location: ' . $_SERVER['PHP_SELF'] . '?error=' . urlencode("Ungültige Zugangsdaten!"));
+                exit();
+            }
+        } else {
+            $error_message = "Bitte alle erforderlichen Felder ausfüllen.";
+        }
     }
+}
+
+// Fehlermeldung aus URL-Parameter auslesen
+if (isset($_GET['error'])) {
+    $error_message = $_GET['error'];
+    $remainingTime = ($_SESSION['admin_last_attempt'] + $waitTime) - time();
 }
 ?>
 
@@ -130,6 +160,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
         </form>
+
+        <?php if ($remainingTime > 0): ?>
+            <p style="text-align: center; color: var(--warning-color); margin-top: 30px;" id="countdown-container">
+                Nächster Versuch in <span id="countdown"><?= $remainingTime ?></span> Sekunden möglich.
+            </p>
+            <script>
+                (function() {
+                    let timeLeft = <?= $remainingTime ?>;
+                    const countdownElement = document.getElementById('countdown');
+                    const countdownContainer = document.getElementById('countdown-container');
+                    const loginForm = document.querySelector('form');
+                    const submitButton = loginForm.querySelector('input[type="submit"]');
+                    
+                    // Login-Button sofort deaktivieren
+                    submitButton.disabled = true;
+                    
+                    // Countdown-Funktion
+                    function updateCountdown() {
+                        if (timeLeft > 0) {
+                            countdownElement.textContent = timeLeft;
+                            timeLeft--;
+                            setTimeout(updateCountdown, 1000);
+                            submitButton.style = 'background-color: var(--border-color);';
+                        } else {
+                            submitButton.disabled = false;
+                            countdownContainer.style.display = 'none';
+                            submitButton.style = 'background-color: var(--success-color);';
+                        }
+                    }
+                    
+                    // Countdown sofort starten
+                    updateCountdown();
+                })();
+            </script>
+        <?php endif; ?>
     </div>
 </body>
 </html>
