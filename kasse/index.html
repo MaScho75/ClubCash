@@ -22,7 +22,7 @@
     <!-- Zeichensatz auf UTF-8 setzen -->
     <meta charset="UTF-8">
 
-    <!-- Cache-Control Header setzen -->
+    <!-- Cache-Control Headers -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -326,8 +326,12 @@
         // Service Worker registrieren
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('sw.js')
-                .then(registration => {
+                .then(async registration => {
                     console.log('ServiceWorker registriert');
+                    if (navigator.onLine) {
+                        // Bei Online-Betrieb ServiceWorker updaten
+                        await registration.update();
+                    }
                 })
                 .catch(err => {
                     console.log('ServiceWorker Fehler: ', err);
@@ -453,14 +457,21 @@
         }
             
         async function loadJSON(url) {
-            // Add timestamp to prevent caching
+            // Timestamp für Cache-Busting
             const timestamp = new Date().getTime();
-            const response = await fetch(`${url}?v=${timestamp}`);
+            const response = await fetch(`${url}?v=${timestamp}`, {
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            });
+            
             if (!response.ok) {
                 throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
             }
-            const data = await response.json();
-            return data;
+            return await response.json();
         }
 
         async function loadCSV(url) {
@@ -520,18 +531,15 @@
             let produkt = produkte.find(produkte => produkte.EAN === EANr);
 
             if (produkt) {
-                console.log("Produkt gefunden: ", produkt);
                 if (produkt.Menge == "true") {
-                    console.log("Produktmenge: " + produkt.Menge);
                     ProduktTemp = produkt;  // Speichert das Produkt in einer temporären Variable, um es später zu verwenden
                     warenkorbüberschrift()
                     document.getElementById("einheit").innerText = "l";
-                    eingabestopp(); 
+                    //eingabestopp(); 
                     //öffnet die Tastatur für die Mengeneingabe
                     tastatur.style.display = 'block';
                     statusfeld.innerHTML = "Bitte Menge für <b>&nbsp;" + produkt.Bezeichnung + "&nbsp;</b> in Litern eingeben";
                     spritt = true;
-
                     return
                 }
 
@@ -618,7 +626,7 @@
                     zeigeHaken(); // Zeige Häkchenanimation an
 
                     setTimeout(() => {
-                        location.reload(); // Seite wird nach 3 Sekunden neu geladen
+                        window.location.reload(true); // Seite wird nach 3 Sekunden neu geladen
                     }, 3000); 
 
                 } else {
@@ -1021,7 +1029,7 @@
         }
 
         function meingabe(x) {
-
+            console.log("Eingabe: " + x);
             let manuelles_Produkt = [];
 
             if (x == "E") {
@@ -1044,7 +1052,6 @@
                         Kategorie: "Fuel"
                     };
                 } else { 
-                    console.log("Test: ", eingabestring);
                     manuelles_Produkt = {
                         EAN: 9990000000000,
                         Bezeichnung: "manuelle Buchung",
@@ -1065,6 +1072,7 @@
         }
 
         function eingabestopp() {
+            console.log("Eingabestopp aktiviert");
             document.removeEventListener("keydown", tastenkontrolle);
             Bt_preisfenster.style.display = 'none';
             Bt_manuelleBuchung.style.display = 'none';

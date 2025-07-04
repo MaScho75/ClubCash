@@ -1,11 +1,12 @@
 <?php
-ini_set('display_errors', 1); // Nur für Debug-Zwecke
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+ini_set('display_errors', 0); // Keine Fehler im Production Mode anzeigen
+error_reporting(0);
 
 // Header für JSON und CORS
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
+header("Cache-Control: no-cache, must-revalidate");
+header("Pragma: no-cache");
 
 $file = "../daten/umsatz.csv";
 
@@ -13,40 +14,46 @@ $file = "../daten/umsatz.csv";
 date_default_timezone_set('Europe/Berlin');
 $today = date("Y-m-d");
 
-if (!file_exists($file)) {
-    echo json_encode(["status" => "error", "message" => "Die Datei umsatz.csv existiert nicht."]);
-    exit;
-}
+try {
+    if (!file_exists($file)) {
+        throw new Exception("Die Datei umsatz.csv existiert nicht.");
+    }
 
-if (($handle = fopen($file, "r")) === false) {
-    echo json_encode(["status" => "error", "message" => "Die Datei konnte nicht geöffnet werden."]);
-    exit;
-}
+    if (($handle = fopen($file, "r")) === false) {
+        throw new Exception("Die Datei konnte nicht geöffnet werden.");
+    }
 
-$headers = fgetcsv($handle, 1000, ";");
-if ($headers === false) {
-    echo json_encode(["status" => "error", "message" => "Header-Zeile fehlt oder ungültig."]);
-    fclose($handle);
-    exit;
-}
+    // fgetcsv mit allen Parametern
+    $headers = fgetcsv($handle, 1000, ";", "\"", "\\");
+    if ($headers === false) {
+        throw new Exception("Header-Zeile fehlt oder ungültig.");
+    }
 
-$todayData = [];
+    $todayData = [];
 
-while (($data = fgetcsv($handle, 1000, ";")) !== false) {
-    $date = $data[0];
+    while (($data = fgetcsv($handle, 1000, ";", "\"", "\\")) !== false) {
+        $date = $data[0];
 
-    if ($date == $today) {
-        if (count($headers) === count($data)) {
-            $todayData[] = array_combine($headers, $data);
+        if ($date == $today) {
+            if (count($headers) === count($data)) {
+                $todayData[] = array_combine($headers, $data);
+            }
         }
     }
+
+    fclose($handle);
+
+    echo json_encode([
+        "status" => "success",
+        "headers" => $headers,
+        "data" => $todayData
+    ]);
+
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode([
+        "status" => "error",
+        "message" => $e->getMessage()
+    ]);
 }
-
-fclose($handle);
-
-echo json_encode([
-    "status" => "success",
-    "headers" => $headers,
-    "data" => $todayData
-]);
 ?>
