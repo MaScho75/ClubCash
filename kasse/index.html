@@ -649,11 +649,6 @@
             let kontosumme = 0.0;
             let kunde = kunden.find(kunden => kunden.schlüssel === Schlüsselnummer);
 
-            console.log("Kundenkontoübersicht startet....");
-            console.log("Schlüsselnummer: ", Schlüsselnummer);
-            console.log("Kunde gefunden: ", kunde);
-            console.log("kundenuid: ", kunde.uid);
-
             try {
                 let response = await fetch("kundenkontouebersicht-cvs.php", {
                     method: "POST",
@@ -673,6 +668,13 @@
                     console.error("Fehler beim Abrufen:", data.message);
                     return;
                 }
+
+                //sortiere die Daten nach Datum und Zeit absteigend
+                data.data.sort((a, b) => {
+                    let dateA = new Date(a.Datum + " " + a.Zeit);
+                    let dateB = new Date(b.Datum + " " + b.Zeit);
+                    return dateB - dateA; // Absteigend sortieren
+                });
 
                 tbody.innerText = ""; // Bestehenden Inhalt löschen
 
