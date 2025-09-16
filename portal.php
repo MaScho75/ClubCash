@@ -1691,7 +1691,6 @@ if ($response !== false) {
 
         // Prüfen, ob nnameDruck definiert sind, dann nur die die Einzelne Mitgliedskarte drucken
         if (schlüsselDruck) {
-            console.log("Mitgliedsausweis für Einzelschlüssel: " + schlüsselDruck);
             sortedKunden = sortedKunden.filter(kunde => kunde.schlüssel && kunde.schlüssel.trim() == schlüsselDruck);
         }
 
@@ -1706,7 +1705,7 @@ if ($response !== false) {
                             </div>
                         </div>        
                         <div style="font-size: 1.2em; margin: 15px; text-align: center;">${kunde.lastname}, ${kunde.firstname} </div>
-                        <div class="barcode" style="font-size: 2em; text-align: center;">*$${kunde.schlüssel}*</div>  
+                        <div class="barcode" style="font-size: 2em; text-align: center;">*${kunde.schlüssel}*</div>  
 
                     </div>`;
         });
@@ -1957,23 +1956,13 @@ if ($response !== false) {
         let menu2 = "<h2 style='display: inline;'>Übersicht</h2>";
         
         let html = '';
-        
-        console.log("Kundenübersicht für Kundennummer: " + kundennummer);
 
         // die akteullen anmeldedaten holen
 
-        console.log("Käufer: " + JSON.stringify(käufer));
-
         const kunde = käufer.find(kunde => kunde.uid == kundennummer);
-
-        console.log("Kunde: " + JSON.stringify(kunde));
-
-        console.log("Kundennummer: " + kundennummer);
 
         //Kontostand berechnen
         let kundenkontostandeinzeln = kundenkontostand.find(k => k.Kundennummer === kundennummer);
-
-        console.log("Kundenkontostand: " + JSON.stringify(kundenkontostandeinzeln));
 
         if (!kunde) {
             portalmenu2.innerHTML = menu2;
@@ -2232,25 +2221,25 @@ if ($response !== false) {
         .catch(error => console.error('Fehler beim Laden der Dateien:', error));
     }
 
-function MitgliederExterneZusammenführen() {
+    function MitgliederExterneZusammenführen() {
 
-    let käufer = [...kunden];
+        let käufer = [...kunden];
 
-    if (!externe) return käufer;
+        if (!externe) return käufer;
 
-    //Kopie der externen Kunden mit angepassten Eigenschaften
-    let externeTemp = externe.map(externer => ({
-        ...externer,
-        uid: externer.schlüssel,
-        cc_admin: false,
-        cc_guest: true,
-        cc_member: false,
-        cc_seller: false
-    }));
+        //Kopie der externen Kunden mit angepassten Eigenschaften
+        let externeTemp = externe.map(externer => ({
+            ...externer,
+            uid: externer.schlüssel,
+            cc_admin: false,
+            cc_guest: true,
+            cc_member: false,
+            cc_seller: false
+        }));
 
-    // käufer Array um externe Kunden erweitern
-    return [...käufer, ...externeTemp];
-}
+        // käufer Array um externe Kunden erweitern
+        return [...käufer, ...externeTemp];
+    }
 
     function Tagesumsätze() {
 
@@ -3367,30 +3356,30 @@ function MitgliederExterneZusammenführen() {
 	// Beispiel für einen Download-Link
     function downloadFile(filename) {
 
-    // Erstellung des Download Links
-    const downloadUrl = `download.php?file=${encodeURIComponent(filename)}`;
+        // Erstellung des Download Links
+        const downloadUrl = `download.php?file=${encodeURIComponent(filename)}`;
 
-    // Erstelle ein unsichtbares <a> Element
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = filename.split('/').pop(); // Extrahiere den Dateinamen ohne Pfad
-    
-    // Füge das Element zum DOM hinzu
-    document.body.appendChild(link);
-    
-    try {
-        // Klicke den Link programmatisch
-        link.click();
+        // Erstelle ein unsichtbares <a> Element
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = filename.split('/').pop(); // Extrahiere den Dateinamen ohne Pfad
         
-        // Entferne den Link wieder nach kurzer Verzögerung
-        setTimeout(() => {
-            document.body.removeChild(link);
-        }, 100);
-    } catch (error) {
-        console.error('Fehler beim Download:', error);
-        alert('Fehler beim Download der Datei');
+        // Füge das Element zum DOM hinzu
+        document.body.appendChild(link);
+        
+        try {
+            // Klicke den Link programmatisch
+            link.click();
+            
+            // Entferne den Link wieder nach kurzer Verzögerung
+            setTimeout(() => {
+                document.body.removeChild(link);
+            }, 100);
+        } catch (error) {
+            console.error('Fehler beim Download:', error);
+            alert('Fehler beim Download der Datei');
+        }
     }
-}
 
     function installLöschen() {
         if (confirm('Soll die Datei install.php gelöscht werden?')) {
@@ -3445,6 +3434,7 @@ function MitgliederExterneZusammenführen() {
         
         return false;
     }
+
 </script>
 </body>
 </html>
