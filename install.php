@@ -68,12 +68,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px; margin: 30px;">
         </div>
         <h2>Initialisierung</h2>
-       <p>Bitte generieren Sie bei Vereinsfleiger einen APPKEY und geben Sie in hier ein. Ohne den APPKEY können Sie ClubCash nicht nutzen.</p>
+       <p>Bitte generieren Sie bei Vereinsflieger einen APPKEY und geben Sie in hier ein. Ohne den APPKEY können Sie ClubCash nicht nutzen.</p>
         <p>Der APPKEY ist eine Art Schlüssel, der es ClubCash ermöglicht, sicher mit dem Vereinsflieger.de-System zu kommunizieren.</p>
-        <p>Danach können Sie sich bei ClubCash mit ihren Zugangsdaten von Vereinsflieger.de anmelden. Wechsels Sie dazu beim Aufrufen der Seite
+        <p>Danach können Sie sich bei ClubCash mit Ihren Zugangsdaten von Vereinsflieger.de anmelden. Wechsels Sie dazu beim Aufrufen der Seite
             auf Admin-Login.</p>
         <p>Sollten Sie die falsche App-Key eingegeben haben, können Sie sich nicht anmelden. In diesem Fall müssen Sie den Ordner "daten" löschen oder diese Seite mit dem Zusatz "/install.php" aufrufen. Dann 
-            können sie eine neue App-Key eingeben.</p>
+            können Sie einen neuen App-Key eingeben.</p>
 
         <form id="appkeyForm" method="post" action="install.php">
             <label for="appkey">App-Key:</label>
