@@ -132,7 +132,8 @@ if ($response !== false) {
       <ul>
         <li><a href="" onclick="location.reload()">Programminfo</a></li>
         <li><a href="#" onclick="Kundenübersicht(angemeldetesMitglied.uid)">Übersicht</a></li>
-        <li><a href="logout.php" >Abmelden</a></li>
+        <li><a href="#" onclick="OnlineBuchung(angemeldetesMitglied.uid)">Buchung</a></li>
+        <li><a href="logout.php">Abmelden</a></li>
       </ul>
     </li>   
 
@@ -198,7 +199,6 @@ if ($response !== false) {
 
     // Datum mitteleuropäisch formatiert
         let heute = new Date();
-        heute = new Date(heute.getTime() - heute.getTimezoneOffset() * 60000);
 
     //Wochenbeginn
         let wochenbeginn = new Date(heute);
@@ -360,6 +360,82 @@ if ($response !== false) {
                 const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
                 window.history.replaceState({}, '', newUrl);
            }
+
+    function OnlineBuchung(KdNr) {
+        let AusgewählterKunde = käufer.find(kunde => kunde.uid === KdNr);
+        let AusgewählterKundenname = AusgewählterKunde ? `${AusgewählterKunde.firstname} ${AusgewählterKunde.lastname}` : 'Unbekannt';
+        let Kategorie;
+        let menu2 = `<h2 style='display: inline;'>Buchung</h2><p>Durch die Auswahl eines der folgenden Produktes wird es auf das Konto von <b>${AusgewählterKundenname}</b> geschrieben.</p>`;
+        let html = "<button onclick='OnlineBuchung_ManuelleBuchung()' style='width: 400px; height: 80px; margin: 10px;' class='grosserBt'>manuelle Buchung</button>";
+  
+        sortedProdukte = [...produkte].sort((a, b) => {
+            if (a.Kategorie === b.Kategorie) {
+                // Numerischer Vergleich der Sortierungswerte
+                return parseInt(a.Sortierung) - parseInt(b.Sortierung);
+            }
+            return a.Kategorie.localeCompare(b.Kategorie);
+        });
+
+        sortedProdukte.forEach(produkt => {
+            if (produkt.EAN === "9990000000000") return; // Skip "manuelle Buchung")
+            if (Kategorie !== produkt.Kategorie) {
+                Kategorie = produkt.Kategorie;
+                html += `
+                    <h3 style="margin-top: 30px; margin-bottom: 10px;">${Kategorie}</h3>
+                `;
+            }
+            html += `
+                <button style="width: 400px; height: 80px; margin: 10px;" class="grosserBt" onclick="OnlineBuchung_Produkt('${produkt.EAN}', '${produkt.Bezeichnung}', '${produkt.Kategorie}', ${produkt.Preis}, ${produkt.MwSt}, '${KdNr}', '${AusgewählterKundenname}')">
+                    ${produkt.Bezeichnung} <br> ${produkt.Preis} €
+                </button>
+            `;
+        });
+        portalmenu2.innerHTML = menu2;
+        portalInhalt.innerHTML = html;
+    }
+
+    function OnlineBuchung_Produkt(EAN, Bezeichnung, Kategorie, Preis, MwSt, KdNr, AusgewählterKundenname) {
+        
+        let buchungsDaten = {
+            Datum: heute.toISOString().split('T')[0],
+            Zeit: heute.toTimeString().split(':').slice(0,2).join(':'),
+            Terminal: 'M',
+            Schlüssel: angemeldetesMitglied.schlüssel,
+            Kundennummer: KdNr,
+            EAN: EAN,
+            Produkt: Bezeichnung,
+            Kategorie: Kategorie,
+            Preis: Preis,
+            MwSt: MwSt
+        };
+
+        if (confirm(`Möchtest du das Produkt "${Bezeichnung}" für ${Preis} € auf das Konto von ${AusgewählterKundenname} gebucht wird?`)) {
+            fetch('kasse/umsatz-api.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify([buchungsDaten])
+            })
+            .then(response => response.json())
+            .then(result => { 
+                    alert(`Das Produkt "${Bezeichnung}" wurde erfolgreich auf das Konto von ${AusgewählterKundenname} gebucht.`);
+            })
+            .then( 
+                // Daten anfügen
+                verkäufe.push(buchungsDaten),
+                // Kontostand aktualisieren
+                angemeldetesMitglied.Kontostand += parseFloat(Preis),
+                // Zurück zur Buchungsseite
+                OnlineBuchung(KdNr)
+            )
+            .catch(error => {
+                alert('Fehler bei der Buchung: ' + error);
+            });
+        }
+    }
+
 
     function ExterneKunden() {
         let data = externe ? [...externe] : []; // Copy of original data
@@ -2007,8 +2083,10 @@ if ($response !== false) {
             <button class="kleinerBt" onclick="RechnungErstellen('${kunde.uid}', '${datum1}', '${datum2}')" style="margin-left: 10px;">Rechnung</button>
                 `;
         if (angemeldetesMitglied.cc_admin == true) {
-            html += `<button class="kleinerBt" onclick="MitgliederAusweise('${kunde.schlüssel}')" style="margin-left: 10px;">Bezahlkarte</button>`;
-            html += `<button class="kleinerBt" style="width: auto;" onclick="KontoAusgleichen('${kunde.uid}', ${kunde.Kontostand})" style="margin-left: 10px;">Konto ausgleichen</button>`;
+            html += `<button class="kleinerBt" onclick="MitgliederAusweise('${kunde.schlüssel}')" style="margin-left: 10px;">Bezahlkarte</button>
+            <button class="kleinerBt" style="width: auto;" onclick="KontoAusgleichen('${kunde.uid}', ${kunde.Kontostand})" style="margin-left: 10px;">Konto ausgleichen</button>
+            <button class="kleinerBt" style="width: auto;" onclick="OnlineBuchung('${kunde.uid}')" style="margin-left: 10px;">Buchung hinzufügen</button>`
+            ;
         }
 
         html += `
