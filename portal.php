@@ -361,6 +361,43 @@ if ($response !== false) {
                 window.history.replaceState({}, '', newUrl);
            }
 
+    function deleteVerkauf(index) {
+        if (confirm(`Möchtest du den ausgewählten Verkauf wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden!`)) {
+            // Verkauf aus dem Array entfernen
+            verkäufe.splice(index, 1);
+
+            //Bildschirm leeren
+            document.getElementById("preloader").style.display = "block"; // Preloader anzeigen
+            portalmenu2.innerHTML = '<h2>Datenaktualisierung</h2>';
+            portalInhalt.innerHTML = '<p>Bitte Warten! Der Datenbestand wird aktualisiert. Es können in dieser Zeit keine Verkäufe getätigt werden!<br>Nach Abschluss der Aktualierung wird die Seite neu gelanden.</p>';
+
+            // Array zur Übertragung vorbereiten
+            const csvData = {
+                data: verkäufe,
+                filename: "daten/umsatz.csv"
+            };
+
+            // Daten an den Server senden, um die CSV-Datei zu überschreiben
+            fetch('csv-schreiben.php' , {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(csvData)
+            })
+            .then(response => response.json())
+            .then(result => { 
+                    alert(`Der ausgewählte Verkauf wurde erfolgreich gelöscht.`);
+            })
+            .catch(error => {
+                alert('Fehler beim Löschen des Verkaufs: ' + error);
+            })
+            .finally(() => location.reload()); // seite aktualisieren
+        }
+    }       
+
+
     function OnlineBuchung(KdNr) {
         let AusgewählterKunde = käufer.find(kunde => kunde.uid === KdNr);
         let AusgewählterKundenname = AusgewählterKunde ? `${AusgewählterKunde.firstname} ${AusgewählterKunde.lastname}` : 'Unbekannt';
@@ -385,8 +422,8 @@ if ($response !== false) {
                 `;
             }
             html += `
-                <button style="width: 400px; height: 80px; margin: 10px;" class="grosserBt" onclick="OnlineBuchung_Produkt('${produkt.EAN}', '${produkt.Bezeichnung}', '${produkt.Kategorie}', ${produkt.Preis}, ${produkt.MwSt}, '${KdNr}', '${AusgewählterKundenname}')">
-                    ${produkt.Bezeichnung} <br> ${produkt.Preis} €
+                <button style="width: 400px; height: 80px; margin: 10px;" class="grosserBt" onclick="OnlineBuchung_Produkt('${produkt.EAN}', '${produkt.Bezeichnung}', '${produkt.Kategorie}', '${produkt.Preis}', '${produkt.MwSt}', '${KdNr}', '${AusgewählterKundenname}')">
+                    ${produkt.Bezeichnung} <br> ${parseFloat(produkt.Preis).toFixed(2)} €
                 </button>
             `;
         });
@@ -396,6 +433,8 @@ if ($response !== false) {
 
     function OnlineBuchung_Produkt(EAN, Bezeichnung, Kategorie, Preis, MwSt, KdNr, AusgewählterKundenname) {
         
+        Preis = parseFloat(Preis).toFixed(2); // Sicherstellen, dass Preis eine Zahl mit 2 Dezimalstellen ist
+
         let buchungsDaten = {
             Datum: heute.toISOString().split('T')[0],
             Zeit: heute.toTimeString().split(':').slice(0,2).join(':'),
@@ -410,7 +449,8 @@ if ($response !== false) {
         };
 
         if (confirm(`Möchtest du das Produkt "${Bezeichnung}" für ${Preis} € auf das Konto von ${AusgewählterKundenname} gebucht wird?`)) {
-            fetch('kasse/umsatz-api.php', {
+            document.getElementById("preloader").style.display = "block"; // Preloader anzeigen
+            fetch('./kasse/umsatz-api.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -421,17 +461,17 @@ if ($response !== false) {
             .then(response => response.json())
             .then(result => { 
                     alert(`Das Produkt "${Bezeichnung}" wurde erfolgreich auf das Konto von ${AusgewählterKundenname} gebucht.`);
+                    // Daten anfügen
+                    verkäufe.push(buchungsDaten);
+                    // Kontostand aktualisieren
+                    angemeldetesMitglied.Kontostand += parseFloat(Preis);
+                    // Zurück zur Buchungsseite
+                    document.getElementById("preloader").style.display = "none"; // Preloader ausblenden
+                    OnlineBuchung(KdNr);
             })
-            .then( 
-                // Daten anfügen
-                verkäufe.push(buchungsDaten),
-                // Kontostand aktualisieren
-                angemeldetesMitglied.Kontostand += parseFloat(Preis),
-                // Zurück zur Buchungsseite
-                OnlineBuchung(KdNr)
-            )
             .catch(error => {
                 alert('Fehler bei der Buchung: ' + error);
+                document.getElementById("preloader").style.display = "none"; // Preloader ausblenden 
             });
         }
     }
@@ -1812,7 +1852,7 @@ if ($response !== false) {
         }
 
         // Umbuchung in der API durchführen
-        fetch('kasse/umsatz-api.php', {
+        fetch('./kasse/umsatz-api.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1828,7 +1868,7 @@ if ($response !== false) {
                     Produkt: `Kontoausgleich`,
                     Kategorie: 'Buchung',
                     Preis: betrag2,
-                    MwSt: 0
+                    MwSt: 0 // Keine Steuern für Kontoausgleich
                 }
             ])
         })
@@ -1867,7 +1907,7 @@ if ($response !== false) {
         }
 
         // Umbuchung in der API durchführen
-        fetch('kasse/umsatz-api.php', {
+        fetch('./kasse/umsatz-api.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -2064,7 +2104,11 @@ if ($response !== false) {
             }
         }
 
-        KäufeFilter = verkäufe.filter(auswahl => auswahl.Kundennummer == kundennummer && auswahl.Datum >= datum1.toISOString().split('T')[0] && auswahl.Datum <= datum2.toISOString().split('T')[0]);
+        KäufeFilter = verkäufe
+            .map((auswahl, index) => ({...auswahl, originalIndex: index}))
+            .filter(auswahl => auswahl.Kundennummer == kundennummer && auswahl.Datum >= datum1.toISOString().split('T')[0] && auswahl.Datum <= datum2.toISOString().split('T')[0]);
+
+        console.log(KäufeFilter);
 
         let summe = 0;        
 
@@ -2142,11 +2186,12 @@ if ($response !== false) {
                     <th class="links">Produkt</th>
                     <th class="links">Kategorie</th>
                     <th class="rechts">Preis</th>
+                    <th></th>
                 </tr>
             
         <tbody>`;
 
-        KäufeFilter.forEach(verkauf => {    
+        KäufeFilter.forEach((verkauf, index) => {    
             html += `<tr>
                 <td>${verkauf.Terminal}</td>
                 <td>${verkauf.Datum}</td>
@@ -2154,7 +2199,13 @@ if ($response !== false) {
                 <td class="links">${verkauf.Produkt}</td>
                 <td class="links">${verkauf.Kategorie}</td>
                 <td class="rechts">${verkauf.Preis} €</td>
-            </tr>`
+            `;
+            
+            if (angemeldetesMitglied.cc_admin === true) {
+                html += `<td><a href="#" onclick="deleteVerkauf(${verkauf.originalIndex})">🗑️</a></td>`;
+            }
+            
+            html += `</tr>`;
             summe += parseFloat(verkauf.Preis);
         });
         html += `
@@ -2188,6 +2239,7 @@ if ($response !== false) {
         produkte.forEach(produkt => {
             produktsumme = 0;
             produktanzahl = 0;
+            let html2 = ""; // HTML für die Produktübersicht
             KäufeFilter.forEach(verkauf => {
                 if (verkauf.EAN === produkt.EAN) {
                     if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
@@ -2266,7 +2318,7 @@ if ($response !== false) {
     
 
         portalmenu2.innerHTML = menu2;
-        portalInhalt.innerHTML = html 
+        portalInhalt.innerHTML = html;
 
         const btn = document.getElementById("bt_aktualisierung");
         btn.addEventListener("click", () => {
@@ -2278,7 +2330,7 @@ if ($response !== false) {
 
     function Mitgliedsdaten_ziehen() {
         portalmenu2.innerHTML = "<h2 style='display: inline;'>Vereinsflieger Datenimport</h2>";
-        portalInhalt.innerHTML = "<p>Bitte warten, die Mitgliedsdaten werden aus Vereinsflieger abgerufen...</p>";
+        portalInhalt.innerHTML = "<p>Bitte warten, die Mitgliederdaten werden aus Vereinsflieger abgerufen...</p>";
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "pull_Mitgliedsdaten_Vereinsflieger.php", true); 
         xhr.onreadystatechange = function () {
@@ -2418,11 +2470,12 @@ if ($response !== false) {
                     <th class="links">Kunde</th>
                     <th class="links">Produkt</th>
                     <th class="rechts">Preis</th>
+                    <th></th>
                 </tr>
 
             <tbody>`;
 
-            verkäufe.forEach(verkauf => {
+            verkäufe.forEach((verkauf, index) => {
             
                 if (verkauf.Datum >= datum1.toISOString().split('T')[0] && verkauf.Datum <= datum2.toISOString().split('T')[0]) {
 
@@ -2446,6 +2499,7 @@ if ($response !== false) {
                             <td class="links">${Kunde.lastname}, ${Kunde.firstname}</td>
                             <td class="links">${verkauf.Produkt}</td>
                             <td class="rechts">${verkauf.Preis} €</td>
+                            <td><a href="#" onclick="deleteVerkauf(${index})">🗑️</a></td>
                         </tr>`;
                         if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
                             summe += parseFloat(verkauf.Preis);
@@ -2465,7 +2519,6 @@ if ($response !== false) {
                 <table id="Tabelle2" class="portal-table" style="display: none; margin-top: 20px;">
                     <tr>
                         <th>Anzahl</th>
-                        <th class="links">EAN</th>
                         <th class="links">Produkt</th>
                         <th class="links">Kategorie</th>
                         <th class="rechts">Einzelpreis</th> 
@@ -2488,25 +2541,22 @@ if ($response !== false) {
                         produktanzahl++;
                     }
                 });
-
-                html2 += `
+                
+                if (produktanzahl === 0) return; // Wenn keine Verkäufe für dieses Produkt, überspringen
+            
+                html += `
                     <tr>
                         <td>${produktanzahl}</td>
-                        <td class="links">${produkt.EAN}</td>
                         <td class="links">${produkt.Bezeichnung}</td>
                         <td class="links">${produkt.Kategorie}</td>
                         <td class="rechts">${produkt.Preis} €</td>
                         <td class="rechts">${produktsumme.toFixed(2)} €</td>
                     </tr>`;
-
-                if (produktanzahl > 0) { // Nur anzeigen, wenn es Verkäufe gibt
-                    html += html2; // Nur anzeigen, wenn es Verkäufe gibt
-                }
-                    summe += produktsumme;
+                summe += produktsumme;
             });
             html += `
                 <tr class="summenzeile">
-                    <td colspan="5" class="rechts"><b>Summe</b></td>
+                    <td colspan="4" class="rechts"><b>Summe</b></td>
                     <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
                 </tr>
                 </table>
@@ -2806,7 +2856,7 @@ if ($response !== false) {
             btn.addEventListener("click", () => {
                 const datumA = document.getElementById("datum_anfang").value;
                 const datumE = document.getElementById("datum_ende").value;
-                Abrechnung(new Date(datumA), new Date(datumE));
+                Abrechnung(kundennummer, new Date(datumA), new Date(datumE));
             });
         }
         
@@ -2983,7 +3033,7 @@ if ($response !== false) {
         let html = "";
 
         // Formularfelder für jede Konfigurationseinstellung
-        // Eingabefelder aktivieren, wenn der Benutzer Admin ist, sind die Eigenschaften nicht Rollen nichtr richtig deklariert, 
+        // Eingabefelder aktivieren, wenn der Benutzer Admin ist, sind die Eigenschaften nicht Rollen nichtrichtig deklariert, 
         // kann das Feld vorsichtshalber nicht deaktiviert werden und der Benutzer kann sich nicht aus versehen ausschließen.
         let inputdisabled = "disabled"; // Eingabefelder standardmäßig deaktiviert
         if (angemeldetesMitglied.cc_admin === true) {
