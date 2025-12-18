@@ -191,7 +191,6 @@
             <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" style="margin: 50px ; height: 200px;">
          <h1>System ist Offline</h1>
          <p>Bitte stellen Sie die Internetverbindung her...</p>
-         <a href="index.html">Seite neu laden</a>
     </div>
 
 
@@ -362,33 +361,51 @@
             const offlineFenster = document.getElementById('offlineFenster');
             const OfflineBildschirm = document.getElementById('OfflineBildschirm')
 
-        // Laden der Konfiguration vor der Offline-Prüfung
-            fetch('../daten/config.json', {
-                cache: 'no-store',
-                headers: {
-                    'Cache-Control': 'no-cache, must-revalidate',
-                    'Pragma': 'no-cache' 
+        // Laden der Konfiguration vor der Offline-Prüfung (Network-first, Cache-Fallback)
+            (async () => {
+                try {
+                    const resp = await fetch('../daten/config.json', {
+                        cache: 'no-store',
+                        headers: {
+                            'Cache-Control': 'no-cache, must-revalidate',
+                            'Pragma': 'no-cache'
+                        }
+                    });
+                    if (!resp.ok) throw new Error('Netzwerkantwort war nicht ok: ' + resp.statusText);
+                    config = await resp.json();
+                } catch (netErr) {
+                    console.warn('config fetch failed, trying cache fallback', netErr);
+                    // Versuche Cache-Fallback
+                    if ('caches' in window) {
+                        try {
+                            const cache = await caches.open('clubcash-v1');
+                            const match = await cache.match(new URL('../daten/config.json', location).href, {ignoreSearch: true});
+                            if (match) {
+                                config = await match.json();
+                            } else {
+                                throw netErr;
+                            }
+                        } catch (cacheErr) {
+                            console.error('Fehler beim Cache-Fallback für config:', cacheErr);
+                        }
+                    }
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                config = data;
-           
+
                 // Offline-Prüfung erst nach dem Laden der Config
-                if (!navigator.onLine) {
-     
-                if (config.OfflineErlaubt == 'false') {
-                    console.log("Offline nicht erlaubt");
-                    OfflineBildschirm.style.display = 'block';
-                    eingabestopp();
+                try {
+                    if (!navigator.onLine) {
+                        if (config && config.OfflineErlaubt == 'false') {
+                            console.log('Offline nicht erlaubt');
+                            OfflineBildschirm.style.display = 'block';
+                            eingabestopp();
+                        }
+                        isOnline = false;
+                        offlineFenster.style.visibility = 'visible';
+                    }
+                } catch (e) {
+                    console.error('Fehler beim Auswerten der Config/Offline-Prüfung:', e);
                 }
-                isOnline = false;
-                offlineFenster.style.visibility = 'visible';
-                }
-            })
-            .catch(error => {
-                console.error("Fehler beim Laden der Config:", error);
-            });
+            })();
 
             window.addEventListener('online', () => {
                 isOnline = true;
@@ -452,19 +469,38 @@
         async function loadJSON(url) {
             // Timestamp für Cache-Busting
             const timestamp = new Date().getTime();
-            const response = await fetch(`${url}?v=${timestamp}`, {
-                cache: 'no-store',
-                headers: {
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
+            try {
+                const response = await fetch(`${url}?v=${timestamp}`, {
+                    cache: 'no-store',
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
                 }
-            });
-            
-            if (!response.ok) {
-                throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+                return await response.json();
+            } catch (networkErr) {
+                console.warn('loadJSON: Netzwerkfehler für', url, networkErr, '- versuche Cache-Fallback');
+                // Versuche, eine gecachte Version ohne Query-String zu lesen
+                if ('caches' in window) {
+                    try {
+                        const cache = await caches.open('clubcash-v1');
+                        const absolute = new URL(url, location).href;
+                        const match = await cache.match(absolute, {ignoreSearch: true});
+                        if (match) {
+                            const text = await match.text();
+                            return JSON.parse(text);
+                        }
+                    } catch (cacheErr) {
+                        console.error('loadJSON: Cache-Fallback fehlgeschlagen', cacheErr);
+                    }
+                }
+                throw networkErr;
             }
-            return await response.json();
         }
 
         async function loadCSV(url) {
