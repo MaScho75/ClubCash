@@ -59,6 +59,7 @@
         stylesheets.forEach(path => {
             const link = document.createElement("link");
             link.rel = "stylesheet";
+            // Append cache-busting timestamp to force fresh load when needed
             link.href = `${path}?v=${timestamp}`;
             document.head.appendChild(link);
         });
@@ -190,6 +191,7 @@
             <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" style="margin: 50px ; height: 200px;">
          <h1>System ist Offline</h1>
          <p>Bitte stellen Sie die Internetverbindung her...</p>
+         <a href="index.html">Seite neu laden</a>
     </div>
 
 
@@ -215,6 +217,13 @@
                 localStorage.setItem('letzterSpeicherZeitpunkt', new Date().toISOString());
                 console.log("Letzter Speicherzeitpunkt im Lokalspeicher: " + localStorage.getItem('letzterSpeicherZeitpunkt'));
             }
+
+
+        // Wie viele Datensätze im lokalen Speicher sind
+            let offlineData = JSON.parse(localStorage.getItem('offlineVerkäufe')) || [];
+            document.getElementById('offlineDS').innerText = offlineData.length;
+            console.log("System ist offline. Es sind " + offlineData.length + " Datensätze im lokalen Speicher.");
+
 
         //Backup der umsatz.csv
             fetch("backup.php")
@@ -395,6 +404,7 @@
                 }
                 isOnline = false;
                 offlineFenster.style.visibility = 'visible';
+                
             });
             
 
@@ -403,7 +413,6 @@
             tastatur.style.display = 'none'; //sollte die Tastatur noch offen sein, wird sie geschlossen
             statusfeld.innerText = "Systeminformationen";
             html = `
-                
                     <h1>Systeminformationen</h1>
                     <p>Terminal: <b>${terminal}</b></p>
                     <p>Version: <b>${config.Version}</b></p>
