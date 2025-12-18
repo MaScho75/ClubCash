@@ -22,6 +22,9 @@ const ASSETS = [
   '../style.css',
   '../farben.css',
   '../daten/config.json',
+  '../daten/produkte.json',
+  '../daten/kunden.json',
+  '../daten/externe.json',
   './fonts/carlito-v3-latin-regular.woff2',
   './lib/jquery-3.6.0.min.js',
   '../grafik/ClubCashLogo-gelbblauschwarz.svg',
@@ -51,7 +54,7 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Spezielle Behandlung für config.json
+  // Wenn es sich um die config.json handelt: versuche Netzwerk zuerst, dann Cache
   if (event.request.url.includes('config.json')) {
     event.respondWith(
       fetch(event.request, {
@@ -62,24 +65,41 @@ self.addEventListener('fetch', event => {
         }
       })
       .then(response => {
-        // Erfolgreiche Antwort vom Server - Cache aktualisieren
+        // Erfolgreiche Antwort vom Server - Cache aktualisieren (ohne Query)
         const responseClone = response.clone();
         caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, responseClone);
+          // Speichere unter Pfad ohne Such-Parameter, damit ignoreSearch funktioniert
+          const urlNoSearch = new URL(event.request.url).origin + new URL(event.request.url).pathname;
+          cache.put(urlNoSearch, responseClone).catch(() => {});
         });
         return response;
       })
       .catch(() => {
-        // Bei Offline-Zugriff oder Fehler - aus Cache laden
-        return caches.match(event.request);
+        // Bei Offline-Zugriff oder Fehler - aus Cache laden (ignoreSearch)
+        return caches.match(event.request, {ignoreSearch: true});
       })
     );
     return;
   }
 
-  // Standard Cache-Strategie für andere Ressourcen
+  // Standard Cache-Strategie: zuerst Cache (ignoreSearch), dann Netzwerk, bei Erfolg Cache aktualisieren
   event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
+    caches.match(event.request, {ignoreSearch: true}).then(cachedResponse => {
+      if (cachedResponse) return cachedResponse;
+      return fetch(event.request).then(networkResponse => {
+        // Bei erfolgreicher Antwort im Hintergrund in den Cache legen (ohne Query-String)
+        if (event.request.method === 'GET' && networkResponse && networkResponse.ok) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            const urlNoSearch = new URL(event.request.url).origin + new URL(event.request.url).pathname;
+            cache.put(urlNoSearch, responseClone).catch(() => {});
+          });
+        }
+        return networkResponse;
+      }).catch(() => {
+        // Netzwerk fehlgeschlagen -> versuche Cache erneut (ignoreSearch)
+        return caches.match(event.request, {ignoreSearch: true});
+      });
+    })
   );
 });

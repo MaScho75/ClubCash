@@ -206,6 +206,16 @@
     </div>
 
     <script>
+
+        //Prüfung, ob offine Speicherung möglich ist, durch darstellung des letzten Speicherzeitpunkts
+            if (localStorage.getItem('letzterSpeicherZeitpunkt')) {
+                console.log("Letzter Speicherzeitpunkt im Lokalspeicher: " + localStorage.getItem('letzterSpeicherZeitpunkt'));
+            } else {
+                console.log("Kein letzter Speicherzeitpunkt im Lokalspeicher gefunden. Wert wird auf jetzt gesetzt.");
+                localStorage.setItem('letzterSpeicherZeitpunkt', new Date().toISOString());
+                console.log("Letzter Speicherzeitpunkt im Lokalspeicher: " + localStorage.getItem('letzterSpeicherZeitpunkt'));
+            }
+
         //Backup der umsatz.csv
             fetch("backup.php")
                 .then(response => {
@@ -406,35 +416,9 @@
                     <p>Preisanpassung Essen: <b>${config.preisanpassungessen}</b></p>
                     <p>Bildschirmschoner: <b>${config.bildschirmschoner} Minuten</b></p>
                     <p>Offline erlaubt: <b>${config.OfflineErlaubt}</b></p>
-                    <h1>Test für Offlinefähigkeit:</h1>
-               `;
-
-            // Prüfung, ob das System im Offlinemodus die erfoderlicher Daten speichern kann, auch wenn das System neu gestartet wird.
-                    const testKey = "speicherTestKey";
-                    const testValue = "test123";
-
-                    try {
-                    // Testwert speichern
-                    localStorage.setItem(testKey, testValue);
-
-                    // Testwert abrufen
-                    const retrieved = localStorage.getItem(testKey);
-
-                    if (retrieved === testValue) {
-                        html += "<p>✅ Lokale Speicherung funktioniert. Die Daten bleiben auch nach einem Neustart erhalten.</p>";
-                    } else {
-                        html += "<p>⚠️ Lokale Speicherung scheint nicht zu funktionieren.</p>";
-                    }
-
-                    // Optional: Testeintrag entfernen
-                    // localStorage.removeItem(testKey);
-                    } catch (e) {
-                    html += "<p>❌ Fehler beim Zugriff auf LocalStorage: " + e.message + "</p>";
-                    document.getElementById("status").classList.add("fail");
-                    }
-
-                html +="<p>Test abgeschlossen.</p>";
-                datenfeld.innerHTML = html;    
+                    <p>Letzter Speicherzeitpunkt im Lokalspeicher: <b>${localStorage.getItem('letzterSpeicherZeitpunkt')}</b></p>
+               `; 
+            datenfeld.innerHTML = html;
         }   
         
         function configuration() {
