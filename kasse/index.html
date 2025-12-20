@@ -219,9 +219,14 @@
 
 
         // Wie viele Datensätze im lokalen Speicher sind
-            let offlineData = JSON.parse(localStorage.getItem('offlineVerkäufe')) || [];
-            document.getElementById('offlineDS').innerText = offlineData.length;
-            console.log("System ist offline. Es sind " + offlineData.length + " Datensätze im lokalen Speicher.");
+            function updateOfflineCounter() {
+                let offlineData = JSON.parse(localStorage.getItem('offlineVerkäufe')) || [];
+                const offlineElement = document.getElementById('offlineDS');
+                if (offlineElement) {
+                    offlineElement.innerText = offlineData.length;
+                    console.log("Offline-Datensätze im lokalen Speicher: " + offlineData.length);
+                }
+            }
 
 
         //Backup der umsatz.csv
@@ -239,6 +244,8 @@
             window.onload = function() {
                 // Preloader ausblenden, wenn die Seite vollständig geladen ist
                 document.getElementById("preloader").style.display = "none";
+                // Offline-Counter initial aktualisieren
+                updateOfflineCounter();
             }
 
         // Terminal ermitteln aus der URL https://host/index.html?zahl=42
@@ -358,11 +365,20 @@
 
         // Offline-Funktionalität
             let isOnline = navigator.onLine;
-            const offlineFenster = document.getElementById('offlineFenster');
-            const OfflineBildschirm = document.getElementById('OfflineBildschirm')
+            let offlineFenster;
+            let OfflineBildschirm;
 
         // Laden der Konfiguration vor der Offline-Prüfung (Network-first, Cache-Fallback)
             (async () => {
+                // Warte bis DOM geladen ist
+                if (document.readyState === 'loading') {
+                    await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
+                }
+                
+                // Jetzt DOM-Elemente referenzieren
+                offlineFenster = document.getElementById('offlineFenster');
+                OfflineBildschirm = document.getElementById('OfflineBildschirm');
+                
                 try {
                     const resp = await fetch('../daten/config.json', {
                         cache: 'no-store',
@@ -408,20 +424,23 @@
             })();
 
             window.addEventListener('online', () => {
+                console.log('Online-Event erkannt');
                 isOnline = true;
                 offlineFenster.style.visibility = 'hidden';
                 OfflineBildschirm.style.display = 'none';
+                updateOfflineCounter();
                 syncOfflineData();
             });
 
             window.addEventListener('offline', () => {
-                if (config.OfflineErlaubt == 'false') {
+                console.log('Offline-Event erkannt');
+                if (config && config.OfflineErlaubt == 'false') {
                     OfflineBildschirm.style.display = 'block';
                     eingabestopp();
                 }
                 isOnline = false;
                 offlineFenster.style.visibility = 'visible';
-                
+                updateOfflineCounter();
             });
             
 
@@ -1306,6 +1325,7 @@
             let offlineVerkäufe = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
             offlineVerkäufe.push(verkaufsdaten);
             localStorage.setItem('offlineVerkäufe', JSON.stringify(offlineVerkäufe));
+            updateOfflineCounter();
         }
 
         // Überarbeitung der übertragung_umsatz Funktion
@@ -1352,6 +1372,7 @@
                     await übertragung_umsatz(verkauf);
                 }
                 localStorage.removeItem('offlineVerkäufe');
+                updateOfflineCounter();
                 statusfeld.innerText = "Offline-Daten synchronisiert";
                 console.log("Offline-Daten synchronisiert");
             } catch (error) {
