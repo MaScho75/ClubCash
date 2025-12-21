@@ -357,17 +357,39 @@
 
         // Service Worker registrieren
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js')
+                console.log('Service Worker wird registriert...');
+                navigator.serviceWorker.register('./sw.js', { scope: './' })
                 .then(async registration => {
-                    console.log('ServiceWorker registriert');
+                    console.log('ServiceWorker erfolgreich registriert:', registration.scope);
+                    console.log('ServiceWorker Status:', registration.active ? 'aktiv' : 'nicht aktiv');
+                    
+                    // Warte auf Aktivierung
+                    if (registration.installing) {
+                        console.log('ServiceWorker wird installiert...');
+                        registration.installing.addEventListener('statechange', e => {
+                            console.log('ServiceWorker State:', e.target.state);
+                        });
+                    }
+                    
                     if (navigator.onLine) {
                         // Bei Online-Betrieb ServiceWorker updaten
+                        console.log('Prüfe auf ServiceWorker Updates...');
                         await registration.update();
+                    }
+                    
+                    // Cache-Status überprüfen
+                    if ('caches' in window) {
+                        const cacheNames = await caches.keys();
+                        console.log('Verfügbare Caches:', cacheNames);
                     }
                 })
                 .catch(err => {
-                    console.log('ServiceWorker Fehler: ', err);
+                    console.error('ServiceWorker Registrierung fehlgeschlagen:', err);
+                    statusfeld.innerText = 'Offline-Modus nicht verfügbar: ' + err.message;
                 });
+            } else {
+                console.error('Service Worker nicht unterstützt in diesem Browser');
+                statusfeld.innerText = 'Offline-Modus nicht unterstützt';
             }
 
         // Offline-Funktionalität

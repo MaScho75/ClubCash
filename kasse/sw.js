@@ -33,38 +33,61 @@ const ASSETS_REL = [
 ];
 
 self.addEventListener('install', event => {
-  // During install try to fetch and cache all assets, but tolerate individual failures
+  console.log('ServiceWorker: Install Event');
+  // Sofort aktivieren ohne auf alte Tabs zu warten
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(async cache => {
+      console.log('ServiceWorker: Cache geöffnet:', CACHE_NAME);
       // Auflösen der relativen Pfade in absolute URLs basierend auf dem SW-Scope
       const ASSETS = ASSETS_REL.map(p => new URL(p, self.registration.scope).href);
+      console.log('ServiceWorker: Versuche', ASSETS.length, 'Dateien zu cachen');
+      
       const results = await Promise.allSettled(ASSETS.map(async url => {
         try {
           const resp = await fetch(url);
           if (resp && resp.ok) {
             await cache.put(url, resp.clone());
+            console.log('ServiceWorker: Gecached:', url);
             return {url, status: 'cached'};
           }
           throw new Error(`Bad response for ${url}: ${resp && resp.status}`);
         } catch (err) {
-          console.log('Cache error for:', url, err);
+          console.error('ServiceWorker: Cache error für:', url, err);
           return {url, status: 'failed', error: String(err)};
         }
       }));
-      // Optionally log summary
+      
       const failed = results.filter(r => r.status === 'rejected' || (r.value && r.value.status === 'failed'));
-      if (failed.length) console.log('Some assets failed to cache during install:', failed.map(f => f.value ? f.value.url : f.reason));
+      const success = results.filter(r => r.value && r.value.status === 'cached');
+      console.log(`ServiceWorker: ${success.length}/${ASSETS.length} Dateien erfolgreich gecached`);
+      if (failed.length) {
+        console.warn('ServiceWorker: Fehler beim Cachen von', failed.length, 'Dateien:', 
+          failed.map(f => f.value ? f.value.url : f.reason));
+      }
+    }).catch(err => {
+      console.error('ServiceWorker: Kritischer Fehler beim Öffnen des Caches:', err);
+      throw err;
     })
   );
 });
 
 // Activate: remove old caches and take control immediately
 self.addEventListener('activate', event => {
+  console.log('ServiceWorker: Activate Event');
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
-    )).then(() => self.clients.claim())
+    caches.keys().then(keys => {
+      console.log('ServiceWorker: Gefundene Caches:', keys);
+      return Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => {
+          console.log('ServiceWorker: Lösche alten Cache:', k);
+          return caches.delete(k);
+        })
+      );
+    }).then(() => {
+      console.log('ServiceWorker: Aktiviert und übernimmt Kontrolle');
+      return self.clients.claim();
+    })
   );
 });
 
@@ -87,7 +110,18 @@ self.addEventListener('fetch', event => {
       })
       .catch(() => {
         // Netzwerk fehlgeschlagen (Offline) -> Cache-Fallback
-        return caches.match(event.request, {ignoreSearch: true});
+        console.log('ServiceWorker: Netzwerk fehlgeschlagen, nutze Cache für:', event.request.url);
+        return caches.match(event.request, {ignoreSearch: true}).then(cachedResponse => {
+          if (cachedResponse) {
+            console.log('ServiceWorker: Aus Cache geladen:', event.request.url);
+            return cachedResponse;
+          }
+          console.warn('ServiceWorker: Keine gecachte Version gefunden für:', event.request.url);
+          return new Response('Offline - Ressource nicht verfügbar', { 
+            status: 503, 
+            statusText: 'Service Unavailable' 
+          });
+        });
       })
   );
 });
