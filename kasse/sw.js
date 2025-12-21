@@ -20,6 +20,7 @@ const CACHE_NAME = 'clubcash-v1';
 const ASSETS_REL = [
   './',
   './index.html',
+  './index.html?terminal=1',
   '../style.css',
   '../farben.css',
   '../daten/config.json',
@@ -98,7 +99,62 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Network-First Strategie für alle Ressourcen:
+  // Spezielle Behandlung für Navigation-Requests (PWA-Start, Back/Forward)
+  if (event.request.mode === 'navigate') {
+    console.log('ServiceWorker: Navigation-Request zu:', event.request.url);
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // Erfolgreiche Navigation - Cache aktualisieren
+          if (response && response.ok) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request.url, responseClone).catch(() => {});
+            }).catch(() => {});
+          }
+          return response;
+        })
+        .catch(async () => {
+          // Offline - versuche index.html aus Cache zu laden
+          console.log('ServiceWorker: Navigation offline, suche index.html im Cache');
+          
+          // Versuche verschiedene Pfade für index.html
+          const paths = [
+            './index.html',
+            '/kasse/index.html',
+            'index.html',
+            new URL('./index.html', self.registration.scope).href,
+            event.request.url
+          ];
+          
+          for (const path of paths) {
+            const cached = await caches.match(path, {ignoreSearch: true});
+            if (cached) {
+              console.log('ServiceWorker: ✓ index.html gefunden unter:', path);
+              return cached;
+            }
+          }
+          
+          // Fallback: Suche irgendeine index.html im Cache
+          const cache = await caches.open(CACHE_NAME);
+          const keys = await cache.keys();
+          for (const request of keys) {
+            if (request.url.includes('index.html')) {
+              console.log('ServiceWorker: ✓ index.html gefunden:', request.url);
+              return cache.match(request);
+            }
+          }
+          
+          console.error('ServiceWorker: ✗ Keine index.html im Cache gefunden!');
+          return new Response('<h1>Offline</h1><p>Die App konnte nicht geladen werden.</p>', {
+            headers: {'Content-Type': 'text/html'}
+          });
+        })
+    );
+    return;
+  }
+
+  // Network-First Strategie für alle anderen Ressourcen:
   // Bei Online: Lade immer frisch vom Server und aktualisiere Cache
   // Bei Offline: Verwende gecachte Version als Fallback
   event.respondWith(
