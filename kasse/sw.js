@@ -42,28 +42,34 @@ self.addEventListener('install', event => {
       // Auflösen der relativen Pfade in absolute URLs basierend auf dem SW-Scope
       const ASSETS = ASSETS_REL.map(p => new URL(p, self.registration.scope).href);
       console.log('ServiceWorker: Versuche', ASSETS.length, 'Dateien zu cachen');
+      console.log('ServiceWorker: Scope:', self.registration.scope);
       
-      const results = await Promise.allSettled(ASSETS.map(async url => {
+      const results = await Promise.allSettled(ASSETS.map(async (url, index) => {
         try {
+          console.log(`ServiceWorker: Lade [${index+1}/${ASSETS.length}]:`, url);
           const resp = await fetch(url);
           if (resp && resp.ok) {
+            // Speichere unter mehreren Pfad-Varianten für besseres Matching
+            const urlObj = new URL(url);
+            const urlNoSearch = urlObj.origin + urlObj.pathname;
+            
             await cache.put(url, resp.clone());
-            console.log('ServiceWorker: Gecached:', url);
-            return {url, status: 'cached'};
+            await cache.put(urlNoSearch, resp.clone());
+            console.log('ServiceWorker: ✓ Gecached:', urlNoSearch);
+            return {url: urlNoSearch, status: 'cached'};
           }
           throw new Error(`Bad response for ${url}: ${resp && resp.status}`);
         } catch (err) {
-          console.error('ServiceWorker: Cache error für:', url, err);
+          console.error('ServiceWorker: ✗ Cache error für:', url, err.message);
           return {url, status: 'failed', error: String(err)};
         }
       }));
       
       const failed = results.filter(r => r.status === 'rejected' || (r.value && r.value.status === 'failed'));
       const success = results.filter(r => r.value && r.value.status === 'cached');
-      console.log(`ServiceWorker: ${success.length}/${ASSETS.length} Dateien erfolgreich gecached`);
+      console.log(`ServiceWorker: ✓ ${success.length}/${ASSETS.length} Dateien erfolgreich gecached`);
       if (failed.length) {
-        console.warn('ServiceWorker: Fehler beim Cachen von', failed.length, 'Dateien:', 
-          failed.map(f => f.value ? f.value.url : f.reason));
+        console.warn('ServiceWorker: ✗ Fehler beim Cachen von', failed.length, 'Dateien');
       }
     }).catch(err => {
       console.error('ServiceWorker: Kritischer Fehler beim Öffnen des Caches:', err);
@@ -102,25 +108,53 @@ self.addEventListener('fetch', event => {
         if (networkResponse && networkResponse.ok && event.request.method === 'GET') {
           const responseClone = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => {
-            const urlNoSearch = new URL(event.request.url).origin + new URL(event.request.url).pathname;
+            const urlObj = new URL(event.request.url);
+            const urlNoSearch = urlObj.origin + urlObj.pathname;
+            // Speichere beide Varianten
+            cache.put(event.request.url, responseClone.clone()).catch(() => {});
             cache.put(urlNoSearch, responseClone).catch(() => {});
           }).catch(() => {});
         }
         return networkResponse;
       })
-      .catch(() => {
+      .catch(async () => {
         // Netzwerk fehlgeschlagen (Offline) -> Cache-Fallback
-        console.log('ServiceWorker: Netzwerk fehlgeschlagen, nutze Cache für:', event.request.url);
-        return caches.match(event.request, {ignoreSearch: true}).then(cachedResponse => {
-          if (cachedResponse) {
-            console.log('ServiceWorker: Aus Cache geladen:', event.request.url);
-            return cachedResponse;
-          }
-          console.warn('ServiceWorker: Keine gecachte Version gefunden für:', event.request.url);
-          return new Response('Offline - Ressource nicht verfügbar', { 
-            status: 503, 
-            statusText: 'Service Unavailable' 
-          });
+        console.log('ServiceWorker: Netzwerk fehlgeschlagen für:', event.request.url);
+        
+        // Versuche verschiedene Matching-Strategien
+        let cachedResponse = await caches.match(event.request, {ignoreSearch: true});
+        
+        if (!cachedResponse) {
+          // Versuche mit URL ohne Query-Parameter
+          const urlObj = new URL(event.request.url);
+          const urlNoSearch = urlObj.origin + urlObj.pathname;
+          cachedResponse = await caches.match(urlNoSearch, {ignoreSearch: true});
+          console.log('ServiceWorker: Versuche ohne Query:', urlNoSearch, cachedResponse ? '✓' : '✗');
+        }
+        
+        if (!cachedResponse) {
+          // Versuche mit relativem Pfad
+          const urlObj = new URL(event.request.url);
+          const relativePath = urlObj.pathname;
+          cachedResponse = await caches.match(relativePath, {ignoreSearch: true});
+          console.log('ServiceWorker: Versuche relativen Pfad:', relativePath, cachedResponse ? '✓' : '✗');
+        }
+        
+        if (cachedResponse) {
+          console.log('ServiceWorker: ✓ Aus Cache geladen:', event.request.url);
+          return cachedResponse;
+        }
+        
+        console.warn('ServiceWorker: ✗ Keine gecachte Version gefunden für:', event.request.url);
+        
+        // Zeige alle gecachten URLs zur Fehlersuche
+        const cache = await caches.open(CACHE_NAME);
+        const keys = await cache.keys();
+        console.log('ServiceWorker: Verfügbare Cache-Keys:', keys.map(r => r.url));
+        
+        return new Response('Offline - Ressource nicht verfügbar: ' + event.request.url, { 
+          status: 503, 
+          statusText: 'Service Unavailable' 
         });
       })
   );

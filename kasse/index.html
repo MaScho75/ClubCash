@@ -425,10 +425,36 @@
             });
             
 
-        function systeminfo() {
+        async function systeminfo() {
             preisfenster.style.display = 'none'; //sollte das Preisfenster noch offen sein, wird es geschlossen
             tastatur.style.display = 'none'; //sollte die Tastatur noch offen sein, wird sie geschlossen
             statusfeld.innerText = "Systeminformationen";
+            
+            // Cache-Informationen abrufen
+            let cacheInfo = 'Nicht verfügbar';
+            let cacheDetails = '';
+            if ('caches' in window) {
+                try {
+                    const cacheNames = await caches.keys();
+                    cacheInfo = cacheNames.join(', ') || 'Keine Caches gefunden';
+                    
+                    // Details für jeden Cache
+                    for (const cacheName of cacheNames) {
+                        const cache = await caches.open(cacheName);
+                        const keys = await cache.keys();
+                        cacheDetails += `<p><b>${cacheName}</b>: ${keys.length} Dateien</p>`;
+                        cacheDetails += '<ul style="font-size: 12px; text-align: left;">';
+                        keys.forEach(req => {
+                            const url = new URL(req.url);
+                            cacheDetails += `<li>${url.pathname}</li>`;
+                        });
+                        cacheDetails += '</ul>';
+                    }
+                } catch (e) {
+                    cacheInfo = 'Fehler: ' + e.message;
+                }
+            }
+            
             html = `
                     <h1>Systeminformationen</h1>
                     <p>Terminal: <b>${terminal}</b></p>
@@ -443,6 +469,10 @@
                     <p>Bildschirmschoner: <b>${config.bildschirmschoner} Minuten</b></p>
                     <p>Offline erlaubt: <b>${config.OfflineErlaubt}</b></p>
                     <p>Letzter Speicherzeitpunkt im Lokalspeicher: <b>${localStorage.getItem('letzterSpeicherZeitpunkt')}</b></p>
+                    <hr>
+                    <h2>Cache-Status</h2>
+                    <p>Caches: <b>${cacheInfo}</b></p>
+                    ${cacheDetails}
                `; 
             datenfeld.innerHTML = html;
         }   
