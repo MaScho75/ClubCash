@@ -41,8 +41,7 @@ self.addEventListener('install', event => {
       const ASSETS = ASSETS_REL.map(p => new URL(p, self.registration.scope).href);
       const results = await Promise.allSettled(ASSETS.map(async url => {
         try {
-          const req = new Request(url, {cache: 'no-store'});
-          const resp = await fetch(req);
+          const resp = await fetch(url);
           if (resp && resp.ok) {
             await cache.put(url, resp.clone());
             return {url, status: 'cached'};
@@ -70,80 +69,14 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Wenn es sich um die config.json handelt: versuche Netzwerk zuerst, dann Cache
-  if (event.request.url.includes('config.json')) {
-    event.respondWith(
-      fetch(event.request, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, must-revalidate',
-          'Pragma': 'no-cache'
-        }
-      })
-      .then(response => {
-        // Erfolgreiche Antwort vom Server - Cache aktualisieren (ohne Query)
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          // Speichere unter Pfad ohne Such-Parameter, damit ignoreSearch funktioniert
-          const urlNoSearch = new URL(event.request.url).origin + new URL(event.request.url).pathname;
-          cache.put(urlNoSearch, responseClone).catch(() => {});
-        });
-        return response;
-      })
-      .catch(() => {
-        // Bei Offline-Zugriff oder Fehler - aus Cache laden (ignoreSearch)
-        return caches.match(event.request, {ignoreSearch: true});
-      })
-    );
-    return;
-  }
-
-  // Standard Cache-Strategie: zuerst Cache (ignoreSearch), dann Netzwerk, bei Erfolg Cache aktualisieren
-  // Navigation-Fallback: falls der Browser eine Seite anfragt und offline ist,
-  // liefere die gecachte index.html damit die App sichtbar bleibt.
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      caches.match('./index.html', {ignoreSearch: true}).then(cachedNav => {
-        if (cachedNav) return cachedNav;
-        return fetch(event.request).catch(() => caches.match('./index.html', {ignoreSearch: true}));
-      })
-    );
-    return;
-  }
-  // Wenn wir online sind: Network-first für gleiche Origin (immer frische Dateien)
-  try {
-    const requestUrl = new URL(event.request.url);
-    const sameOrigin = requestUrl.origin === self.location.origin;
-
-    if (event.request.method === 'GET' && sameOrigin && self.navigator && self.navigator.onLine) {
-      event.respondWith(
-        fetch(event.request).then(networkResponse => {
-          if (networkResponse && networkResponse.ok) {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              const urlNoSearch = requestUrl.origin + requestUrl.pathname;
-              cache.put(urlNoSearch, responseClone).catch(() => {});
-            });
-          }
-          return networkResponse;
-        }).catch(() => {
-          // Netzwerk fehlgeschlagen -> aus Cache (ignoreSearch)
-          return caches.match(event.request, {ignoreSearch: true});
-        })
-      );
-      return;
-    }
-  } catch (err) {
-    // Falls URL Verarbeitung fehlschlägt, fallbacks unten nutzen
-    console.log('SW fetch URL parse error', err);
-  }
-
-  // Default: Cache-first (ignoreSearch) für andere Fälle
+  // Network-First Strategie für alle Ressourcen:
+  // Bei Online: Lade immer frisch vom Server und aktualisiere Cache
+  // Bei Offline: Verwende gecachte Version als Fallback
   event.respondWith(
-    caches.match(event.request, {ignoreSearch: true}).then(cachedResponse => {
-      if (cachedResponse) return cachedResponse;
-      return fetch(event.request).then(networkResponse => {
-        if (event.request.method === 'GET' && networkResponse && networkResponse.ok) {
+    fetch(event.request)
+      .then(networkResponse => {
+        // Erfolgreiche Netzwerkantwort - Cache aktualisieren
+        if (networkResponse && networkResponse.ok && event.request.method === 'GET') {
           const responseClone = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => {
             const urlNoSearch = new URL(event.request.url).origin + new URL(event.request.url).pathname;
@@ -151,7 +84,10 @@ self.addEventListener('fetch', event => {
           }).catch(() => {});
         }
         return networkResponse;
-      }).catch(() => caches.match(event.request, {ignoreSearch: true}));
-    })
+      })
+      .catch(() => {
+        // Netzwerk fehlgeschlagen (Offline) -> Cache-Fallback
+        return caches.match(event.request, {ignoreSearch: true});
+      })
   );
 });

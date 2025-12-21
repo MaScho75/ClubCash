@@ -50,7 +50,6 @@
     <meta name="robots" content="noindex, nofollow">
 
     <script>
-        const timestamp = new Date().getTime();
         const stylesheets = [
             "../style.css",
             "../farben.css"
@@ -59,8 +58,7 @@
         stylesheets.forEach(path => {
             const link = document.createElement("link");
             link.rel = "stylesheet";
-            // Append cache-busting timestamp to force fresh load when needed
-            link.href = `${path}?v=${timestamp}`;
+            link.href = path;
             document.head.appendChild(link);
         });
     </script>
@@ -342,7 +340,16 @@
                     document.getElementById("verein").innerText = config.VereinsnameAbk;
                     configuration();
                     preisliste();
-                    direktwahl(); 
+                    direktwahl();
+                    
+                    // Offline-Prüfung nach dem Laden der Config
+                    if (!navigator.onLine && config.OfflineErlaubt == 'false') {
+                        console.log('Offline nicht erlaubt');
+                        if (OfflineBildschirm) {
+                            OfflineBildschirm.style.display = 'block';
+                            eingabestopp();
+                        }
+                    }
                 })
                 .catch(error => {
                 console.error("Error loading data:", error);
@@ -365,63 +372,15 @@
 
         // Offline-Funktionalität
             let isOnline = navigator.onLine;
-            let offlineFenster;
-            let OfflineBildschirm;
+            let offlineFenster = document.getElementById('offlineFenster');
+            let OfflineBildschirm = document.getElementById('OfflineBildschirm');
 
-        // Laden der Konfiguration vor der Offline-Prüfung (Network-first, Cache-Fallback)
-            (async () => {
-                // Warte bis DOM geladen ist
-                if (document.readyState === 'loading') {
-                    await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
-                }
-                
-                // Jetzt DOM-Elemente referenzieren
-                offlineFenster = document.getElementById('offlineFenster');
-                OfflineBildschirm = document.getElementById('OfflineBildschirm');
-                
-                try {
-                    const resp = await fetch('../daten/config.json', {
-                        cache: 'no-store',
-                        headers: {
-                            'Cache-Control': 'no-cache, must-revalidate',
-                            'Pragma': 'no-cache'
-                        }
-                    });
-                    if (!resp.ok) throw new Error('Netzwerkantwort war nicht ok: ' + resp.statusText);
-                    config = await resp.json();
-                } catch (netErr) {
-                    console.warn('config fetch failed, trying cache fallback', netErr);
-                    // Versuche Cache-Fallback
-                    if ('caches' in window) {
-                        try {
-                            const cache = await caches.open('clubcash-v1');
-                            const match = await cache.match(new URL('../daten/config.json', location).href, {ignoreSearch: true});
-                            if (match) {
-                                config = await match.json();
-                            } else {
-                                throw netErr;
-                            }
-                        } catch (cacheErr) {
-                            console.error('Fehler beim Cache-Fallback für config:', cacheErr);
-                        }
-                    }
-                }
-
-                // Offline-Prüfung erst nach dem Laden der Config
-                try {
-                    if (!navigator.onLine) {
-                        if (config && config.OfflineErlaubt == 'false') {
-                            console.log('Offline nicht erlaubt');
-                            OfflineBildschirm.style.display = 'block';
-                            eingabestopp();
-                        }
-                        isOnline = false;
-                        offlineFenster.style.visibility = 'visible';
-                    }
-                } catch (e) {
-                    console.error('Fehler beim Auswerten der Config/Offline-Prüfung:', e);
-                }
-            })();
+            // Initiale Offline-Prüfung
+            if (!navigator.onLine) {
+                isOnline = false;
+                if (offlineFenster) offlineFenster.style.visibility = 'visible';
+                updateOfflineCounter();
+            }
 
             window.addEventListener('online', () => {
                 console.log('Online-Event erkannt');
@@ -486,46 +445,15 @@
         }
             
         async function loadJSON(url) {
-            // Timestamp für Cache-Busting
-            const timestamp = new Date().getTime();
-            try {
-                const response = await fetch(`${url}?v=${timestamp}`, {
-                    cache: 'no-store',
-                    headers: {
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
-                }
-                return await response.json();
-            } catch (networkErr) {
-                console.warn('loadJSON: Netzwerkfehler für', url, networkErr, '- versuche Cache-Fallback');
-                // Versuche, eine gecachte Version ohne Query-String zu lesen
-                if ('caches' in window) {
-                    try {
-                        const cache = await caches.open('clubcash-v1');
-                        const absolute = new URL(url, location).href;
-                        const match = await cache.match(absolute, {ignoreSearch: true});
-                        if (match) {
-                            const text = await match.text();
-                            return JSON.parse(text);
-                        }
-                    } catch (cacheErr) {
-                        console.error('loadJSON: Cache-Fallback fehlgeschlagen', cacheErr);
-                    }
-                }
-                throw networkErr;
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
             }
+            return await response.json();
         }
 
         async function loadCSV(url) {
-            // Add timestamp to prevent caching
-            const timestamp = new Date().getTime();
-            const response = await fetch(`${url}?v=${timestamp}`);
+            const response = await fetch(url);
             const data = await response.text();
 
             // Split into lines 
