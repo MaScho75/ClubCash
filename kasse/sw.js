@@ -15,12 +15,10 @@
  * along with ClubCash. If not, see <https://www.gnu.org/licenses/>.
  */
 
-const CACHE_NAME = 'clubcash-v1';
-// Relative asset list — wird zur Install-Zeit in absolute URLs aufgelöst
-const ASSETS_REL = [
+const CACHE_NAME = 'clubcash-v2';
+const ASSETS = [
   './',
   './index.html',
-  './index.html?terminal=1',
   '../style.css',
   '../farben.css',
   '../daten/config.json',
@@ -33,184 +31,45 @@ const ASSETS_REL = [
   '../grafik/ClubCashLogo-gelbblauweiss.svg'
 ];
 
+// Installation: Cache alle benötigten Dateien
 self.addEventListener('install', event => {
-  console.log('ServiceWorker: Install Event');
-  // Sofort aktivieren ohne auf alte Tabs zu warten
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(async cache => {
-      console.log('ServiceWorker: Cache geöffnet:', CACHE_NAME);
-      // Auflösen der relativen Pfade in absolute URLs basierend auf dem SW-Scope
-      const ASSETS = ASSETS_REL.map(p => new URL(p, self.registration.scope).href);
-      console.log('ServiceWorker: Versuche', ASSETS.length, 'Dateien zu cachen');
-      console.log('ServiceWorker: Scope:', self.registration.scope);
-      
-      const results = await Promise.allSettled(ASSETS.map(async (url, index) => {
-        try {
-          console.log(`ServiceWorker: Lade [${index+1}/${ASSETS.length}]:`, url);
-          const resp = await fetch(url);
-          if (resp && resp.ok) {
-            // Speichere unter mehreren Pfad-Varianten für besseres Matching
-            const urlObj = new URL(url);
-            const urlNoSearch = urlObj.origin + urlObj.pathname;
-            
-            await cache.put(url, resp.clone());
-            await cache.put(urlNoSearch, resp.clone());
-            console.log('ServiceWorker: ✓ Gecached:', urlNoSearch);
-            return {url: urlNoSearch, status: 'cached'};
-          }
-          throw new Error(`Bad response for ${url}: ${resp && resp.status}`);
-        } catch (err) {
-          console.error('ServiceWorker: ✗ Cache error für:', url, err.message);
-          return {url, status: 'failed', error: String(err)};
-        }
-      }));
-      
-      const failed = results.filter(r => r.status === 'rejected' || (r.value && r.value.status === 'failed'));
-      const success = results.filter(r => r.value && r.value.status === 'cached');
-      console.log(`ServiceWorker: ✓ ${success.length}/${ASSETS.length} Dateien erfolgreich gecached`);
-      if (failed.length) {
-        console.warn('ServiceWorker: ✗ Fehler beim Cachen von', failed.length, 'Dateien');
-      }
-    }).catch(err => {
-      console.error('ServiceWorker: Kritischer Fehler beim Öffnen des Caches:', err);
-      throw err;
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(ASSETS);
     })
   );
 });
 
-// Activate: remove old caches and take control immediately
+// Aktivierung: Lösche alte Caches
 self.addEventListener('activate', event => {
-  console.log('ServiceWorker: Activate Event');
   event.waitUntil(
     caches.keys().then(keys => {
-      console.log('ServiceWorker: Gefundene Caches:', keys);
       return Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => {
-          console.log('ServiceWorker: Lösche alten Cache:', k);
-          return caches.delete(k);
-        })
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
       );
-    }).then(() => {
-      console.log('ServiceWorker: Aktiviert und übernimmt Kontrolle');
-      return self.clients.claim();
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
+// Fetch: Network First, dann Cache
 self.addEventListener('fetch', event => {
-  // Spezielle Behandlung für Navigation-Requests (PWA-Start, Back/Forward)
-  if (event.request.mode === 'navigate') {
-    console.log('ServiceWorker: Navigation-Request zu:', event.request.url);
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          // Erfolgreiche Navigation - Cache aktualisieren
-          if (response && response.ok) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request.url, responseClone).catch(() => {});
-            }).catch(() => {});
-          }
-          return response;
-        })
-        .catch(async () => {
-          // Offline - versuche index.html aus Cache zu laden
-          console.log('ServiceWorker: Navigation offline, suche index.html im Cache');
-          
-          // Versuche verschiedene Pfade für index.html
-          const paths = [
-            './index.html',
-            '/kasse/index.html',
-            'index.html',
-            new URL('./index.html', self.registration.scope).href,
-            event.request.url
-          ];
-          
-          for (const path of paths) {
-            const cached = await caches.match(path, {ignoreSearch: true});
-            if (cached) {
-              console.log('ServiceWorker: ✓ index.html gefunden unter:', path);
-              return cached;
-            }
-          }
-          
-          // Fallback: Suche irgendeine index.html im Cache
-          const cache = await caches.open(CACHE_NAME);
-          const keys = await cache.keys();
-          for (const request of keys) {
-            if (request.url.includes('index.html')) {
-              console.log('ServiceWorker: ✓ index.html gefunden:', request.url);
-              return cache.match(request);
-            }
-          }
-          
-          console.error('ServiceWorker: ✗ Keine index.html im Cache gefunden!');
-          return new Response('<h1>Offline</h1><p>Die App konnte nicht geladen werden.</p>', {
-            headers: {'Content-Type': 'text/html'}
-          });
-        })
-    );
-    return;
-  }
-
-  // Network-First Strategie für alle anderen Ressourcen:
-  // Bei Online: Lade immer frisch vom Server und aktualisiere Cache
-  // Bei Offline: Verwende gecachte Version als Fallback
   event.respondWith(
     fetch(event.request)
-      .then(networkResponse => {
-        // Erfolgreiche Netzwerkantwort - Cache aktualisieren
-        if (networkResponse && networkResponse.ok && event.request.method === 'GET') {
-          const responseClone = networkResponse.clone();
+      .then(response => {
+        // Bei erfolgreicher Antwort: Cache aktualisieren
+        if (response && response.ok && event.request.method === 'GET') {
+          const responseClone = response.clone();
           caches.open(CACHE_NAME).then(cache => {
-            const urlObj = new URL(event.request.url);
-            const urlNoSearch = urlObj.origin + urlObj.pathname;
-            // Speichere beide Varianten
-            cache.put(event.request.url, responseClone.clone()).catch(() => {});
-            cache.put(urlNoSearch, responseClone).catch(() => {});
-          }).catch(() => {});
+            cache.put(event.request, responseClone);
+          });
         }
-        return networkResponse;
+        return response;
       })
-      .catch(async () => {
-        // Netzwerk fehlgeschlagen (Offline) -> Cache-Fallback
-        console.log('ServiceWorker: Netzwerk fehlgeschlagen für:', event.request.url);
-        
-        // Versuche verschiedene Matching-Strategien
-        let cachedResponse = await caches.match(event.request, {ignoreSearch: true});
-        
-        if (!cachedResponse) {
-          // Versuche mit URL ohne Query-Parameter
-          const urlObj = new URL(event.request.url);
-          const urlNoSearch = urlObj.origin + urlObj.pathname;
-          cachedResponse = await caches.match(urlNoSearch, {ignoreSearch: true});
-          console.log('ServiceWorker: Versuche ohne Query:', urlNoSearch, cachedResponse ? '✓' : '✗');
-        }
-        
-        if (!cachedResponse) {
-          // Versuche mit relativem Pfad
-          const urlObj = new URL(event.request.url);
-          const relativePath = urlObj.pathname;
-          cachedResponse = await caches.match(relativePath, {ignoreSearch: true});
-          console.log('ServiceWorker: Versuche relativen Pfad:', relativePath, cachedResponse ? '✓' : '✗');
-        }
-        
-        if (cachedResponse) {
-          console.log('ServiceWorker: ✓ Aus Cache geladen:', event.request.url);
-          return cachedResponse;
-        }
-        
-        console.warn('ServiceWorker: ✗ Keine gecachte Version gefunden für:', event.request.url);
-        
-        // Zeige alle gecachten URLs zur Fehlersuche
-        const cache = await caches.open(CACHE_NAME);
-        const keys = await cache.keys();
-        console.log('ServiceWorker: Verfügbare Cache-Keys:', keys.map(r => r.url));
-        
-        return new Response('Offline - Ressource nicht verfügbar: ' + event.request.url, { 
-          status: 503, 
-          statusText: 'Service Unavailable' 
+      .catch(() => {
+        // Bei Fehler: Aus Cache laden
+        return caches.match(event.request).then(cached => {
+          return cached || caches.match('./index.html');
         });
       })
   );
