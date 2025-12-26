@@ -497,11 +497,37 @@
         }
             
         async function loadJSON(url) {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+            try {
+                // Immer vom Netzwerk laden, nie aus dem Browser-Cache
+                const response = await fetch(url, {
+                    cache: 'no-cache',
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+                }
+                console.log(`${url} erfolgreich vom Netzwerk geladen`);
+                return await response.json();
+            } catch (error) {
+                // Bei Netzwerkfehler: Versuche aus dem Service Worker Cache zu laden
+                console.warn(`Netzwerkfehler bei ${url}, versuche aus Cache zu laden:`, error);
+                if ('caches' in window) {
+                    try {
+                        const cache = await caches.open('clubcash-v1');
+                        const cachedResponse = await cache.match(url);
+                        if (cachedResponse) {
+                            console.log(`${url} aus Cache geladen (Offline-Modus)`);
+                            return await cachedResponse.json();
+                        }
+                    } catch (cacheError) {
+                        console.error(`Cache-Fehler bei ${url}:`, cacheError);
+                    }
+                }
+                throw new Error(`Datei ${url} konnte weder vom Netzwerk noch aus dem Cache geladen werden: ${error.message}`);
             }
-            return await response.json();
         }
 
         async function loadCSV(url) {
