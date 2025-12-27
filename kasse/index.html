@@ -18,6 +18,73 @@
  * along with ClubCash. If not, see <https://www.gnu.org/licenses/>.
 -->
 
+<!-- 
+DOKUMENTATION DER FUNKTIONEN
+============================
+
+KONFIGURATION & INITIALISIERUNG
+--------------------------------
+configuration() - Wendet Konfigurationseinstellungen an (Wartungsmodus, Berechtigungen, Bildschirmschoner)
+
+DATENVERWALTUNG
+---------------
+loadJSON(url) - Lädt JSON-Dateien vom Netzwerk oder aus dem Cache bei Offline-Betrieb
+loadCSV(url) - Lädt CSV-Dateien und konvertiert sie in ein JSON-Array-Format
+
+OFFLINE-FUNKTIONALITÄT
+----------------------
+updateOfflineCounter() - Aktualisiert die Anzeige der offline gespeicherten Verkäufe
+speichereOfflineVerkauf(verkaufsdaten) - Speichert Verkäufe lokal wenn keine Internetverbindung besteht
+syncOfflineData() - Synchronisiert offline gespeicherte Verkäufe mit dem Server sobald die Verbindung wiederhergestellt ist
+
+BENUTZEROBERFLÄCHE & NAVIGATION
+--------------------------------
+toggleMenu() - Öffnet/schließt das Hauptmenü
+preisfenster_öffnen() - Öffnet das Fenster mit der Preisliste
+eingabestopp() - Deaktiviert die Tastatureingabe und blendet bestimmte Buttons aus
+Fehlerton() - Gibt einen akustischen Fehlerton aus
+zeigeHaken() - Zeigt eine Häkchen-Animation nach erfolgreicher Aktion an
+showScreensaver() - Aktiviert den Bildschirmschoner
+resetTimer() - Setzt den Timer für den Bildschirmschoner zurück
+
+PRODUKTVERWALTUNG
+-----------------
+direktwahl() - Erstellt Schnellwahl-Buttons für die ersten 12 Produkte
+produktprüfung(EANr) - Überprüft ob ein Produkt existiert und fügt es dem Warenkorb hinzu
+preisliste() - Zeigt die vollständige Preisliste aller Produkte an
+aus_preisliste_buchen(EAN_Preisliste) - Bucht ein Produkt direkt aus der Preisliste
+mittagspreis() - Ermöglicht die Anpassung des Essenspreises
+update_mittagspreis(neuerPreis) - Speichert den geänderten Essenspreis in der Datenbank
+
+WARENKORB-FUNKTIONEN
+--------------------
+warenkorbüberschrift() - Setzt die Kopfzeile des Warenkorbs zurück
+warenkorbaddition(produkt) - Fügt ein Produkt zur Warenkorb-Anzeige hinzu und aktualisiert die Summe
+manuell() - Öffnet die Tastatur für manuelle Preiseingaben
+meingabe(x) - Verarbeitet Tastatureingaben für manuelle Buchungen und Mengenangaben
+
+KUNDENVERWALTUNG
+----------------
+kundenprüfung(KundenNr) - Prüft ob ein Kunde existiert und verarbeitet den Warenkorb oder zeigt Kontoübersicht
+kundenkontoübersicht(Schlüsselnummer) - Zeigt alle Umsätze eines bestimmten Kunden an
+
+BERICHTSFUNKTIONEN
+------------------
+tagesabrechnung() - Zeigt detaillierte Tagesabrechnung aller Verkäufe an
+tageszusammenfassung() - Zeigt zusammengefasste Verkaufsstatistik nach Produkten gruppiert
+kundentagesübersicht() - Zeigt Tagesumsätze gruppiert nach Kunden an
+
+SYSTEMFUNKTIONEN
+----------------
+systeminfo() - Zeigt Systeminformationen und Cache-Status an
+info() - Zeigt allgemeine Informationen zum Kassensystem an
+sonderfunktionen(EANr) - Verarbeitet spezielle EAN-Codes für administrative Funktionen
+
+DATENÜBERTRAGUNG
+----------------
+übertragung_umsatz(data) - Überträgt Verkaufsdaten an den Server oder speichert sie offline
+-->
+
 <head>
     <!-- Zeichensatz auf UTF-8 setzen -->
     <meta charset="UTF-8">
@@ -416,73 +483,6 @@
         // KONFIGURATION & INITIALISIERUNG
         // ========================================
 
-        <!-- 
-            DOKUMENTATION DER FUNKTIONEN
-            ============================
-
-            KONFIGURATION & INITIALISIERUNG
-            --------------------------------
-            configuration() - Wendet Konfigurationseinstellungen an (Wartungsmodus, Berechtigungen, Bildschirmschoner)
-            
-            DATENVERWALTUNG
-            ---------------
-            loadJSON(url) - Lädt JSON-Dateien vom Netzwerk oder aus dem Cache bei Offline-Betrieb
-            loadCSV(url) - Lädt CSV-Dateien und konvertiert sie in ein JSON-Array-Format
-            
-            OFFLINE-FUNKTIONALITÄT
-            ----------------------
-            updateOfflineCounter() - Aktualisiert die Anzeige der offline gespeicherten Verkäufe
-            speichereOfflineVerkauf(verkaufsdaten) - Speichert Verkäufe lokal wenn keine Internetverbindung besteht
-            syncOfflineData() - Synchronisiert offline gespeicherte Verkäufe mit dem Server sobald die Verbindung wiederhergestellt ist
-            
-            BENUTZEROBERFLÄCHE & NAVIGATION
-            --------------------------------
-            toggleMenu() - Öffnet/schließt das Hauptmenü
-            preisfenster_öffnen() - Öffnet das Fenster mit der Preisliste
-            eingabestopp() - Deaktiviert die Tastatureingabe und blendet bestimmte Buttons aus
-            Fehlerton() - Gibt einen akustischen Fehlerton aus
-            zeigeHaken() - Zeigt eine Häkchen-Animation nach erfolgreicher Aktion an
-            showScreensaver() - Aktiviert den Bildschirmschoner
-            resetTimer() - Setzt den Timer für den Bildschirmschoner zurück
-            
-            PRODUKTVERWALTUNG
-            -----------------
-            direktwahl() - Erstellt Schnellwahl-Buttons für die ersten 12 Produkte
-            produktprüfung(EANr) - Überprüft ob ein Produkt existiert und fügt es dem Warenkorb hinzu
-            preisliste() - Zeigt die vollständige Preisliste aller Produkte an
-            aus_preisliste_buchen(EAN_Preisliste) - Bucht ein Produkt direkt aus der Preisliste
-            mittagspreis() - Ermöglicht die Anpassung des Essenspreises
-            update_mittagspreis(neuerPreis) - Speichert den geänderten Essenspreis in der Datenbank
-            
-            WARENKORB-FUNKTIONEN
-            --------------------
-            warenkorbüberschrift() - Setzt die Kopfzeile des Warenkorbs zurück
-            warenkorbaddition(produkt) - Fügt ein Produkt zur Warenkorb-Anzeige hinzu und aktualisiert die Summe
-            manuell() - Öffnet die Tastatur für manuelle Preiseingaben
-            meingabe(x) - Verarbeitet Tastatureingaben für manuelle Buchungen und Mengenangaben
-            
-            KUNDENVERWALTUNG
-            ----------------
-            kundenprüfung(KundenNr) - Prüft ob ein Kunde existiert und verarbeitet den Warenkorb oder zeigt Kontoübersicht
-            kundenkontoübersicht(Schlüsselnummer) - Zeigt alle Umsätze eines bestimmten Kunden an
-            
-            BERICHTSFUNKTIONEN
-            ------------------
-            tagesabrechnung() - Zeigt detaillierte Tagesabrechnung aller Verkäufe an
-            tageszusammenfassung() - Zeigt zusammengefasste Verkaufsstatistik nach Produkten gruppiert
-            kundentagesübersicht() - Zeigt Tagesumsätze gruppiert nach Kunden an
-            
-            SYSTEMFUNKTIONEN
-            ----------------
-            systeminfo() - Zeigt Systeminformationen und Cache-Status an
-            info() - Zeigt allgemeine Informationen zum Kassensystem an
-            sonderfunktionen(EANr) - Verarbeitet spezielle EAN-Codes für administrative Funktionen
-            
-            DATENÜBERTRAGUNG
-            ----------------
-            übertragung_umsatz(data) - Überträgt Verkaufsdaten an den Server oder speichert sie offline
-        -->
-        
         function configuration() {
             // Konfigutarionen - Ansicht anpassen je nach Benutzergruppe
             if (config.wartungsmodus == "true") document.getElementById("Wartungsfenster").style = "display: block"; // Offlinemodus
