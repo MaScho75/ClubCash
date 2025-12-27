@@ -347,9 +347,9 @@ body {
 }
 
 .preiseingabe {
-    font-size: 30px;
+    font-size: 4vw;
     text-align: center;
-    margin: 10px 0px 10px 0px ;
+    margin: 1vw;
 }
 
 .button {
@@ -415,6 +415,10 @@ select {
  
     border-radius: 5px;
 }
+ b
+div#rechteSpalte {
+    width: 24vw;
+}
 
 .button:hover {
     background-color: var(--button-hover);
@@ -423,12 +427,11 @@ select {
 /* Allgemeine Stile */
 body {
     font-family: 'Carlito', sans-serif;
-    font-size: 3vw;
+    font-size: 2.5vw;
 }
 
 /* Menüleiste */
 #navbar {
-    /* padding: 10px 20px; */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -442,6 +445,8 @@ body {
     display: block;
     cursor: pointer;
     font-size: 3vw;
+    margin: 0vw;
+    padding: 0vw;
 }
 
 /* Menü-Container */
@@ -449,20 +454,20 @@ body {
     flex-direction: column;
     background: var(--background-light);
     position: absolute;
-    top: 50px;
-    left: 0;
-    width: 300px;
+    top: 4.4vw;
+    left: -2vw;
+    width: 29vw;
     text-align: center;
-    padding: 10px 0;
     border: solid 1px var(--border-color);
     border-top: none;
-    border-left: none;
-    border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 5px;
+    /* border-left: 1px; */
+    border-bottom-left-radius: 1vw;
+    border-bottom-right-radius: 1vw;
     z-index: 10;
     transform-origin: top;
     transition: transform 0.3s ease-out;
     transform: scaleY(0);
+    /* font-size: 3vw; */
 }
 
 /* Buttons im Menü */
@@ -470,12 +475,11 @@ body {
     background: var(--secondary-color);
     color: var(--text-color-light);
     border: none;
-    padding: 10px;
-    margin: 5px;
-    width: 96%;
+    width: 26vw;
     cursor: pointer;
-    font-size: 20px;
-    border-radius: 5px;
+    font-size: 2vw;
+    border-radius: 1vw;
+    margin: 0.5vw;
 }
 
 .menu button:hover {
@@ -496,6 +500,7 @@ button:disabled {
 /* Menü aktivieren */
 .menu.active {
     transform: scaleY(1);
+    /* width: 29vw; */
 }
 
 p {
@@ -516,13 +521,13 @@ h2 {
 
 button {
     height: 7vw;
-    width: 22vw;
+    width: 23vw;
     margin: 1vw;
     font-weight: bold;
     font-size: 2.5vw;
     background-color: var(--button-color);
     border: none;
-    border-radius: 5px;
+    border-radius: 1vw;
     color: var(--text-color-dark)
 }
 
@@ -543,8 +548,8 @@ button:hover {
 
 #direktwahl button {
     height: 6vw;
-    width: 30vw;
-    margin: 1vw 1vw;
+    width: 28vw;
+    margin: 0.8vw;
     font-weight: bold;
     font-size: 2vw;
     background-color: var(--button-color);
@@ -626,6 +631,10 @@ button:hover {
     width: 100vw;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+    aspect-ratio: 4 / 3;
+    /* width: 100%; */
+    /* max-width: 100%; */
+    height: auto;
 }
 
 #direktwahl {
@@ -639,7 +648,7 @@ button:hover {
 }
 
 #linkeSpalte {
-    width: 75vw;
+    width: 73vw;
     height: 100vh;        /* oder 100dvh, siehe Hinweis unten */
     display: flex;
     flex-direction: column;
@@ -650,25 +659,26 @@ button:hover {
 /* Tastatur */
 #tastatur {
     display: none;
-    width: 195px;
+    width: 23vw;
     position: fixed;
     background: var(--text-color-light);
-    left: 600px;
-    top: 120px;
+    left: 74vw;
+    top: 21vw;
     border: solid 1px;
-    height: 300px;
+    height: 36vw;
 }
 
 #tastatur button {
-    width: 50px;
-    height: 50px;
-    margin: 5px;
-    font-size: 30px;
+    width: 6vw;
+    height: 6vw;
+    margin: .5vw;
+    font-size: 4vw;
 }
 
 /* Warenkorb Tabelle */
 #warenkorbtabelle {
     width: 100%;
+    font-size: 3vw;
 }
 
 #bt-abrechnungExport {
@@ -680,7 +690,6 @@ button:hover {
 }
 
 #datenfeld {
-    height: 83%;
     overflow: auto;
     border: 1px solid var(--border-color);
     padding: 1vw;
@@ -690,10 +699,15 @@ button:hover {
     flex: 1 1 auto;       /* nimmt den restlichen Platz */
     min-height: 0;        /* wichtig, damit overflow sauber funktioniert */
            /* optional */
+           /* nimmt den restlichen Platz */
+            /* wichtig, damit overflow sauber funktioniert */
+           /* optional */
+    height: 467px;
 }
 
 #copyright {
-    font-size: 3vw;
+    /* font-size: 3vw; */
+    height: 5vw;
 }
 
 #summenkasten {
@@ -739,6 +753,7 @@ button:hover {
 /* Statusfeld */
 #statusfeld {
     height: 6vw;
+    min-height: min-content;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -749,15 +764,13 @@ button:hover {
 }
 
 /* Menubar */
-#menubar {
-}
+#menubar {display: flex;justify-content: center;flex-direction: column;}
 
 /* Logo */
 #logo {
     display: flex;
     justify-content: center;
     align-items: center;
-    /* height: 120px; */
 }
 
 /* Tabellen */
@@ -989,3 +1002,152 @@ th {
     background-color: var(--success-color);
     color: var(--text-color-light);
  }
+
+ /* Kassestyle.css - Extrahierte Inline-Styles */
+
+/* Preloader */
+#preloader {
+    display: flex;
+}
+
+/* Warenkorb Initialnachricht */
+#warenkorb-initial-message {
+    font-size: 3vw;
+    padding: 1vw;
+}
+
+/* Copyright Text */
+#copyright-text {
+    margin: 0px;
+}
+
+/* Logo Bild */
+#logo-bild {
+    width: 14vw;
+    padding: 1vw;
+}
+
+/* Terminal Info Text */
+#terminal-info-text {
+    margin: 0px;
+}
+
+/* Offline Fenster */
+#offlineFenster {
+    visibility: hidden;
+}
+
+/* Offline Status Text */
+#offline-status-text {
+    padding: 1vw 0vw;
+    margin: 0px;
+    color: var(--warning-color);
+    font-size: 2.5vw;
+}
+
+/* Tastatur */
+#tastatur {
+    display: none;
+}
+
+/* Bildschirmschoner */
+#bildschirmschoner {
+    display: none;
+}
+
+/* Wartungsfenster */
+#Wartungsfenster {
+    display: none;
+}
+
+.menubuttondown {
+    font-size: 8vw;
+}
+
+
+/* Wartungsfenster Logo */
+#wartungs-logo {
+    margin: 50px;
+    height: 200px;
+}
+
+#rechteSpalte {
+    width: 25vw;
+}
+
+
+/* Offline Bildschirm */
+#OfflineBildschirm {
+    display: none;
+}
+
+/* Offline Bildschirm Logo */
+#offline-logo {
+    margin: 50px;
+    height: 200px;
+}
+
+/* Checkmark Container */
+#checkmark-container {
+    display: none;
+}
+
+/* Preis geändert Erfolgsmeldung */
+.preis-geaendert-erfolg {
+    font-size: 30px;
+    color: var(--success-color);
+}
+
+/* Preis geändert Info */
+.preis-geaendert-info {
+    font-size: 30px;
+}
+
+/* Preis geändert Wert */
+.preis-geaendert-wert {
+    color: var(--success-color);
+}
+
+/* Preis Fehler Meldung */
+.preis-fehler {
+    font-size: 30px;
+    color: var(--success-color);
+}
+
+/* Warenkorb Übertragung Text */
+.warenkorb-uebertragung-text {
+    font-size: 30px;
+}
+
+/* Warenkorb Checkmark Container (in dynamischem HTML) */
+.warenkorb-checkmark-container {
+    display: none;
+}
+
+/* Warenkorb Checkmark SVG */
+#warenkorb-checkmark-svg {
+    margin: -105px 0px 0px 0px;
+}
+
+/* Tagesabrechnung Tabellen-Header */
+.tagesabrechnung-th-left {
+    text-align: left;
+}
+
+/* Kundentagesübersicht Namenfeld */
+#Namenfeld {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+/* Kundentagesübersicht Summen-Zeile */
+.kunden-summen-padding {
+    padding-bottom: 10px;
+}
+
+/* Systeminfo Cache-Liste */
+.systeminfo-cache-liste {
+    font-size: 2vw;
+    text-align: left;
+}

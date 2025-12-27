@@ -176,7 +176,7 @@ DATENÜBERTRAGUNG
 <body>
 
     <!-- Preloader anzeigen -->
-    <div style="display: flex;"  class="preloader" id="preloader">
+    <div class="preloader" id="preloader">
         <div class="spinner-container">
             <div class="spinner"></div>
             <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" class="preloader-logo">
@@ -186,12 +186,12 @@ DATENÜBERTRAGUNG
     <div id="navbar" onclick="toggleMenu()">
         <div class="menu-icon">☰</div>
         <div class="menu">
-            <button id="bt_tagesabrechnung" onclick="tagesabrechnung();">Tagesabrechnung</button>
-            <button id="bt_tageszusammenfassung" onclick="tageszusammenfassung();">Tageszusammenfassung</button>
-            <button id="bt_kundentagesübersicht" onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
-            <button id="bt_mittagspreis" onclick="mittagspreis();">Preisanpassung Essen</button>
-            <button id="bt_info" onclick="info();">Programminfos</button>
-            <button id="bt_systeminfo" onclick="systeminfo()">Systeminfo</button>
+            <button class="menubuttondown" id="bt_tagesabrechnung" onclick="tagesabrechnung();">Tagesabrechnung</button>
+            <button class="menubuttondown" id="bt_tageszusammenfassung" onclick="tageszusammenfassung();">Tageszusammenfassung</button>
+            <button class="menubuttondown" id="bt_kundentagesübersicht" onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
+            <button class="menubuttondown" id="bt_mittagspreis" onclick="mittagspreis();">Preisanpassung Essen</button>
+            <button class="menubuttondown" id="bt_info" onclick="info();">Programminfos</button>
+            <button class="menubuttondown" id="bt_systeminfo" onclick="systeminfo()">Systeminfo</button>
         </div>
     </div>
 
@@ -212,7 +212,7 @@ DATENÜBERTRAGUNG
             </table>
         </div>
     </div>
-
+    
     <div id="display">
 
         <div id="linkeSpalte">
@@ -226,7 +226,7 @@ DATENÜBERTRAGUNG
                     <thead></thead>
                     <tbody>
                         <tr>
-                            <td class="zentriert" style="font-size: 25px; padding: 10px;">Bitte Produkt scannen oder Chip auflegen.</td>
+                            <td class="zentriert" id="warenkorb-initial-message">Bitte Produkt scannen oder Chip auflegen.</td>
                         </tr>
                         <tr>
                             <td>
@@ -237,20 +237,20 @@ DATENÜBERTRAGUNG
             </div>
 
             <div id="copyright">
-                <p class="zentriert" style="margin: 0px;"><span id="verein">VEREIN</span> - &copy; 2025 Marcel Schommer - Version: <span id="version">x.x.x</span></p>
+                <p class="zentriert" id="copyright-text"><span id="verein">VEREIN</span> - &copy; 2025 Marcel Schommer - Version: <span id="version">x.x.x</span></p>
             </div>
         </div>
 
         <div id="rechteSpalte">
 
             <div id="logo">
-                <img id="logo-bild" src="../grafik/ClubCashLogo-gelbblauschwarz.svg" alt="ClubCash" style="width: 130px;">
+                <img id="logo-bild" src="../grafik/ClubCashLogo-gelbblauschwarz.svg" alt="ClubCash">
             </div>
 
             <div id="menubar">
-                <p class="zentriert" style="margin: 0px;"><b>Terminal <span id=terminal>X</span></b></p>
-                    <div id="offlineFenster" style="visibility: hidden;">
-                        <p class="zentriert" style="padding: 10px; margin: 0px; color: var(--warning-color);"><b>System offline!</b> (<span id="offlineDS">0</span>)</p>
+                <p class="zentriert" id="terminal-info-text"><b>Terminal <span id=terminal>X</span></b></p>
+                    <div id="offlineFenster">
+                        <p class="zentriert" id="offline-status-text"><b>System offline!</b> (<span id="offlineDS">0</span>)</p>
                     </div>
                 <button id="Bt_preisfenster" onclick="preisfenster_öffnen()">Produkte</button>
                 <button id="Bt_manuelleBuchung" onclick="manuell();">manuelle Buchung</button>
@@ -263,7 +263,7 @@ DATENÜBERTRAGUNG
 
         </div>
 
-        <div style="display: none;" id=tastatur>
+        <div id=tastatur>
             <p class="preiseingabe"><b><span id="zifferneingabefeld">0.00</span> <span id="einheit">€</span></b></p>
             <button onclick="meingabe(1)">1</button>
             <button onclick="meingabe(2)">2</button>
@@ -280,27 +280,27 @@ DATENÜBERTRAGUNG
         </div>
 
     </div>
-    
+        
     <!-- Bildschirmschoner -->
-    <div style="display: none;" class="box_zentrieren" id="bildschirmschoner" onclick="window.location.reload(true);">
+    <div class="box_zentrieren" id="bildschirmschoner" onclick="window.location.reload(true);">
         <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" class="scaling-img">
         
     </div>
 
     <!-- Wartungs Bildschrim  -->
-    <div style="display: none;"   id="Wartungsfenster">
-            <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" style="margin: 50px ; height: 200px;">
+    <div id="Wartungsfenster">
+            <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" id="wartungs-logo">
          <h1>System ist im Wartungsmodus!</h1>
     </div>
 
     <!-- Offline Bildschrim  -->
-    <div style="display: none;" id="OfflineBildschirm">
-            <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" style="margin: 50px ; height: 200px;">
+    <div id="OfflineBildschirm">
+            <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" id="offline-logo">
          <h1>System ist Offline</h1>
          <p>Bitte stellen Sie die Internetverbindung her...</p>
     </div>
 
-    <div id="checkmark-container" style="display: none;">
+    <div id="checkmark-container">
         <svg width="200" height="200" viewBox="0 0 100 100">
             <path id="checkmark" d="M25 50 L45 70 L75 35"
                 stroke="#4CAF50" stroke-width="8"
@@ -833,19 +833,19 @@ DATENÜBERTRAGUNG
             if (result.success) {
                 console.log('JSON erfolgreich gespeichert');
                 datenfeld.innerHTML = `
-                <p><p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Der Preis wurde geändert!<b></p>
-                <p class="zentriert" style="font-size: 30px;">Der neue Preis für das heutige Essen beträgt jetzt: </p>
-                <h1 class="zentriert" style="color: var(--success-color);">` + zifferneingabefeld.firstChild.nodeValue + ` €</h1>
+                <p><p class="zentriert preis-geaendert-erfolg"><b>Der Preis wurde geändert!<b></p>
+                <p class="zentriert preis-geaendert-info">Der neue Preis für das heutige Essen beträgt jetzt: </p>
+                <h1 class="zentriert preis-geaendert-wert">` + zifferneingabefeld.firstChild.nodeValue + ` €</h1>
                 `;
                 tastatur.style.display = 'none';
             } else {
                 console.error('Fehler:', result.error);
-                datenfeld.innerHTML = '<p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Preis konnte nicht angepasst werden weil: ' + result.error;
+                datenfeld.innerHTML = '<p class="zentriert preis-fehler"><b>Preis konnte nicht angepasst werden weil: ' + result.error;
             }
             })
             .catch(error => {
             console.error('Fehler:', error)
-            datenfeld.innerHTML = '<p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Preis konnte nicht angepasst werden weil: ' + error;
+            datenfeld.innerHTML = '<p class="zentriert preis-fehler"><b>Preis konnte nicht angepasst werden weil: ' + error;
             });
         }
 
@@ -982,15 +982,15 @@ DATENÜBERTRAGUNG
                 tbody.innerHTML = `
                     <tr>
                         <td class="zentriert">
-                        <p style="font-size: 30px; ">Alle Produkte aus dem Warenkorb
+                        <p class="warenkorb-uebertragung-text">Alle Produkte aus dem Warenkorb
                         <br>wurden dem Kundenkonto von</p>
                         <h1><b>` + kunde.firstname + ` ` + kunde.lastname + `</b></h1>
-                        <p style="font-size: 30px"; >übertragen.</p>
+                        <p class="warenkorb-uebertragung-text">übertragen.</p>
                         </td>
                     </tr> 
                 <tr>
-                <div id="checkmark-container" style="display: none;">
-                    <svg width="200" height="200" viewBox="0 0 100 100" style="margin: -105px 0px 0px 0px;">
+                <div class="warenkorb-checkmark-container">
+                    <svg width="200" height="200" viewBox="0 0 100 100" id="warenkorb-checkmark-svg">
                     <path id="checkmark" d="M25 50 L45 70 L75 35"
                         stroke="#4CAF50" stroke-width="8"
                         fill="none"
@@ -1073,8 +1073,8 @@ DATENÜBERTRAGUNG
             <tr>
             <th class="datumspalte">Datum</th>
             <th>Zeit</th>
-            <th style="text-align: left;">T</th>
-            <th style="text-align: left;">Produkt</th>
+            <th class="tagesabrechnung-th-left">T</th>
+            <th class="tagesabrechnung-th-left">Produkt</th>
              <th class="rechts">Preis</th>
              </tr>
              `;
@@ -1143,7 +1143,7 @@ DATENÜBERTRAGUNG
             <th>T</th>
             <th>Zeit</th>
             <th class="kundenspalte">Kunde</th>
-            <th style="text-align: left;">Produkt</th>
+            <th class="tagesabrechnung-th-left">Produkt</th>
             <th class="preisspalte">Preis</th>
             </tr>
             `;
@@ -1340,10 +1340,6 @@ DATENÜBERTRAGUNG
                 tr.innerHTML = `
             <td colspan="4" 
             id="Namenfeld"
-            style="
-                position: sticky;
-                top: 0;
-                z-index: 1;"
             >` + kunde.lastname + `, ` + kunde.firstname + `</td>
             `;
                 tbody.appendChild(tr);
@@ -1382,7 +1378,7 @@ DATENÜBERTRAGUNG
             <td></td>
             <td></td>
             <td></td>
-            <td class="währung" style="padding-bottom: 10px;"><b>` + kundensumme.toFixed(2) + ` €</b></td>
+            <td class="währung kunden-summen-padding"><b>` + kundensumme.toFixed(2) + ` €</b></td>
             `;
                 tbody.appendChild(tr2);
 
@@ -1422,7 +1418,7 @@ DATENÜBERTRAGUNG
                 const cache = await caches.open(cacheName);
                 const keys = await cache.keys();
                 cacheDetails += `<p><b>${cacheName}</b>: ${keys.length} Dateien</p>`;
-                cacheDetails += '<ul style="font-size: 12px; text-align: left;">';
+                cacheDetails += '<ul class="systeminfo-cache-liste">';
                 keys.forEach(req => {
                     const url = new URL(req.url);
                     cacheDetails += `<li>${url.pathname}</li>`;
