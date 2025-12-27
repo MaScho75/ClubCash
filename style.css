@@ -627,14 +627,10 @@ button:hover {
     background-color: var(--background-light);
     margin: 0;
     padding: 0;
-    height: 100vh;
-    width: 100vw;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    aspect-ratio: 4 / 3;
-    /* width: 100%; */
-    /* max-width: 100%; */
-    height: auto;
+    width: 100%;
+    height: 100vh;
 }
 
 #direktwahl {
@@ -649,16 +645,17 @@ button:hover {
 
 #linkeSpalte {
     width: 73vw;
-    height: 100vh;        /* oder 100dvh, siehe Hinweis unten */
+            /* oder 100dvh, siehe Hinweis unten */
     display: flex;
     flex-direction: column;
+    height: 100vh;
 }
 
 /* Removed empty ruleset for #rechteSpalte */
 
 /* Tastatur */
 #tastatur {
-    display: none;
+    /* display: block; */
     width: 23vw;
     position: fixed;
     background: var(--text-color-light);
@@ -702,7 +699,7 @@ button:hover {
            /* nimmt den restlichen Platz */
             /* wichtig, damit overflow sauber funktioniert */
            /* optional */
-    height: 467px;
+    height: 100vh;
 }
 
 #copyright {
@@ -1072,7 +1069,6 @@ th {
 }
 
 #rechteSpalte {
-    width: 25vw;
 }
 
 
