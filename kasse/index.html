@@ -70,7 +70,7 @@
 <body>
 
     <!-- Preloader anzeigen -->
-    <div class="preloader" id="preloader">
+    <div style="display: flex;"  class="preloader" id="preloader">
         <div class="spinner"></div>
     </div>
 
@@ -154,7 +154,7 @@
 
         </div>
 
-        <div id=tastatur>
+        <div style="display: none;" id=tastatur>
             <p class="preiseingabe"><b><span id="zifferneingabefeld">0.00</span> <span id="einheit">€</span></b></p>
             <button onclick="meingabe(1)">1</button>
             <button onclick="meingabe(2)">2</button>
@@ -173,24 +173,23 @@
     </div>
     
     <!-- Bildschirmschoner -->
-    <div class="box_zentrieren" id="bildschirmschoner" onclick="window.location.reload(true);">
+    <div style="display: none;" class="box_zentrieren" id="bildschirmschoner" onclick="window.location.reload(true);">
         <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" class="scaling-img">
         
     </div>
 
     <!-- Wartungs Bildschrim  -->
-    <div id="Wartungsfenster">
+    <div style="display: none;"   id="Wartungsfenster">
             <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" style="margin: 50px ; height: 200px;">
          <h1>System ist im Wartungsmodus!</h1>
     </div>
 
     <!-- Offline Bildschrim  -->
-    <div id="OfflineBildschirm">
+    <div style="display: none;" id="OfflineBildschirm">
             <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" style="margin: 50px ; height: 200px;">
          <h1>System ist Offline</h1>
          <p>Bitte stellen Sie die Internetverbindung her...</p>
     </div>
-
 
     <div id="checkmark-container" style="display: none;">
         <svg width="200" height="200" viewBox="0 0 100 100">
@@ -216,15 +215,7 @@
             }
 
 
-        // Wie viele Datensätze im lokalen Speicher sind
-            function updateOfflineCounter() {
-                let offlineData = JSON.parse(localStorage.getItem('offlineVerkäufe')) || [];
-                const offlineElement = document.getElementById('offlineDS');
-                if (offlineElement) {
-                    offlineElement.innerText = offlineData.length;
-                    console.log("Offline-Datensätze im lokalen Speicher: " + offlineData.length);
-                }
-            }
+
 
 
         //Backup der umsatz.csv
@@ -425,108 +416,60 @@
             });
             
 
-        async function systeminfo() {
-            preisfenster.style.display = 'none'; //sollte das Preisfenster noch offen sein, wird es geschlossen
-            tastatur.style.display = 'none'; //sollte die Tastatur noch offen sein, wird sie geschlossen
-            statusfeld.innerText = "Systeminformationen";
-            
-            // Cache-Informationen abrufen
-            let cacheInfo = 'Nicht verfügbar';
-            let cacheDetails = '';
-            if ('caches' in window) {
-                try {
-                    const cacheNames = await caches.keys();
-                    cacheInfo = cacheNames.join(', ') || 'Keine Caches gefunden';
-                    
-                    // Details für jeden Cache
-                    for (const cacheName of cacheNames) {
-                        const cache = await caches.open(cacheName);
-                        const keys = await cache.keys();
-                        cacheDetails += `<p><b>${cacheName}</b>: ${keys.length} Dateien</p>`;
-                        cacheDetails += '<ul style="font-size: 12px; text-align: left;">';
-                        keys.forEach(req => {
-                            const url = new URL(req.url);
-                            cacheDetails += `<li>${url.pathname}</li>`;
-                        });
-                        cacheDetails += '</ul>';
-                    }
-                } catch (e) {
-                    cacheInfo = 'Fehler: ' + e.message;
-                }
-            }
-            
-            html = `
-                    <h1>Systeminformationen</h1>
-                    <p>Terminal: <b>${terminal}</b></p>
-                    <p>Version: <b>${config.Version}</b></p>
-                    <p>Vereinsname: <b>${config.Vereinsname}</b></p>
-                    <p>Vereinsname Abk.: <b>${config.VereinsnameAbk}</b></p>
-                    <p>Wartungsmodus: <b>${config.wartungsmodus}</b></p>
-                    <p>Tagesabrechnung: <b>${config.tagesabrechnung}</b></p>
-                    <p>Tageszusammenfassung: <b>${config.tageszusammenfassung}</b></p>
-                    <p>Kundentagesübersicht: <b>${config.kundentagesübersicht}</b></p>
-                    <p>Preisanpassung Essen: <b>${config.preisanpassungessen}</b></p>
-                    <p>Bildschirmschoner: <b>${config.bildschirmschoner} Minuten</b></p>
-                    <p>Offline erlaubt: <b>${config.OfflineErlaubt}</b></p>
-                    <p>Letzter Speicherzeitpunkt im Lokalspeicher: <b>${localStorage.getItem('letzterSpeicherZeitpunkt')}</b></p>
-                    <hr>
-                    <h2>Cache-Status</h2>
-                    <p>Caches: <b>${cacheInfo}</b></p>
-                    ${cacheDetails}
-               `; 
-            datenfeld.innerHTML = html;
-        }   
-        
+        // ========================================
+        // KONFIGURATION & INITIALISIERUNG
+        // ========================================
+
         function configuration() {
             // Konfigutarionen - Ansicht anpassen je nach Benutzergruppe
-            if (config.wartungsmodus == "false") document.getElementById("Wartungsfenster").style = "display: none"; // Offlinemodus
+            if (config.wartungsmodus == "true") document.getElementById("Wartungsfenster").style = "display: block"; // Offlinemodus
             if (config.tagesabrechnung == "false") document.getElementById("bt_tagesabrechnung").style = "display: none";
             if (config.tageszusammenfassung == "false") document.getElementById("bt_tageszusammenfassung").style = "display: none";
             if (config.kundentagesübersicht == "false") document.getElementById("bt_kundentagesübersicht").style = "display: none";
             if (config.preisanpassungessen == "false") document.getElementById("bt_mittagspreis").style = "display: none";
             
             if (config.bildschirmschoner>0) {
-                document.addEventListener('mousemove', resetTimer);
-                document.addEventListener('mousedown', resetTimer);
-                document.addEventListener('keypress', resetTimer);
-                document.addEventListener('touchstart', resetTimer);
-                document.addEventListener('scroll', resetTimer);
-                resetTimer(); // aktiviert den Bildschirmschoner
+            document.addEventListener('mousemove', resetTimer);
+            document.addEventListener('mousedown', resetTimer);
+            document.addEventListener('keypress', resetTimer);
+            document.addEventListener('touchstart', resetTimer);
+            document.addEventListener('scroll', resetTimer);
+            resetTimer(); // aktiviert den Bildschirmschoner
             }
             document.getElementById("version").innerText = config.Version;
         }
-            
+
         async function loadJSON(url) {
             try {
-                // Immer vom Netzwerk laden, nie aus dem Browser-Cache
-                const response = await fetch(url, {
-                    cache: 'no-cache',
-                    headers: {
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache'
-                    }
-                });
-                if (!response.ok) {
-                    throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+            // Immer vom Netzwerk laden, nie aus dem Browser-Cache
+            const response = await fetch(url, {
+                cache: 'no-cache',
+                headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
                 }
-                console.log(`${url} erfolgreich vom Netzwerk geladen`);
-                return await response.json();
+            });
+            if (!response.ok) {
+                throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+            }
+            console.log(`${url} erfolgreich vom Netzwerk geladen`);
+            return await response.json();
             } catch (error) {
-                // Bei Netzwerkfehler: Versuche aus dem Service Worker Cache zu laden
-                console.warn(`Netzwerkfehler bei ${url}, versuche aus Cache zu laden:`, error);
-                if ('caches' in window) {
-                    try {
-                        const cache = await caches.open('clubcash-v1');
-                        const cachedResponse = await cache.match(url);
-                        if (cachedResponse) {
-                            console.log(`${url} aus Cache geladen (Offline-Modus)`);
-                            return await cachedResponse.json();
-                        }
-                    } catch (cacheError) {
-                        console.error(`Cache-Fehler bei ${url}:`, cacheError);
-                    }
+            // Bei Netzwerkfehler: Versuche aus dem Service Worker Cache zu laden
+            console.warn(`Netzwerkfehler bei ${url}, versuche aus Cache zu laden:`, error);
+            if ('caches' in window) {
+                try {
+                const cache = await caches.open('clubcash-v1');
+                const cachedResponse = await cache.match(url);
+                if (cachedResponse) {
+                    console.log(`${url} aus Cache geladen (Offline-Modus)`);
+                    return await cachedResponse.json();
                 }
-                throw new Error(`Datei ${url} konnte weder vom Netzwerk noch aus dem Cache geladen werden: ${error.message}`);
+                } catch (cacheError) {
+                console.error(`Cache-Fehler bei ${url}:`, cacheError);
+                }
+            }
+            throw new Error(`Datei ${url} konnte weder vom Netzwerk noch aus dem Cache geladen werden: ${error.message}`);
             }
         }
 
@@ -542,19 +485,62 @@
 
             // Process remaining lines
             const result = lines.slice(1).map(line => {
-                const values = line.split(';');
-                // Create object with column headers as keys
-                return headers.reduce((obj, header, index) => {
-                    // Filter quotes from values
-                    obj[header] = values[index] ? values[index].replace(/"/g, '') : values[index];
-                    return obj;
-                }, {});
+            const values = line.split(';');
+            // Create object with column headers as keys
+            return headers.reduce((obj, header, index) => {
+                // Filter quotes from values
+                obj[header] = values[index] ? values[index].replace(/"/g, '') : values[index];
+                return obj;
+            }, {});
             });
 
             return result;
         }
 
-        //Hamburger Menu
+        // ========================================
+        // OFFLINE-FUNKTIONALITÄT
+        // ========================================
+
+        function updateOfflineCounter() {
+            let offlineData = JSON.parse(localStorage.getItem('offlineVerkäufe')) || [];
+            const offlineElement = document.getElementById('offlineDS');
+            if (offlineElement) {
+            offlineElement.innerText = offlineData.length;
+            console.log("Offline-Datensätze im lokalen Speicher: " + offlineData.length);
+            }
+        }
+
+        function speichereOfflineVerkauf(verkaufsdaten) {
+            console.log("Speichere Verkauf offline:", verkaufsdaten);
+            let offlineVerkäufe = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
+            offlineVerkäufe.push(verkaufsdaten);
+            localStorage.setItem('offlineVerkäufe', JSON.stringify(offlineVerkäufe));
+            updateOfflineCounter();
+        }
+
+        async function syncOfflineData() {
+            const offlineVerkäufe = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
+            if (offlineVerkäufe.length === 0) return;
+
+            try {
+            for (const verkauf of offlineVerkäufe) {
+                await übertragung_umsatz(verkauf);
+            }
+            localStorage.removeItem('offlineVerkäufe');
+            updateOfflineCounter();
+            statusfeld.innerText = "Offline-Daten synchronisiert";
+            console.log("Offline-Daten synchronisiert");
+            } catch (error) {
+            console.error("Sync-Fehler:", error);
+            statusfeld.innerText = "Fehler bei der Synchronisation";
+            console.log("Fehler bei der Synchronisation");
+            }
+        }
+
+        // ========================================
+        // UI & NAVIGATION
+        // ========================================
+
         function toggleMenu() {
             document.querySelector(".menu").classList.toggle("active");
         }
@@ -564,500 +550,11 @@
             preisfenster.style.display = 'flex';
         }
 
-        function direktwahl() {
-
-            produkte.forEach(produkt => {
-                if (produkt.Sortierung > 0 && produkt.Sortierung < 13) {
-                    let button = document.createElement("button");
-                    button.innerText = produkt.Bezeichnung + " - " + produkt.Preis + " €";
-                    button.onclick = function() {
-                        produktprüfung(produkt.EAN);
-                    }
-                    document.getElementById("direktwahl").appendChild(button);
-                }
-            });
-        }
-
-        function produktprüfung(EANr) {
-            console.log("Produktprüfung für EAN: " + EANr);
-            document.querySelector(".menu").classList.remove("active"); //Menu ausblenden, sollte es geöffnet sein. 
-
-            let produkt = produkte.find(produkte => produkte.EAN === EANr);
-
-            if (produkt) {
-                if (produkt.Menge == "true") {
-                    ProduktTemp = produkt;  // Speichert das Produkt in einer temporären Variable, um es später zu verwenden
-                    warenkorbüberschrift()
-                    document.getElementById("einheit").innerText = "l";
-                    //eingabestopp(); 
-                    //öffnet die Tastatur für die Mengeneingabe
-                    tastatur.style.display = 'block';
-                    statusfeld.innerHTML = "Bitte Menge für <b>&nbsp;" + produkt.Bezeichnung + "&nbsp;</b> in Litern eingeben";
-                    spritt = true;
-                    return
-                }
-
-                warenkorbüberschrift();
-                warenkorb.push(produkt);
-                warenkorbaddition(produkt);
-                eingabe = "";
-            }
-        }
-
-        function kundenprüfung(KundenNr) {
-
-            let kunde = kunden.find(kunden => kunden.schlüssel === KundenNr); // schlüssel ist die Kundennummer
-
-            if (kunde) {
-                if (!summe == 0) {
-
-                    let warenkorb2 = [];
-                    let now = new Date();
-                    // Manuelles Erstellen des Datums im Format YYYY-MM-DD
-                    let year = now.getFullYear();
-                    let month = String(now.getMonth() + 1).padStart(2, '0'); // Monat ist 0-basiert, daher +1
-                    let day = String(now.getDate()).padStart(2, '0'); // Den Tag immer auf 2 Stellen auffüllen
-                    let datum = `${year}-${month}-${day}`;
-                    let zeit = now.toTimeString().split(" ")[0].slice(0, 5);
-
-                    if (!kunde.uid) {
-                        kunde.uid = kunde.schlüssel; // Wenn keine Kundennummer vorhanden ist, setze den Schlüssel als Kundennummer
-                    }
-
-                    for (ds of warenkorb) {
-                        let ds2 = {
-                            Datum: datum,
-                            Zeit: zeit,
-                            Terminal: terminal,
-                            Schlüssel: kunde.schlüssel,
-                            Kundennummer: kunde.uid,
-                            EAN: ds.EAN,
-                            Produkt: ds.Bezeichnung,
-                            Kategorie: ds.Kategorie,
-                            Preis: ds.Preis,
-                            MwSt: ds.MwSt
-                        }
-                        warenkorb2.push(ds2);
-                    }
-
-                    übertragung_umsatz(warenkorb2);
-
-                    tbody.innerHTML = `
-			        <tr>
-			            <td class="zentriert">
-			                <p style="font-size: 30px; ">Alle Produkte aus dem Warenkorb
-			                <br>wurden dem Kundenkonto von</p>
-			                <h1><b>` + kunde.firstname + ` ` + kunde.lastname + `</b></h1>
-			                <p style="font-size: 30px"; >übertragen.</p>
-			            </td>
-			        </tr> 
-                    <tr>
-                        <div id="checkmark-container" style="display: none;">
-                            <svg width="200" height="200" viewBox="0 0 100 100" style="margin: -105px 0px 0px 0px;">
-                                <path id="checkmark" d="M25 50 L45 70 L75 35"
-                                    stroke="#4CAF50" stroke-width="8"
-                                    fill="none"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-dasharray="100"
-                                    stroke-dashoffset="100" />
-                            </svg>
-                        </div>
-                    </tr>
-			        `;
-
-                    thead.innerHTML = "";
-
-                    eingabe = "";
-                    warenkorb = [];
-                    warenkorb2 = [];
-                    summe = 0;
-
-                    abbruch.innerText = "zurück";
-
-                    eingabestopp();
-
-                    zeigeHaken(); // Zeige Häkchenanimation an
-
-                    setTimeout(() => {
-                        window.location.reload(true); // Seite wird nach 3 Sekunden neu geladen
-                    }, 3000); 
-
-                } else {
-                    eingabe = "";
-                    statusfeld.innerText = "Kontoübersicht " + kunde.lastname + ", " + kunde.firstname;
-                    kundenkontoübersicht(KundenNr);
-                }
-            }
-        }
-
-        async function kundenkontoübersicht(Schlüsselnummer) {
-            document.getElementById('abbruch').innerText="zurück";
-            eingabestopp();
-
-            if (!isOnline) {    
-                datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, deine Umsätze anzugezeigen. Bitte warte, bis das System wieder online ist, oder logge dich in das Onlineportal ein.</h1></div>`;
-                return;
-            }
-
-            let kontosumme = 0.0;
-            let kunde = kunden.find(kunden => kunden.schlüssel === Schlüsselnummer);
-
-            try {
-                let response = await fetch("kundenkontouebersicht-cvs.php", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(kunde.uid) // Sende die Kundennummer als JSON
-                });
-
-                if (!response.ok) {
-                    throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
-                }
-
-                let data = await response.json();
-
-                if (data.status !== "success") {
-                    console.error("Fehler beim Abrufen:", data.message);
-                    return;
-                }
-
-                //sortiere die Daten nach Datum und Zeit absteigend
-                data.data.sort((a, b) => {
-                    let dateA = new Date(a.Datum + " " + a.Zeit);
-                    let dateB = new Date(b.Datum + " " + b.Zeit);
-                    return dateB - dateA; // Absteigend sortieren
-                });
-
-                tbody.innerText = ""; // Bestehenden Inhalt löschen
-
-                thead.innerHTML = `
-            <tr>
-            <th class="datumspalte">Datum</th>
-            <th>Zeit</th>
-            <th style="text-align: left;">T</th>
-            <th style="text-align: left;">Produkt</th>
-             <th class="rechts">Preis</th>
-             </tr>
-             `;
-
-                data.data.forEach(row => {
-
-                    kontosumme += parseFloat(row.Preis);
-
-                    let tr = document.createElement("tr");
-                    tr.innerHTML = `
-                <td class="zentriert">` + row.Datum + `</td>
-                <td class="zentriert">` + row.Zeit + `</td>
-                <td class="zentriert">` + row.Terminal + `</td>
-                <td>` + row.Produkt + `</td>
-                <td class="währung">` + row.Preis + ` €</td>
-            `;
-                    tbody.appendChild(tr);
-
-                });
-
-                summenfeld.innerText = kontosumme.toFixed(2);
-
-                warenkorb = [];
-
-            } catch (error) {
-                console.error("Fehler beim Laden der Daten:", error);
-            }
-        }
-        
-        async function tagesabrechnung() {
-            
-            document.getElementById('abbruch').innerText="zurück";
-            tastatur.style.display = 'none';
-
-            eingabestopp();
-
-            if (!isOnline) {    
-                datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, die Tagesumsätze anzugezeigen. Bitte warte, bis das System wieder online ist, oder logge dich in das Onlineportal ein.</h1></div>`;
-                return;
-            }
-
-            let tagessumme = 0.0;
-
-            try {
-                let response = await fetch("tagesabrechnung-csv.php");
-                console.log(response);
-                if (!response.ok) {
-                    throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
-                }
-
-                let data = await response.json();
-
-                if (data.status !== "success") {
-                    console.error("Fehler beim Abrufen:", data.message);
-                    return;
-                }
-
-                tbody.innerText = ""; // Bestehenden Inhalt löschen
-
-                thead.innerHTML = `
-            <tr>
-            <th>T</th>
-            <th>Zeit</th>
-            <th class="kundenspalte">Kunde</th>
-            <th style="text-align: left;">Produkt</th>
-            <th class="preisspalte">Preis</th>
-            </tr>
-            `;
-    
-
-                data.data.forEach(row => {
-
-                    let kunde = kunden.find(kunden => kunden.schlüssel === row.Schlüssel);
-
-                    if (!kunde) {
-                        return console.error("Kunde nicht gefunden für Schlüssel: " + row.Schlüssel);
-                    }
-
-                    let tr = document.createElement("tr");
-                    tr.innerHTML = `
-                <td class="zentriertTop" class="top">` + row.Terminal + `</td>
-                <td class="zentriertTop" class="top">` + row.Zeit + `</td>
-                <td class="top">` + kunde.lastname + ", " + kunde.firstname + `</td>
-                <td class="top">` + row.Produkt + `</td>
-                <td class="währung">` + row.Preis + ` €</td>
-            `;
-                    tbody.appendChild(tr);
-
-
-                });
-
-                statusfeld.innerText = "Tagesabrechnung";
-
-                summenfeld.innerText = tagessumme.toFixed(2);
-
-                warenkorb = [];
-
-            } catch (error) {
-                console.error("Fehler beim Laden der Daten:", error);
-                statusfeld.innerText = "Fehler beim Laden der Daten:" + error;
-            }
-        }
-
-        async function tageszusammenfassung() {
-            document.getElementById('abbruch').innerText="zurück";
-            eingabestopp();
-            tastatur.style.display = 'none';
-
-            if (!isOnline) {    
-                datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, die Tagesumsätze anzugezeigen. Bitte warte, bis das System wieder online ist, oder logge dich in das Onlineportal ein.</h1></div>`;
-                return;
-            }
-
-            let tagessumme = 0.0;
-
-            try {
-                let response = await fetch("tagesabrechnung-csv.php");
-                if (!response.ok) {
-                    throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
-                }
-
-                let data = await response.json();
-
-                if (data.status !== "success") {
-                    console.error("Fehler beim Abrufen:", data.message);
-                    return;
-                }
-
-                const productCounts = data.data.reduce((acc, row) => {
-
-                    const product = row.Produkt; // Produktname
-                    const price = parseFloat(row.Preis); // Preis
-
-                    if (acc[product]) {
-                        acc[product].count += 1; // Falls das Produkt schon im Objekt ist, erhöhe die Zählung
-                        acc[product].totalPrice += price; // und addiere den Preis
-
-                    } else {
-                        acc[product] = {
-                            count: 1, // Erstes Vorkommen des Produkts
-                            unitPrice: price, // Einzelpreis
-                            totalPrice: price // Summenpreis (zu Beginn gleich dem Einzelpreis) erste Mal ist, setze den Zähler auf 1
-                        };
-                    }
-                    return acc;
-                }, {});
-
-                tbody.innerText = ""; // Bestehenden Inhalt löschen
-
-                thead.innerHTML = `
-            <tr>
-            <th>Anzahl</th>
-            <th class="links">Produkt</th>   
-            <th class="rechts">Einzelpreis</th>
-            <th class="rechts">Summe</th>
-             </tr>
-             `;
-
-                for (const [product, details] of Object.entries(productCounts)) {
-
-                    let tr = document.createElement("tr");
-
-                    if (product == "manuelle Buchung") {
-                        tr.innerHTML = `
-                <td class="zentriert"> ${details.count} </td>
-                <td> ${product} </td>
-                <td class="währung"> * </td>
-                <td class="währung"> ${details.totalPrice.toFixed(2)} €</td>
-                `;
-                        tbody.appendChild(tr);
-
-                        tagessumme += details.totalPrice;
-
-                        continue;
-                    }
-
-                    tr.innerHTML = `
-                <td class="zentriert"> ${details.count} </td>
-                <td> ${product} </td>
-                <td class="währung"> ${details.unitPrice.toFixed(2)} €</td>
-                <td class="währung"> ${details.totalPrice.toFixed(2)} €</td>
-            `;
-                    tbody.appendChild(tr);
-
-                    tagessumme += details.totalPrice;
-
-                }
-
-                statusfeld.innerText = "Tageszusammenfassung";
-                summenfeld.innerText = tagessumme.toFixed(2);
-                warenkorb = [];
-
-            } catch (error) {
-                console.error("Fehler beim Laden der Daten:", error);
-                statusfeld.innerText = "Fehler beim Laden der Daten:", error;
-            }
-        }
-
-        async function kundentagesübersicht() {
-            document.getElementById('abbruch').innerText="zurück";
-            eingabestopp();
-            tastatur.style.display = 'none';
-
-            if (!isOnline) {    
-                datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, die Tagesumsätze anzugezeigen. Bitte warte, bis das System wieder online ist, oder logge dich in das Onlineportal ein.</h1></div>`;
-                return;
-            }
-
-            let tagessumme = 0.0;
-
-            try {
-                let response = await fetch("tagesabrechnung-csv.php");
-                if (!response.ok) {
-                    throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
-                }
-
-                let data = await response.json();
-
-                if (data.status !== "success") {
-                    console.error("Fehler beim Abrufen:", data.message);
-                    return;
-                }
-
-                const sortedByCustomer = data.data.sort((a, b) => a.Kundennummer.localeCompare(b.Kundennummer));
-
-                // Produkte zählen, Einzelpreis und Gesamtsumme berechnen
-                const customerData = sortedByCustomer.reduce((acc, row) => {
-                    const customer = row.Kundennummer; // Kunde
-                    const product = row.Produkt; // Produkt
-                    const price = parseFloat(row.Preis); // Preis als Zahl
-
-                    // Wenn der Kunde noch nicht im Accumulator ist, hinzufügen
-                    if (!acc[customer]) {
-                        acc[customer] = {};
-                    }
-
-                    // Wenn das Produkt noch nicht für diesen Kunden existiert
-                    if (!acc[customer][product]) {
-                        acc[customer][product] = {
-                            count: 0,
-                            unitPrice: price,
-                            totalPrice: 0
-                        };
-                    }
-
-                    // Produktanzahl erhöhen und Gesamtsumme berechnen
-                    acc[customer][product].count += 1;
-                    acc[customer][product].totalPrice += price;
-
-                    return acc;
-
-                }, {});
-
-                thead.innerHTML = "";
-                tbody.innerText = ""; // Bestehenden Inhalt löschen
-
-                for (const Kunde1 in customerData) {
-
-                    let kunde = kunden.find(kunden => kunden.uid === Kunde1);
-
-                    let tr = document.createElement("tr");
-                    tr.innerHTML = `
-                <td colspan="4" 
-                id="Namenfeld"
-                style="
-                    position: sticky;
-                    top: 0;
-                    z-index: 1;"
-                >` + kunde.lastname + `, ` + kunde.firstname + `</td>
-            `;
-                    tbody.appendChild(tr);
-                    
-                    let kundensumme = 0.0;
-
-                    for (const [product, details] of Object.entries(customerData[Kunde1])) {
-
-
-                        let tr = document.createElement("tr");
-
-                        if (product == "manuelle Buchung") {
-                            tr.innerHTML = `
-                    <td class="zentriert">` + details.count + `</td>
-                    <td class="links">` + product + `</td>
-                    <td class="währung">*</td>
-                    <td class="währung">` + details.totalPrice.toFixed(2) + ` €</td>
-                  `;
-                        } else {
-                            tr.innerHTML = `
-                    <td class="zentriert">` + details.count + `</td>
-                    <td class="links">` + product + `</td>
-                    <td class="währung">` + details.unitPrice.toFixed(2) + ` €</td>
-                    <td class="währung">` + details.totalPrice.toFixed(2) + ` €</td>
-                  `;
-                        }
-
-                        tbody.appendChild(tr);
-                        kundensumme += details.totalPrice;
-                    }
-
-                    tagessumme += kundensumme;
-
-                    let tr2 = document.createElement("tr");
-                    tr2.innerHTML = `
-                <td></td>
-                <td></td>
-                <td></td>
-                <td class="währung" style="padding-bottom: 10px;"><b>` + kundensumme.toFixed(2) + ` €</b></td>
-            `;
-                    tbody.appendChild(tr2);
-
-                }
-
-                statusfeld.innerText = "Kunden Tagesübersicht";
-                summenfeld.innerText = tagessumme.toFixed(2);
-                warenkorb = [];
-
-            } catch (error) {
-                console.error("Fehler beim Laden der Daten:", error);
-                statusfeld.innerText = "Fehler beim Laden der Daten:", error;
-            }
+        function eingabestopp() {
+            console.log("Eingabestopp aktiviert");
+            document.removeEventListener("keydown", tastenkontrolle);
+            Bt_preisfenster.style.display = 'none';
+            Bt_manuelleBuchung.style.display = 'none';
         }
 
         function Fehlerton() {
@@ -1072,8 +569,203 @@
 
             // Stoppe den Ton nach 0.3 Sekunden
             setTimeout(() => {
-                oscillator.stop();
+            oscillator.stop();
             }, 300);
+        }
+
+        function zeigeHaken() {
+            const container = document.getElementById("checkmark-container");
+            const check = document.getElementById("checkmark");
+
+            container.style.display = "flex";
+
+            // Leichte Verzögerung, damit Transition greift
+            setTimeout(() => {
+            check.style.strokeDashoffset = "0";
+            }, 50);
+        }
+
+        function showScreensaver() {
+            div_Bildschirmschoner.style.display = 'flex';
+        }
+
+        function resetTimer() {
+            clearTimeout(timeout);
+            timeout = setTimeout(showScreensaver, 60000 * config.bildschirmschoner);
+        }
+
+        // ========================================
+        // PRODUKT-FUNKTIONEN
+        // ========================================
+
+        function direktwahl() {
+            produkte.forEach(produkt => {
+            if (produkt.Sortierung > 0 && produkt.Sortierung < 13) {
+                let button = document.createElement("button");
+                button.innerText = produkt.Bezeichnung + " - " + produkt.Preis + " €";
+                button.onclick = function() {
+                produktprüfung(produkt.EAN);
+                }
+                document.getElementById("direktwahl").appendChild(button);
+            }
+            });
+        }
+
+        function produktprüfung(EANr) {
+            console.log("Produktprüfung für EAN: " + EANr);
+            document.querySelector(".menu").classList.remove("active"); //Menu ausblenden, sollte es geöffnet sein. 
+
+            let produkt = produkte.find(produkte => produkte.EAN === EANr);
+
+            if (produkt) {
+            if (produkt.Menge == "true") {
+                ProduktTemp = produkt;  // Speichert das Produkt in einer temporären Variable, um es später zu verwenden
+                warenkorbüberschrift()
+                document.getElementById("einheit").innerText = "l";
+                //eingabestopp(); 
+                //öffnet die Tastatur für die Mengeneingabe
+                tastatur.style.display = 'block';
+                statusfeld.innerHTML = "Bitte Menge für <b>&nbsp;" + produkt.Bezeichnung + "&nbsp;</b> in Litern eingeben";
+                spritt = true;
+                return
+            }
+
+            warenkorbüberschrift();
+            warenkorb.push(produkt);
+            warenkorbaddition(produkt);
+            eingabe = "";
+            }
+        }
+
+        function preisliste() {
+            produkte.sort((a, b) => a.Sortierung - b.Sortierung);
+            preislisten_tbody.innerHTML = "";
+            produkte.forEach(produkt => {
+            if (produkt.EAN == "") { // Leere Zeilen überspringen
+                return;
+            }
+            let zeile = preislisten_tbody.insertRow();
+            let zelle1 = zeile.insertCell();
+            zelle1.innerText = produkt.Bezeichnung;
+            zelle1.className = "preisliste_rechts_groß";
+            let zelle2 = zeile.insertCell();
+            zelle2.innerText = produkt.Preis + " €";
+            zelle2.className = "preisliste_rechts_groß";
+            let zelle3 = zeile.insertCell();
+            zelle3.innerHTML = "<button onclick='aus_preisliste_buchen(`" + produkt.EAN + "`)' class='plus-button'>+</button>";
+
+            });
+        }
+
+        function aus_preisliste_buchen(EAN_Preisliste) {
+            produktprüfung(EAN_Preisliste);
+            preisfenster.style.display = 'none';
+        }
+
+        function mittagspreis() {
+           
+            eingabestopp();
+            statusfeld.innerText = "Preisänderung für das Essen";
+            Bt_preisfenster.style.display = 'none';
+            Bt_manuelleBuchung.style.display = 'none';
+            navbar.style.display = 'none';
+
+            summenfeld.innerText = "0.00";
+            eingabestring = "";
+
+            if (!isOnline) {    
+            datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, den Preis anzupassen. Bitte warte, bis das System wieder online ist, oder buche das Essen als <br> *manuelle Buchung*.</h1></div>`;
+            return;
+            }
+
+            tastatur.style.display = 'block';
+
+            datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Bitte gebe den neuen Preis für das Essen ein.</h1></div>`;
+        
+            document.getElementById('BT_EingabeBestätigt').onclick = function() {
+            let preisNum = parseFloat(zifferneingabefeld.firstChild.nodeValue);
+            update_mittagspreis(preisNum);
+            };
+        }
+
+        function update_mittagspreis(neuerPreis) {
+            document.getElementById('abbruch').innerText="zurück";
+            const produkt = produkte.find(item => item.EAN === "1");
+            if (!produkt) {
+            statusbar.innerHTML = "Fehler in der Produktdatenbank!";
+            return;
+            }
+
+            produkt.Preis = neuerPreis.toFixed(2); // Preis aktualisieren
+        
+            fetch('json-schreiben.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                data: produkte,
+                filename: '../daten/produkte.json'
+            })
+            })
+            .then(response => response.json())
+            .then(result => {
+            if (result.success) {
+                console.log('JSON erfolgreich gespeichert');
+                datenfeld.innerHTML = `
+                <p><p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Der Preis wurde geändert!<b></p>
+                <p class="zentriert" style="font-size: 30px;">Der neue Preis für das heutige Essen beträgt jetzt: </p>
+                <h1 class="zentriert" style="color: var(--success-color);">` + zifferneingabefeld.firstChild.nodeValue + ` €</h1>
+                `;
+                tastatur.style.display = 'none';
+            } else {
+                console.error('Fehler:', result.error);
+                datenfeld.innerHTML = '<p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Preis konnte nicht angepasst werden weil: ' + result.error;
+            }
+            })
+            .catch(error => {
+            console.error('Fehler:', error)
+            datenfeld.innerHTML = '<p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Preis konnte nicht angepasst werden weil: ' + error;
+            });
+        }
+
+        // ========================================
+        // WARENKORB-FUNKTIONEN
+        // ========================================
+
+        function warenkorbüberschrift() {
+            if (warenkorb.length == 0) {
+            warenkorb2 = [];
+            tbody.innerHTML = ""; // Bestehenden Inhalt löschen
+            thead.innerHTML = `
+            <tr>
+                        <th class="produktspalte" >Produkt</th>
+                        <th class="preisspalteWarenkorb">Preis</th>
+                        <th class="leerspalte"></th>		
+                </tr>
+             `;
+            }
+        }
+
+        function warenkorbaddition(produkt) {
+            statusfeld.innerText = "Produkt dem Warenkorb hinzugefügt."
+
+            summe = summe + parseFloat(produkt.Preis);
+
+            summenfeld.innerText = summe.toFixed(2);
+
+            let zeile = tbody.insertRow();
+            let zelle1 = zeile.insertCell();
+            zelle1.innerText = produkt.Bezeichnung;
+            zelle1.className = "rechts_groß";
+            let zelle2 = zeile.insertCell();
+            zelle2.innerText = produkt.Preis + " €";
+            zelle2.className = "rechts_groß";
+            if (produkt.EAN != 9990000000000) {
+            let zelle3 = zeile.insertCell();
+            zelle3.innerHTML = "<button onclick='produktprüfung(`" + produkt.EAN + "`)' class='plus-button'>+</button>";
+            }
         }
 
         function manuell() {
@@ -1089,86 +781,561 @@
             let manuelles_Produkt = [];
 
             if (x == "E") {
-                if (eingabestring == "") {
-                    statusfeld.innerText = "Keine Eingabe erfolgt.";
-                    tastatur.style.display = "none";
-                    return;
-                }
-                if (spritt) {
-                    eingabestring = (eingabestring / 100).toFixed(2);
-                    eingabestring = parseFloat(eingabestring).toFixed(2);
-                    let sprittpreis = parseFloat(eingabestring);
-                    spritt = false; // Zurücksetzen der Spritt-Variable
-                    let Produkttext = ProduktTemp.Bezeichnung + " (" + ProduktTemp.Preis + "€/l * " + eingabestring + "l)";
-                    manuelles_Produkt = {
-                        EAN: ProduktTemp.EAN,
-                        Bezeichnung: Produkttext,
-                        Preis: (sprittpreis * ProduktTemp.Preis).toFixed(2),
-                        MwSt: 19,
-                        Kategorie: "Fuel"
-                    };
-                } else { 
-                    manuelles_Produkt = {
-                        EAN: 9990000000000,
-                        Bezeichnung: "manuelle Buchung",
-                        Preis: (eingabestring / 100).toFixed(2),
-                        MwSt: 19,
-                        Kategorie: "manuelle Buchung"
-                    };
-                }
-
+            if (eingabestring == "") {
+                statusfeld.innerText = "Keine Eingabe erfolgt.";
                 tastatur.style.display = "none";
-                warenkorbüberschrift();
-                warenkorb.push(manuelles_Produkt);
-                warenkorbaddition(manuelles_Produkt);
                 return;
+            }
+            if (spritt) {
+                eingabestring = (eingabestring / 100).toFixed(2);
+                eingabestring = parseFloat(eingabestring).toFixed(2);
+                let sprittpreis = parseFloat(eingabestring);
+                spritt = false; // Zurücksetzen der Spritt-Variable
+                let Produkttext = ProduktTemp.Bezeichnung + " (" + ProduktTemp.Preis + "€/l * " + eingabestring + "l)";
+                manuelles_Produkt = {
+                EAN: ProduktTemp.EAN,
+                Bezeichnung: Produkttext,
+                Preis: (sprittpreis * ProduktTemp.Preis).toFixed(2),
+                MwSt: 19,
+                Kategorie: "Fuel"
+                };
+            } else { 
+                manuelles_Produkt = {
+                EAN: 9990000000000,
+                Bezeichnung: "manuelle Buchung",
+                Preis: (eingabestring / 100).toFixed(2),
+                MwSt: 19,
+                Kategorie: "manuelle Buchung"
+                };
+            }
+
+            tastatur.style.display = "none";
+            warenkorbüberschrift();
+            warenkorb.push(manuelles_Produkt);
+            warenkorbaddition(manuelles_Produkt);
+            return;
             }
             eingabestring += x;
             zifferneingabefeld.innerText = (eingabestring / 100).toFixed(2);
         }
 
-        function eingabestopp() {
-            console.log("Eingabestopp aktiviert");
-            document.removeEventListener("keydown", tastenkontrolle);
-            Bt_preisfenster.style.display = 'none';
-            Bt_manuelleBuchung.style.display = 'none';
-        }
+        // ========================================
+        // KUNDEN-FUNKTIONEN
+        // ========================================
 
-        function warenkorbüberschrift() {
+        function kundenprüfung(KundenNr) {
+            let kunde = kunden.find(kunden => kunden.schlüssel === KundenNr); // schlüssel ist die Kundennummer
 
-            if (warenkorb.length == 0) {
-                warenkorb2 = [];
-                tbody.innerHTML = ""; // Bestehenden Inhalt löschen
-                thead.innerHTML = `
+            if (kunde) {
+            if (!summe == 0) {
+
+                let warenkorb2 = [];
+                let now = new Date();
+                // Manuelles Erstellen des Datums im Format YYYY-MM-DD
+                let year = now.getFullYear();
+                let month = String(now.getMonth() + 1).padStart(2, '0'); // Monat ist 0-basiert, daher +1
+                let day = String(now.getDate()).padStart(2, '0'); // Den Tag immer auf 2 Stellen auffüllen
+                let datum = `${year}-${month}-${day}`;
+                let zeit = now.toTimeString().split(" ")[0].slice(0, 5);
+
+                if (!kunde.uid) {
+                kunde.uid = kunde.schlüssel; // Wenn keine Kundennummer vorhanden ist, setze den Schlüssel als Kundennummer
+                }
+
+                for (ds of warenkorb) {
+                let ds2 = {
+                    Datum: datum,
+                    Zeit: zeit,
+                    Terminal: terminal,
+                    Schlüssel: kunde.schlüssel,
+                    Kundennummer: kunde.uid,
+                    EAN: ds.EAN,
+                    Produkt: ds.Bezeichnung,
+                    Kategorie: ds.Kategorie,
+                    Preis: ds.Preis,
+                    MwSt: ds.MwSt
+                }
+                warenkorb2.push(ds2);
+                }
+
+                übertragung_umsatz(warenkorb2);
+
+                tbody.innerHTML = `
+                    <tr>
+                        <td class="zentriert">
+                        <p style="font-size: 30px; ">Alle Produkte aus dem Warenkorb
+                        <br>wurden dem Kundenkonto von</p>
+                        <h1><b>` + kunde.firstname + ` ` + kunde.lastname + `</b></h1>
+                        <p style="font-size: 30px"; >übertragen.</p>
+                        </td>
+                    </tr> 
                 <tr>
-				    <th class="produktspalte" >Produkt</th>
-					<th class="preisspalteWarenkorb">Preis</th>
-					<th class="leerspalte"></th>		
-		        </tr>
-             `;
+                <div id="checkmark-container" style="display: none;">
+                    <svg width="200" height="200" viewBox="0 0 100 100" style="margin: -105px 0px 0px 0px;">
+                    <path id="checkmark" d="M25 50 L45 70 L75 35"
+                        stroke="#4CAF50" stroke-width="8"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-dasharray="100"
+                        stroke-dashoffset="100" />
+                    </svg>
+                </div>
+                </tr>
+                    `;
+
+                thead.innerHTML = "";
+
+                eingabe = "";
+                warenkorb = [];
+                warenkorb2 = [];
+                summe = 0;
+
+                abbruch.innerText = "zurück";
+
+                eingabestopp();
+
+                zeigeHaken(); // Zeige Häkchenanimation an
+
+                setTimeout(() => {
+                window.location.reload(true); // Seite wird nach 3 Sekunden neu geladen
+                }, 3000); 
+
+            } else {
+                eingabe = "";
+                statusfeld.innerText = "Kontoübersicht " + kunde.lastname + ", " + kunde.firstname;
+                kundenkontoübersicht(KundenNr);
+            }
             }
         }
 
-        function warenkorbaddition(produkt) {
+        async function kundenkontoübersicht(Schlüsselnummer) {
+            document.getElementById('abbruch').innerText="zurück";
+            eingabestopp();
 
-            statusfeld.innerText = "Produkt dem Warenkorb hinzugefügt."
-
-            summe = summe + parseFloat(produkt.Preis);
-
-            summenfeld.innerText = summe.toFixed(2);
-
-            let zeile = tbody.insertRow();
-            let zelle1 = zeile.insertCell();
-            zelle1.innerText = produkt.Bezeichnung;
-            zelle1.className = "rechts_groß";
-            let zelle2 = zeile.insertCell();
-            zelle2.innerText = produkt.Preis + " €";
-            zelle2.className = "rechts_groß";
-            if (produkt.EAN != 9990000000000) {
-                let zelle3 = zeile.insertCell();
-                zelle3.innerHTML = "<button onclick='produktprüfung(`" + produkt.EAN + "`)' class='plus-button'>+</button>";
+            if (!isOnline) {    
+            datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, deine Umsätze anzugezeigen. Bitte warte, bis das System wieder online ist, oder logge dich in das Onlineportal ein.</h1></div>`;
+            return;
             }
 
+            let kontosumme = 0.0;
+            let kunde = kunden.find(kunden => kunden.schlüssel === Schlüsselnummer);
+
+            try {
+            let response = await fetch("kundenkontouebersicht-cvs.php", {
+                method: "POST",
+                headers: {
+                "Content-Type": "application/json"
+                },
+                body: JSON.stringify(kunde.uid) // Sende die Kundennummer als JSON
+            });
+
+            if (!response.ok) {
+                throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+            }
+
+            let data = await response.json();
+
+            if (data.status !== "success") {
+                console.error("Fehler beim Abrufen:", data.message);
+                return;
+            }
+
+            //sortiere die Daten nach Datum und Zeit absteigend
+            data.data.sort((a, b) => {
+                let dateA = new Date(a.Datum + " " + a.Zeit);
+                let dateB = new Date(b.Datum + " " + b.Zeit);
+                return dateB - dateA; // Absteigend sortieren
+            });
+
+            tbody.innerText = ""; // Bestehenden Inhalt löschen
+
+            thead.innerHTML = `
+            <tr>
+            <th class="datumspalte">Datum</th>
+            <th>Zeit</th>
+            <th style="text-align: left;">T</th>
+            <th style="text-align: left;">Produkt</th>
+             <th class="rechts">Preis</th>
+             </tr>
+             `;
+
+            data.data.forEach(row => {
+
+                kontosumme += parseFloat(row.Preis);
+
+                let tr = document.createElement("tr");
+                tr.innerHTML = `
+            <td class="zentriert">` + row.Datum + `</td>
+            <td class="zentriert">` + row.Zeit + `</td>
+            <td class="zentriert">` + row.Terminal + `</td>
+            <td>` + row.Produkt + `</td>
+            <td class="währung">` + row.Preis + ` €</td>
+            `;
+                tbody.appendChild(tr);
+
+            });
+
+            summenfeld.innerText = kontosumme.toFixed(2);
+
+            warenkorb = [];
+
+            } catch (error) {
+            console.error("Fehler beim Laden der Daten:", error);
+            }
+        }
+
+        // ========================================
+        // BERICHTS-FUNKTIONEN
+        // ========================================
+
+        async function tagesabrechnung() {
+            
+            document.getElementById('abbruch').innerText="zurück";
+            tastatur.style.display = 'none';
+
+            eingabestopp();
+
+            if (!isOnline) {    
+            datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, die Tagesumsätze anzugezeigen. Bitte warte, bis das System wieder online ist, oder logge dich in das Onlineportal ein.</h1></div>`;
+            return;
+            }
+
+            let tagessumme = 0.0;
+
+            try {
+            let response = await fetch("tagesabrechnung-csv.php");
+            console.log(response);
+            if (!response.ok) {
+                throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+            }
+
+            let data = await response.json();
+
+            if (data.status !== "success") {
+                console.error("Fehler beim Abrufen:", data.message);
+                return;
+            }
+
+            tbody.innerText = ""; // Bestehenden Inhalt löschen
+
+            thead.innerHTML = `
+            <tr>
+            <th>T</th>
+            <th>Zeit</th>
+            <th class="kundenspalte">Kunde</th>
+            <th style="text-align: left;">Produkt</th>
+            <th class="preisspalte">Preis</th>
+            </tr>
+            `;
+        
+
+            data.data.forEach(row => {
+
+                let kunde = kunden.find(kunden => kunden.schlüssel === row.Schlüssel);
+
+                if (!kunde) {
+                return console.error("Kunde nicht gefunden für Schlüssel: " + row.Schlüssel);
+                }
+
+                let tr = document.createElement("tr");
+                tr.innerHTML = `
+            <td class="zentriertTop" class="top">` + row.Terminal + `</td>
+            <td class="zentriertTop" class="top">` + row.Zeit + `</td>
+            <td class="top">` + kunde.lastname + ", " + kunde.firstname + `</td>
+            <td class="top">` + row.Produkt + `</td>
+            <td class="währung">` + row.Preis + ` €</td>
+            `;
+                tbody.appendChild(tr);
+
+
+            });
+
+            statusfeld.innerText = "Tagesabrechnung";
+
+            summenfeld.innerText = tagessumme.toFixed(2);
+
+            warenkorb = [];
+
+            } catch (error) {
+            console.error("Fehler beim Laden der Daten:", error);
+            statusfeld.innerText = "Fehler beim Laden der Daten:" + error;
+            }
+        }
+
+        async function tageszusammenfassung() {
+            document.getElementById('abbruch').innerText="zurück";
+            eingabestopp();
+            tastatur.style.display = 'none';
+
+            if (!isOnline) {    
+            datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, die Tagesumsätze anzugezeigen. Bitte warte, bis das System wieder online ist, oder logge dich in das Onlineportal ein.</h1></div>`;
+            return;
+            }
+
+            let tagessumme = 0.0;
+
+            try {
+            let response = await fetch("tagesabrechnung-csv.php");
+            if (!response.ok) {
+                throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+            }
+
+            let data = await response.json();
+
+            if (data.status !== "success") {
+                console.error("Fehler beim Abrufen:", data.message);
+                return;
+            }
+
+            const productCounts = data.data.reduce((acc, row) => {
+
+                const product = row.Produkt; // Produktname
+                const price = parseFloat(row.Preis); // Preis
+
+                if (acc[product]) {
+                acc[product].count += 1; // Falls das Produkt schon im Objekt ist, erhöhe die Zählung
+                acc[product].totalPrice += price; // und addiere den Preis
+
+                } else {
+                acc[product] = {
+                    count: 1, // Erstes Vorkommen des Produkts
+                    unitPrice: price, // Einzelpreis
+                    totalPrice: price // Summenpreis (zu Beginn gleich dem Einzelpreis) erste Mal ist, setze den Zähler auf 1
+                };
+                }
+                return acc;
+            }, {});
+
+            tbody.innerText = ""; // Bestehenden Inhalt löschen
+
+            thead.innerHTML = `
+            <tr>
+            <th>Anzahl</th>
+            <th class="links">Produkt</th>   
+            <th class="rechts">Einzelpreis</th>
+            <th class="rechts">Summe</th>
+             </tr>
+             `;
+
+            for (const [product, details] of Object.entries(productCounts)) {
+
+                let tr = document.createElement("tr");
+
+                if (product == "manuelle Buchung") {
+                tr.innerHTML = `
+            <td class="zentriert"> ${details.count} </td>
+            <td> ${product} </td>
+            <td class="währung"> * </td>
+            <td class="währung"> ${details.totalPrice.toFixed(2)} €</td>
+            `;
+                tbody.appendChild(tr);
+
+                tagessumme += details.totalPrice;
+
+                continue;
+                }
+
+                tr.innerHTML = `
+            <td class="zentriert"> ${details.count} </td>
+            <td> ${product} </td>
+            <td class="währung"> ${details.unitPrice.toFixed(2)} €</td>
+            <td class="währung"> ${details.totalPrice.toFixed(2)} €</td>
+            `;
+                tbody.appendChild(tr);
+
+                tagessumme += details.totalPrice;
+
+            }
+
+            statusfeld.innerText = "Tageszusammenfassung";
+            summenfeld.innerText = tagessumme.toFixed(2);
+            warenkorb = [];
+
+            } catch (error) {
+            console.error("Fehler beim Laden der Daten:", error);
+            statusfeld.innerText = "Fehler beim Laden der Daten:", error;
+            }
+        }
+
+        async function kundentagesübersicht() {
+            document.getElementById('abbruch').innerText="zurück";
+            eingabestopp();
+            tastatur.style.display = 'none';
+
+            if (!isOnline) {    
+            datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, die Tagesumsätze anzugezeigen. Bitte warte, bis das System wieder online ist, oder logge dich in das Onlineportal ein.</h1></div>`;
+            return;
+            }
+
+            let tagessumme = 0.0;
+
+            try {
+            let response = await fetch("tagesabrechnung-csv.php");
+            if (!response.ok) {
+                throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+            }
+
+            let data = await response.json();
+
+            if (data.status !== "success") {
+                console.error("Fehler beim Abrufen:", data.message);
+                return;
+            }
+
+            const sortedByCustomer = data.data.sort((a, b) => a.Kundennummer.localeCompare(b.Kundennummer));
+
+            // Produkte zählen, Einzelpreis und Gesamtsumme berechnen
+            const customerData = sortedByCustomer.reduce((acc, row) => {
+                const customer = row.Kundennummer; // Kunde
+                const product = row.Produkt; // Produkt
+                const price = parseFloat(row.Preis); // Preis als Zahl
+
+                // Wenn der Kunde noch nicht im Accumulator ist, hinzufügen
+                if (!acc[customer]) {
+                acc[customer] = {};
+                }
+
+                // Wenn das Produkt noch nicht für diesen Kunden existiert
+                if (!acc[customer][product]) {
+                acc[customer][product] = {
+                    count: 0,
+                    unitPrice: price,
+                    totalPrice: 0
+                };
+                }
+
+                // Produktanzahl erhöhen und Gesamtsumme berechnen
+                acc[customer][product].count += 1;
+                acc[customer][product].totalPrice += price;
+
+                return acc;
+
+            }, {});
+
+            thead.innerHTML = "";
+            tbody.innerText = ""; // Bestehenden Inhalt löschen
+
+            for (const Kunde1 in customerData) {
+
+                let kunde = kunden.find(kunden => kunden.uid === Kunde1);
+
+                let tr = document.createElement("tr");
+                tr.innerHTML = `
+            <td colspan="4" 
+            id="Namenfeld"
+            style="
+                position: sticky;
+                top: 0;
+                z-index: 1;"
+            >` + kunde.lastname + `, ` + kunde.firstname + `</td>
+            `;
+                tbody.appendChild(tr);
+                
+                let kundensumme = 0.0;
+
+                for (const [product, details] of Object.entries(customerData[Kunde1])) {
+
+
+                let tr = document.createElement("tr");
+
+                if (product == "manuelle Buchung") {
+                    tr.innerHTML = `
+                <td class="zentriert">` + details.count + `</td>
+                <td class="links">` + product + `</td>
+                <td class="währung">*</td>
+                <td class="währung">` + details.totalPrice.toFixed(2) + ` €</td>
+              `;
+                } else {
+                    tr.innerHTML = `
+                <td class="zentriert">` + details.count + `</td>
+                <td class="links">` + product + `</td>
+                <td class="währung">` + details.unitPrice.toFixed(2) + ` €</td>
+                <td class="währung">` + details.totalPrice.toFixed(2) + ` €</td>
+              `;
+                }
+
+                tbody.appendChild(tr);
+                kundensumme += details.totalPrice;
+                }
+
+                tagessumme += kundensumme;
+
+                let tr2 = document.createElement("tr");
+                tr2.innerHTML = `
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="währung" style="padding-bottom: 10px;"><b>` + kundensumme.toFixed(2) + ` €</b></td>
+            `;
+                tbody.appendChild(tr2);
+
+            }
+
+            statusfeld.innerText = "Kunden Tagesübersicht";
+            summenfeld.innerText = tagessumme.toFixed(2);
+            warenkorb = [];
+
+            } catch (error) {
+            console.error("Fehler beim Laden der Daten:", error);
+            statusfeld.innerText = "Fehler beim Laden der Daten:", error;
+            }
+        }
+
+        // ========================================
+        // SYSTEM-FUNKTIONEN
+        // ========================================
+
+        async function systeminfo() {
+            preisfenster.style.display = 'none'; //sollte das Preisfenster noch offen sein, wird es geschlossen
+            tastatur.style.display = 'none'; //sollte die Tastatur noch offen sein, wird sie geschlossen
+            statusfeld.innerText = "Systeminformationen";
+            
+            // Cache-Informationen abrufen
+            let cacheInfo = 'Nicht verfügbar';
+            let cacheDetails = '';
+            if ('caches' in window) {
+            try {
+                const cacheNames = await caches.keys();
+                cacheInfo = cacheNames.join(', ') || 'Keine Caches gefunden';
+                
+                // Details für jeden Cache
+                for (const cacheName of cacheNames) {
+                const cache = await caches.open(cacheName);
+                const keys = await cache.keys();
+                cacheDetails += `<p><b>${cacheName}</b>: ${keys.length} Dateien</p>`;
+                cacheDetails += '<ul style="font-size: 12px; text-align: left;">';
+                keys.forEach(req => {
+                    const url = new URL(req.url);
+                    cacheDetails += `<li>${url.pathname}</li>`;
+                });
+                cacheDetails += '</ul>';
+                }
+            } catch (e) {
+                cacheInfo = 'Fehler: ' + e.message;
+            }
+            }
+            
+            html = `
+                <h1>Systeminformationen</h1>
+                <p>Terminal: <b>${terminal}</b></p>
+                <p>Version: <b>${config.Version}</b></p>
+                <p>Vereinsname: <b>${config.Vereinsname}</b></p>
+                <p>Vereinsname Abk.: <b>${config.VereinsnameAbk}</b></p>
+                <p>Wartungsmodus: <b>${config.wartungsmodus}</b></p>
+                <p>Tagesabrechnung: <b>${config.tagesabrechnung}</b></p>
+                <p>Tageszusammenfassung: <b>${config.tageszusammenfassung}</b></p>
+                <p>Kundentagesübersicht: <b>${config.kundentagesübersicht}</b></p>
+                <p>Preisanpassung Essen: <b>${config.preisanpassungessen}</b></p>
+                <p>Bildschirmschoner: <b>${config.bildschirmschoner} Minuten</b></p>
+                <p>Offline erlaubt: <b>${config.OfflineErlaubt}</b></p>
+                <p>Letzter Speicherzeitpunkt im Lokalspeicher: <b>${localStorage.getItem('letzterSpeicherZeitpunkt')}</b></p>
+                <hr>
+                <h2>Cache-Status</h2>
+                <p>Caches: <b>${cacheInfo}</b></p>
+                ${cacheDetails}
+               `; 
+            datenfeld.innerHTML = html;
         }
 
         function info() {
@@ -1183,211 +1350,65 @@
             Bt_manuelleBuchung.style.display = 'none';
             
             document.getElementById('abbruch').innerText="zurück";
-
         }
 
-        function preisliste() {
-            produkte.sort((a, b) => a.Sortierung - b.Sortierung);
-            preislisten_tbody.innerHTML = "";
-            produkte.forEach(produkt => {
-                if (produkt.EAN == "") { // Leere Zeilen überspringen
-                    return;
-                }
-                let zeile = preislisten_tbody.insertRow();
-                let zelle1 = zeile.insertCell();
-                zelle1.innerText = produkt.Bezeichnung;
-                zelle1.className = "preisliste_rechts_groß";
-                let zelle2 = zeile.insertCell();
-                zelle2.innerText = produkt.Preis + " €";
-                zelle2.className = "preisliste_rechts_groß";
-                let zelle3 = zeile.insertCell();
-                zelle3.innerHTML = "<button onclick='aus_preisliste_buchen(`" + produkt.EAN + "`)' class='plus-button'>+</button>";
-
-            });
-        }
-
-        function aus_preisliste_buchen(EAN_Preisliste) {
-            produktprüfung(EAN_Preisliste);
-            preisfenster.style.display = 'none';
-        }
-
-        //Mittagessenpreis
-        function mittagspreis() {
-           
-            eingabestopp();
-            statusfeld.innerText = "Preisänderung für das Essen";
-            Bt_preisfenster.style.display = 'none';
-            Bt_manuelleBuchung.style.display = 'none';
-            navbar.style.display = 'none';
-
-            summenfeld.innerText = "0.00";
-            eingabestring = "";
-
-            if (!isOnline) {    
-                datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Das System ist offline! Es ist derzeit nicht möglich, den Preis anzupassen. Bitte warte, bis das System wieder online ist, oder buche das Essen als <br> *manuelle Buchung*.</h1></div>`;
-                return;
-            }
-
-            tastatur.style.display = 'block';
-
-            datenfeld.innerHTML = `<div class="box_zentrieren"><h1> Bitte gebe den neuen Preis für das Essen ein.</h1></div>`;
-        
-            document.getElementById('BT_EingabeBestätigt').onclick = function() {
-                let preisNum = parseFloat(zifferneingabefeld.firstChild.nodeValue);
-                update_mittagspreis(preisNum);
-            };
-        }
-
-        function update_mittagspreis(neuerPreis) {
-            document.getElementById('abbruch').innerText="zurück";
-            const produkt = produkte.find(item => item.EAN === "1");
-            if (!produkt) {
-                statusbar.innerHTML = "Fehler in der Produktdatenbank!";
-                return;
-            }
-
-            produkt.Preis = neuerPreis.toFixed(2); // Preis aktualisieren
-        
-            fetch('json-schreiben.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    data: produkte,
-                    filename: '../daten/produkte.json'
-                })
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    console.log('JSON erfolgreich gespeichert');
-                    datenfeld.innerHTML = `
-                        <p><p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Der Preis wurde geändert!<b></p>
-                        <p class="zentriert" style="font-size: 30px;">Der neue Preis für das heutige Essen beträgt jetzt: </p>
-                        <h1 class="zentriert" style="color: var(--success-color);">` + zifferneingabefeld.firstChild.nodeValue + ` €</h1>
-                        `;
-                    tastatur.style.display = 'none';
-                } else {
-                    console.error('Fehler:', result.error);
-                    datenfeld.innerHTML = '<p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Preis konnte nicht angepasst werden weil: ' + result.error;
-                }
-            })
-            .catch(error => {
-                console.error('Fehler:', error)
-                datenfeld.innerHTML = '<p class="zentriert" style="font-size: 30px; color: var(--success-color);"><b>Preis konnte nicht angepasst werden weil: ' + error;
-            });
-        }
-
-        // Funktion zum Anzeigen des Bildschirm-Schoners
-        function showScreensaver() {
-            div_Bildschirmschoner.style.display = 'flex';
-        }
-
-        // Funktion, die den Inaktivitäts-Timer zurücksetzt
-        function resetTimer() {
-            clearTimeout(timeout);
-            timeout = setTimeout(showScreensaver, 60000 * config.bildschirmschoner);
-        }
-            
-        //spezielle EAN-Nummer lösen Sonderfunktionen aus
         function sonderfunktionen(EANr) {
             switch (EANr) {
-                case "1111":
-                    tagesabrechnung();
-                    eingabe="";
-                    break;
-                case "2222":
-                    tageszusammenfassung();
-                    eingabe="";
-                    break;
-                case "3333":
-                    kundentagesübersicht();
-                    eingabe="";
-                    break;
-                case "4444":
-                    mittagspreis();
-                    eingabe="";
-                    break;
+            case "1111":
+                tagesabrechnung();
+                eingabe="";
+                break;
+            case "2222":
+                tageszusammenfassung();
+                eingabe="";
+                break;
+            case "3333":
+                kundentagesübersicht();
+                eingabe="";
+                break;
+            case "4444":
+                mittagspreis();
+                eingabe="";
+                break;
             }
         }
 
-        function zeigeHaken() {
-            const container = document.getElementById("checkmark-container");
-            const check = document.getElementById("checkmark");
+        // ========================================
+        // DATENÜBERTRAGUNG
+        // ========================================
 
-            container.style.display = "flex";
-
-            // Leichte Verzögerung, damit Transition greift
-            setTimeout(() => {
-                check.style.strokeDashoffset = "0";
-            }, 50);
-        }
-        
-    // Offline-Daten im localStorage speichern
-        function speichereOfflineVerkauf(verkaufsdaten) {
-            console.log("Speichere Verkauf offline:", verkaufsdaten);
-            let offlineVerkäufe = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
-            offlineVerkäufe.push(verkaufsdaten);
-            localStorage.setItem('offlineVerkäufe', JSON.stringify(offlineVerkäufe));
-            updateOfflineCounter();
-        }
-
-        // Überarbeitung der übertragung_umsatz Funktion
         async function übertragung_umsatz(data) {
             if (!isOnline) {
-                speichereOfflineVerkauf(data);
-                statusfeld.innerText = "Verkauf offline gespeichert";
-                console.log("Verkauf offline gespeichert");
-                return;
+            speichereOfflineVerkauf(data);
+            statusfeld.innerText = "Verkauf offline gespeichert";
+            console.log("Verkauf offline gespeichert");
+            return;
             }
 
             try {
-                const response = await fetch("umsatz-api.php", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(data)
-                });
+            const response = await fetch("umsatz-api.php", {
+                method: "POST",
+                headers: {
+                "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
 
-                if (!response.ok) {
-                    throw new Error(`Server-Fehler: ${response.status}`);
-                }
+            if (!response.ok) {
+                throw new Error(`Server-Fehler: ${response.status}`);
+            }
 
-                const result = await response.json();
-                console.log(result);
-                statusfeld.innerText = "Verkauf online gespeichert";
-                console.log("Verkauf online gespeichert");
+            const result = await response.json();
+            console.log(result);
+            statusfeld.innerText = "Verkauf online gespeichert";
+            console.log("Verkauf online gespeichert");
             } catch (error) {
-                console.error("Fehler:", error);
-                speichereOfflineVerkauf(data);
-                statusfeld.innerText = "Fehler - Verkauf offline gespeichert";
-                console.log("Fehler - Verkauf offline gespeichert");
+            console.error("Fehler:", error);
+            speichereOfflineVerkauf(data);
+            statusfeld.innerText = "Fehler - Verkauf offline gespeichert";
+            console.log("Fehler - Verkauf offline gespeichert");
             }
         }
-
-        // Offline-Daten synchronisieren
-        async function syncOfflineData() {
-            const offlineVerkäufe = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
-            if (offlineVerkäufe.length === 0) return;
-
-            try {
-                for (const verkauf of offlineVerkäufe) {
-                    await übertragung_umsatz(verkauf);
-                }
-                localStorage.removeItem('offlineVerkäufe');
-                updateOfflineCounter();
-                statusfeld.innerText = "Offline-Daten synchronisiert";
-                console.log("Offline-Daten synchronisiert");
-            } catch (error) {
-                console.error("Sync-Fehler:", error);
-                statusfeld.innerText = "Fehler bei der Synchronisation";
-                console.log("Fehler bei der Synchronisation");
-            }
-        }
-  
     </script>
 
 </body>
