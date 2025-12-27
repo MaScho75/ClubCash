@@ -423,24 +423,25 @@ select {
 /* Allgemeine Stile */
 body {
     font-family: 'Carlito', sans-serif;
-    font-size: 20px;
+    font-size: 3vw;
 }
 
 /* Menüleiste */
 #navbar {
-    padding: 10px 20px;
+    /* padding: 10px 20px; */
     display: flex;
     justify-content: space-between;
     align-items: center;
     color: var(--text-color-dark);
     position: absolute;
+    margin: 1.5vw;
 }
 
 /* Hamburger-Icon */
 .menu-icon {
     display: block;
     cursor: pointer;
-    font-size: 24px;
+    font-size: 3vw;
 }
 
 /* Menü-Container */
@@ -514,11 +515,11 @@ h2 {
 }
 
 button {
-    height: 70px;
-    width: 180px;
-    margin: 5px 5px 0px 5px;
+    height: 7vw;
+    width: 22vw;
+    margin: 1vw;
     font-weight: bold;
-    font-size: 20px;
+    font-size: 2.5vw;
     background-color: var(--button-color);
     border: none;
     border-radius: 5px;
@@ -541,14 +542,14 @@ button:hover {
 }
 
 #direktwahl button {
-    height: 50px;
-    width: 230px;
-    margin: 5px 5px 0px 5px;
+    height: 6vw;
+    width: 30vw;
+    margin: 1vw 1vw;
     font-weight: bold;
-    font-size: 18px;
+    font-size: 2vw;
     background-color: var(--button-color);
     border: none;
-    border-radius: 5px;
+    border-radius: 1vw;
     color: var(--text-color-dark)
 }
 
@@ -621,14 +622,14 @@ button:hover {
     background-color: var(--background-light);
     margin: 0;
     padding: 0;
-    height: 480px;
-    width: 800px;
+    height: 100vh;
+    width: 100vw;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
 }
 
 #direktwahl {
-    height: 330px;
+    /* height: 330px; */
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -638,7 +639,10 @@ button:hover {
 }
 
 #linkeSpalte {
-    width: 600px;
+    width: 75vw;
+    height: 100vh;        /* oder 100dvh, siehe Hinweis unten */
+    display: flex;
+    flex-direction: column;
 }
 
 /* Removed empty ruleset for #rechteSpalte */
@@ -676,25 +680,28 @@ button:hover {
 }
 
 #datenfeld {
-    height: 390px;
+    height: 83%;
     overflow: auto;
     border: 1px solid var(--border-color);
-    padding: 5px;
-    margin: 10px 10px 0px 10px;
+    padding: 1vw;
+    margin: 1vw;
     background-color: var(--text-color-light);
-    border-radius: 5px;
+    border-radius: 2vw;
+    flex: 1 1 auto;       /* nimmt den restlichen Platz */
+    min-height: 0;        /* wichtig, damit overflow sauber funktioniert */
+           /* optional */
 }
 
 #copyright {
-    font-size: .8em;
+    font-size: 3vw;
 }
 
 #summenkasten {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 50px;
-    font-size: 35px;
+    /* height: 50px; */
+    font-size: 4vw;
     font-weight: bold;
 }
 
@@ -731,18 +738,18 @@ button:hover {
 
 /* Statusfeld */
 #statusfeld {
-    height: 40px;
+    height: 6vw;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 25px;
+    font-size: 4vw;
     font-weight: bold;
     color: var(--text-color-dark);
+    padding: 0vw;
 }
 
 /* Menubar */
 #menubar {
-    height: 300px;
 }
 
 /* Logo */
@@ -750,7 +757,7 @@ button:hover {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 120px;
+    /* height: 120px; */
 }
 
 /* Tabellen */
@@ -856,7 +863,7 @@ th {
 
 /* Breite des Scrollbalkens */
 .scrollbalken::-webkit-scrollbar {
-    width: 40px;
+    width: 5vw;
 }
 
 /* Hintergrund des Scrollbalkens */
