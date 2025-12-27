@@ -25,7 +25,7 @@ const ASSETS = [
   '../daten/produkte.json',
   '../daten/kunden.json',
   '../daten/externe.json',
-  './fonts/carlito-v3-latin-regular.woff2',
+  '../grafik/carlito-v3-latin-regular.woff2',
   './lib/jquery-3.6.0.min.js',
   '../grafik/ClubCashLogo-gelbblauschwarz.svg',
   '../grafik/ClubCashLogo-gelbblauweiss.svg'
