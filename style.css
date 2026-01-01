@@ -347,9 +347,9 @@ body {
 }
 
 .preiseingabe {
-    font-size: 4vw;
+    font-size: 4cqw;
     text-align: center;
-    margin: 1vw;
+    margin: 1cqw;
 }
 
 .button {
@@ -427,7 +427,6 @@ div#rechteSpalte {
 /* Allgemeine Stile */
 body {
     font-family: 'Carlito', sans-serif;
-    font-size: 2.5vw;
 }
 
 /* Menüleiste */
@@ -444,9 +443,9 @@ body {
 .menu-icon {
     display: block;
     cursor: pointer;
-    font-size: 3vw;
-    margin: 0vw;
-    padding: 0vw;
+    /* margin: 0vw; */
+    /* padding: 0vw; */
+    font-size: 2cqw;
 }
 
 /* Menü-Container */
@@ -454,20 +453,20 @@ body {
     flex-direction: column;
     background: var(--background-light);
     position: absolute;
-    top: 4.4vw;
-    left: -2vw;
-    width: 29vw;
+    top: 3.4cqw;
+    left: -1cqw;
     text-align: center;
     border: solid 1px var(--border-color);
     border-top: none;
     /* border-left: 1px; */
-    border-bottom-left-radius: 1vw;
-    border-bottom-right-radius: 1vw;
+    border-bottom-left-radius: 1cqw;
+    border-bottom-right-radius: 1cqw;
     z-index: 10;
     transform-origin: top;
     transition: transform 0.3s ease-out;
     transform: scaleY(0);
     /* font-size: 3vw; */
+    width:  28cqw;
 }
 
 /* Buttons im Menü */
@@ -475,11 +474,12 @@ body {
     background: var(--secondary-color);
     color: var(--text-color-light);
     border: none;
-    width: 26vw;
+    width: 26cqw;
     cursor: pointer;
-    font-size: 2vw;
-    border-radius: 1vw;
-    margin: 0.5vw;
+    font-size: 1.8cqw;
+    border-radius: 1cqw;
+    margin: 0.5cqw;
+    height: 5cqw;
 }
 
 .menu button:hover {
@@ -500,11 +500,12 @@ button:disabled {
 /* Menü aktivieren */
 .menu.active {
     transform: scaleY(1);
-    /* width: 29vw; */
+    width: 28cqw;
 }
 
 p {
-    margin-block-start: 0em;
+    /* margin-block-start: 0em; */
+    font-size: 2cqw;
 }
 
 h1 {
@@ -514,20 +515,21 @@ h1 {
 
 h2 {
     text-align: left;
-    font-size: 25px;
+    font-size: 4cqw;
     font-weight: bold;
-    margin: 20px 0px 0px 0px;
+    margin: 3cqw 0 0 0;
 }
 
 button {
-    height: 7vw;
-    width: 23vw;
-    margin: 1vw;
+    font-size: 2.2cqw;
+    height: 8cqw;
+    width: 20cqw;
+    margin: .3cqw;
     font-weight: bold;
-    font-size: 2.5vw;
+    /* font-size: 2.5vw; */
     background-color: var(--button-color);
     border: none;
-    border-radius: 1vw;
+    border-radius: 1cqw;
     color: var(--text-color-dark)
 }
 
@@ -547,15 +549,13 @@ button:hover {
 }
 
 #direktwahl button {
-    height: 6vw;
-    width: 28vw;
-    margin: 0.8vw;
     font-weight: bold;
-    font-size: 2vw;
     background-color: var(--button-color);
     border: none;
-    border-radius: 1vw;
-    color: var(--text-color-dark)
+    border-radius: 1cqw;
+    color: var(--text-color-dark);
+    width: 29cqw;
+    height: 6cqw;
 }
 
 #direktwahl button:hover {
@@ -628,9 +628,15 @@ button:hover {
     margin: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    width: 100%;
+    grid-template-columns: 3fr 1fr;
+    /* background-color: green; */
     height: 100vh;
+    max-width: calc(100vh * 5 / 3);
+    width: 100%;
+    justify-content: center;
+    justify-items: center;
+    align-items: start;
+    container-type: inline-size;
 }
 
 #direktwahl {
@@ -644,38 +650,42 @@ button:hover {
 }
 
 #linkeSpalte {
-    width: 73vw;
+    
             /* oder 100dvh, siehe Hinweis unten */
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    max-height: 100cqh;
+    min-height: 100cqh;
 }
 
 /* Removed empty ruleset for #rechteSpalte */
 
 /* Tastatur */
 #tastatur {
-    /* display: block; */
-    width: 23vw;
+    display: block;
+    width: 22cqw;
     position: fixed;
     background: var(--text-color-light);
-    left: 74vw;
-    top: 21vw;
+    left: 76cqw;
+    top: 20cqw;
     border: solid 1px;
-    height: 36vw;
+    height: 36cqw;
+    padding: 0.5cqw;
+    border-radius: 1cqw;
 }
 
 #tastatur button {
-    width: 6vw;
-    height: 6vw;
-    margin: .5vw;
-    font-size: 4vw;
+    width: 6cqw;
+    height: 6cqw;
+    margin: .5cqw;
+    font-size: 4cqw;
 }
 
 /* Warenkorb Tabelle */
 #warenkorbtabelle {
     width: 100%;
-    font-size: 3vw;
+    flex:  1;
+    border-spacing: 0.5cqw;
 }
 
 #bt-abrechnungExport {
@@ -689,22 +699,24 @@ button:hover {
 #datenfeld {
     overflow: auto;
     border: 1px solid var(--border-color);
-    padding: 1vw;
-    margin: 1vw;
+    padding: 1cqw;
+    margin: 1cqw;
     background-color: var(--text-color-light);
-    border-radius: 2vw;
+    border-radius: 1cqw;
     flex: 1 1 auto;       /* nimmt den restlichen Platz */
-    min-height: 0;        /* wichtig, damit overflow sauber funktioniert */
+    min-height: 0px;        /* wichtig, damit overflow sauber funktioniert */
            /* optional */
            /* nimmt den restlichen Platz */
             /* wichtig, damit overflow sauber funktioniert */
            /* optional */
-    height: 100vh;
+    width: 70cqw;
+    height: 100%;
+    /* max-height: 100cqh; */
 }
 
 #copyright {
     /* font-size: 3vw; */
-    height: 5vw;
+    height: 4cqw;
 }
 
 #summenkasten {
@@ -712,12 +724,13 @@ button:hover {
     justify-content: center;
     align-items: center;
     /* height: 50px; */
-    font-size: 4vw;
     font-weight: bold;
+    font-size: 5cqw;
+    padding: 2cqw 0 0 0;
 }
 
 .leerspalte {
-    width: 50px;
+    width: 3cqw;
 }
 
 .preisspalte {
@@ -725,7 +738,7 @@ button:hover {
 }
 
 .preisspalteWarenkorb {
-    width: 120px;
+    width: 14cqw;
 }
 
 .datumspalte {
@@ -749,19 +762,18 @@ button:hover {
 
 /* Statusfeld */
 #statusfeld {
-    height: 6vw;
-    min-height: min-content;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 4vw;
     font-weight: bold;
     color: var(--text-color-dark);
     padding: 0vw;
+    font-size: 4cqw;
+    height: 5cqw;
 }
 
 /* Menubar */
-#menubar {display: flex;justify-content: center;flex-direction: column;}
+#menubar {display: flex;justify-content: center;flex-direction: column;font-size: 2.5cqw;}
 
 /* Logo */
 #logo {
@@ -777,8 +789,9 @@ th {
     position: sticky;
     top: 0;
     z-index: 1;
-    padding: 3px;
-    border: 2px white solid;
+    padding: 1cqw;
+    border: 0.5cqw white solid;
+    font-size: 3cqw;
 }
 
 .BT_Eingabe {
@@ -817,8 +830,8 @@ th {
 
 .rechts_groß {
     text-align: right;
-    font-size: 30px;
-    padding-right: 10px;
+    font-size: 4cqw;
+    padding-right: 1cqw;
 }
 
 .preisliste_rechts_groß {
@@ -864,28 +877,32 @@ th {
 }
 
 .plus-button {
-    width: 50px;
-    height: 40px;
-    font-size: 20px;
+    width: 5cqw;
+    height: 5cqw;
+    font-size: 3cqw;
     padding: 0px;
-    margin: 5px;
+}
+
+.plus-button-zelle {
+    text-align: center;
+    vertical-align: middle;
 }
 
 /* Breite des Scrollbalkens */
 .scrollbalken::-webkit-scrollbar {
-    width: 5vw;
+    width: 4cqw;
 }
 
 /* Hintergrund des Scrollbalkens */
 .scrollbalken::-webkit-scrollbar-track {
     background: var(--secondary-color);
-    border-radius: 10px;
+    border-radius: 2xqw;
 }
 
 /* Farbe des Scrollbalkens */
 .scrollbalken::-webkit-scrollbar-thumb {
     background: var(--tertiary-color);
-    border-radius: 10px;
+    border-radius: 2cqw;
 }
 
 /* Scrollbalken beim Hover */
@@ -1008,20 +1025,18 @@ th {
 }
 
 /* Warenkorb Initialnachricht */
-#warenkorb-initial-message {
-    font-size: 3vw;
-    padding: 1vw;
-}
+#warenkorb-initial-message {height: 4cqw;font-size: 3cqw;}
 
 /* Copyright Text */
 #copyright-text {
     margin: 0px;
+    font-size: 2.5cqw;
 }
 
 /* Logo Bild */
 #logo-bild {
-    width: 14vw;
-    padding: 1vw;
+    width: 16cqw;
+    padding: 5px;
 }
 
 /* Terminal Info Text */
@@ -1031,15 +1046,16 @@ th {
 
 /* Offline Fenster */
 #offlineFenster {
+    /* width: 25cqw; */
     visibility: hidden;
 }
 
 /* Offline Status Text */
 #offline-status-text {
-    padding: 1vw 0vw;
+    padding: 1cqw 0;
     margin: 0px;
     color: var(--warning-color);
-    font-size: 2.5vw;
+    font-size: 2.5cqw;
 }
 
 /* Tastatur */
@@ -1068,8 +1084,7 @@ th {
     height: 200px;
 }
 
-#rechteSpalte {
-}
+#rechteSpalte {}
 
 
 /* Offline Bildschirm */

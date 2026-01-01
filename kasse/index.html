@@ -771,8 +771,9 @@ DATENÜBERTRAGUNG
             zelle2.innerText = produkt.Preis + " €";
             zelle2.className = "preisliste_rechts_groß";
             let zelle3 = zeile.insertCell();
-            zelle3.innerHTML = "<button onclick='aus_preisliste_buchen(`" + produkt.EAN + "`)' class='plus-button'>+</button>";
-
+            zelle3.className = "plus-button-zelle";
+            zelle3.innerHTML = "<button onclick='aus_preisliste_buchen(\"" + produkt.EAN + "\")' class='plus-button'>1+</button>";
+            
             });
         }
 
