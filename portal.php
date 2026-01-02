@@ -100,7 +100,7 @@ if ($response !== false) {
     <!-- Anweisung an Suchmaschinen, die Seite NICHT zu indexieren -->
     <meta name="robots" content="noindex, nofollow">
 	
-	<link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+	<link rel="stylesheet" href="style-portal.css?v=<?php echo time(); ?>">
 	
 	<link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
 
@@ -126,7 +126,12 @@ if ($response !== false) {
             </div>
 
 <nav class="navbar">
-  <ul>
+  <div class="hamburger" id="hamburger">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+  <ul id="navMenu">
     <li>
       <a href="#" id="MenuMeinKonto" style="display: none;">Mein Konto</a>
       <ul>
@@ -194,6 +199,35 @@ if ($response !== false) {
 
 
 <script>
+
+    // Hamburger Menu Toggle
+    document.getElementById('hamburger').addEventListener('click', function() {
+        document.getElementById('navMenu').classList.toggle('active');
+        this.classList.toggle('active');
+    });
+
+    // Mobile submenu toggle
+    document.querySelectorAll('.navbar > ul > li > a').forEach(item => {
+        item.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768) {
+                e.preventDefault();
+                const submenu = this.nextElementSibling;
+                if (submenu && submenu.tagName === 'UL') {
+                    submenu.classList.toggle('active');
+                }
+            }
+        });
+    });
+
+    // Schließe Menü wenn außerhalb geklickt wird
+    document.addEventListener('click', function(event) {
+        const navbar = document.querySelector('.navbar');
+        const hamburger = document.getElementById('hamburger');
+        if (!navbar.contains(event.target)) {
+            document.getElementById('navMenu').classList.remove('active');
+            hamburger.classList.remove('active');
+        }
+    });
 
     let portalmenu2 = document.getElementById('portalmenu2');
 
@@ -748,7 +782,7 @@ if ($response !== false) {
             <html>
             <head>
                 <title>Eiskarte</title>
-	            <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+	            <link rel="stylesheet" href="style-portal.css?v=<?php echo time(); ?>">
 	
 	            <link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
         
@@ -803,7 +837,7 @@ if ($response !== false) {
             <html>
             <head>
                 <title>Preisliste</title>
-                <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+                <link rel="stylesheet" href="style-portal.css?v=<?php echo time(); ?>">
                 <link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
             </head>
             <body>
@@ -872,7 +906,7 @@ if ($response !== false) {
             <html>
             <head>
                 <title>Preisliste</title>
-                <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+                <link rel="stylesheet" href="style-portal.css?v=<?php echo time(); ?>">
                 <link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
                 
             </head>
@@ -1790,7 +1824,7 @@ if ($response !== false) {
             <html>
             <head>
                 <title>Mitglieder Bezahlcodeliste</title>
-                <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+                <link rel="stylesheet" href="style-portal.css?v=<?php echo time(); ?>">
 	            <link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
             </head>
             <body>
@@ -1989,7 +2023,7 @@ if ($response !== false) {
             <html>
             <head>
                 <title>Abrechnung</title>
-                <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+                <link rel="stylesheet" href="style-portal.css?v=<?php echo time(); ?>">
                 <link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
 
             </head>
@@ -3192,6 +3226,56 @@ if ($response !== false) {
                         Feldes angegeben. Der Wert des Feldes muss true oder false sein.
                         Nach Änderung des Wertes müssen die Mitgliederdaten aus Vereinsflieger.de neu geladen werden.</p>
 
+
+                <!-- Emailseinstellung -->
+                    <p class="formularunterüberschrift">Email Einstellungen</p>
+
+                        <!-- SMTP Server -->
+                        <label>SMTP Server</label>
+                        <input type="text" id="smtpServer" value="${config.SMTPServer}" class="inputfeld">
+                        <p class="beschreibung">Der SMTP-Server, der für den Versand von E-Mails verwendet wird.</p>
+
+                        <!-- SMTP Absenderadresse -->
+                        <label>SMTP Absenderadresse</label>
+                        <input type="email" id="smtpAbsenderadresse" value="${config.SMTPAbsenderadresse}" class="inputfeld">
+                        <p class="beschreibung">Die Absenderadresse, die in den E-Mails verwendet
+                            wird. Diese Adresse sollte gültig sein und zum SMTP-Server passen.</p>
+
+                        <!-- SMTP Antwortadresse -->
+                        <label>SMTP Antwortadresse</label>
+                        <input type="email" id="smtpAntwortadresse" value="${config.SMTPAntwortadresse}" class="inputfeld">
+                        <p class="beschreibung">Die Antwortadresse, die in den E-Mails verwendet
+                            wird. Antworten auf die E-Mails werden an diese Adresse gesendet.</p>
+
+                        <!-- SMTP Port -->
+                        <label>SMTP Port</label>
+                        <input type="text" id="smtpPort" value="${config.SMTPPort}" class="inputfeld">
+                        <p class="beschreibung">Der Port des SMTP-Servers.</p>
+
+                        <!-- SMTP Verschlüsselung -->
+                        <label>SMTP Verschlüsselung</label>
+                        <select id="smtpVerschluesselung" class="inputfeld">
+                            <option value="none" ${config.SMTPVerschluesselung === "none" ? "selected" : ""}>Keine</option>
+                            <option value="ssl" ${config.SMTPVerschluesselung === "ssl" ? "selected" : ""}>SSL</option>
+                            <option value="tls" ${config.SMTPVerschluesselung === "tls" ? "selected" : ""}>TLS</option>
+                        </select>
+                        <p class="beschreibung">Die Verschlüsselungsmethode für die Verbindung zum SMTP-Server.</p>
+                        
+                        <!-- SMTP Benutzer -->
+                        <label>SMTP Benutzer</label>
+                        <input type="text" id="smtpBenutzer" value="${config.SMTPBenutzer}" class="inputfeld">
+                        <p class="beschreibung">Der Benutzername für die Authentifizierung am SMTP-Server.</p>
+
+                        <!-- SMTP Passwort -->
+                        <label>SMTP Passwort</label>
+                        <input type="password" id="smtpPasswort" value="" class="inputfeld">
+                        <p class="beschreibung">Das Passwort für die Authentifizierung am SMTP-Server.</p>  
+
+                        <label></label>
+                        <button class="kleinerBt" onclick="Testemail()">Testemail senden</button>
+                        <p class="beschreibung">Mit dem Button kann eine Testemail an die Antwortadresse gesendet werden. 
+                        Alle geänderten Konfigurationen müssen zuvor gespeichert werden.</p>
+                        
                 <!-- Einstellungen -->
                     <p class="formularunterüberschrift">Einstellungen</p>
                         <!-- Ansicht im Backend einschränkgen, kann nur editiert werden, wenn der Benutzer die Rolle Admin hat -->
@@ -3364,6 +3448,16 @@ if ($response !== false) {
                 }
             }
 
+            // SMTP Passwort behandeln
+
+            const smtpPwInput = document.getElementById('smtpPasswort').value;
+            let smtp_pw_neu;
+            if (smtpPwInput === "") {
+                smtp_pw_neu = config.SMTPPasswort; // Altes Passwort beibehalten
+            } else {
+                smtp_pw_neu = smtpPwInput; // Neues Passwort verwenden
+            }
+
             const newConfig = {
                 // Zugriffsdaten 
                 appkey: document.getElementById('appkey').value,
@@ -3391,6 +3485,15 @@ if ($response !== false) {
                 cc_seller: document.getElementById('verkäufer').value,
                 cc_admin: document.getElementById('admin').value,
 
+                // Email Einstellungen
+                SMTPServer: document.getElementById('smtpServer').value,
+                SMTPAbsenderadresse: document.getElementById('smtpAbsenderadresse').value,
+                SMTPAntwortadresse: document.getElementById('smtpAntwortadresse').value,
+                SMTPPort: document.getElementById('smtpPort').value,
+                SMTPVerschluesselung: document.getElementById('smtpVerschluesselung').value,
+                SMTPBenutzer: document.getElementById('smtpBenutzer').value,
+                SMTPPasswort: smtp_pw_neu,
+                
                 // Einstellungen
                 zugriffseinschränkung: document.getElementById('zugriffseinschränkung').checked.toString(),
                 wartungsmodus: document.getElementById('wartungsmodus').checked.toString(),
@@ -3562,6 +3665,22 @@ if ($response !== false) {
         
         return false;
     }
+
+    function Testemail() {
+        portalInhalt.innerHTML = "<p>Bitte warten, die Testemail wird gesendet...</p>";
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "send_test_email.php", true); 
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                portalInhalt.innerHTML = xhr.responseText;
+            }
+        };
+        xhr.send();
+        //Fehlermeldung abfangen
+        xhr.onerror = function () {
+            portalInhalt.innerHTML = "<p>Fehler beim Senden der Testemail. Bitte überprüfen Sie die SMTP-Einstellungen und Ihre Internetverbindung.</p>";
+        };
+    }   
 
 </script>
 </body>

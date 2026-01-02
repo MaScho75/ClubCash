@@ -1,0 +1,654 @@
+/*
+ * This file is part of ClubCash.
+ *
+ * ClubCash is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * ClubCash is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with ClubCash. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/* ============================================
+   FONTS
+   ============================================ */
+
+@font-face {
+    font-family: 'Carlito';
+    src: url('grafik/carlito-v3-latin-regular.woff2') format('woff2')
+}
+
+@font-face {
+    font-family: '3-of-9';
+    src: url('grafik/LibreBarcode39-Regular.ttf') format('truetype');
+    font-display: swap;
+}
+
+
+/* ============================================
+   GRUNDLEGENDE ELEMENTE
+   ============================================ */
+
+body {
+    font-family: 'Carlito', sans-serif;
+    color: var(--text-color-dark);
+    font-size: 20px;
+    margin: 0;
+}
+
+h1 {
+    margin: 0;
+    text-align: center;
+}
+
+h2 {
+    text-align: left;
+    font-size: 25px;
+    font-weight: bold;
+    margin: 20px 0 0 0;
+}
+
+p {
+    margin-block-start: 0;
+}
+
+a {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+button {
+    height: 70px;
+    width: 180px;
+    margin: 5px 5px 0 5px;
+    font-weight: bold;
+    font-size: 20px;
+    background-color: var(--button-color);
+    border: none;
+    border-radius: 5px;
+    color: var(--text-color-dark);
+}
+
+button:hover {
+    background: var(--button-hover);
+}
+
+button:disabled {
+    background-color: var(--border-color);
+    color: var(--text-color-dark);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+input[type="date"] {
+    font-family: 'Carlito', sans-serif;
+    font-size: 20px;
+    background-color: var(--background-light);
+    border: none;
+}
+
+select {
+    font-family: 'Carlito', sans-serif;
+    font-size: 20px;
+    border: none;
+    background-color: var(--background-light);
+    color: var(--text-color-dark);
+    border-radius: 5px;
+}
+
+th {
+    background-color: var(--border-color);
+    color: var(--text-color-dark);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 3px;
+    border: 2px white solid;
+}
+
+
+/* ============================================
+   LAYOUT-KLASSEN
+   ============================================ */
+
+.portal {
+    background-color: var(--background-light);
+    color: var(--text-color-dark);
+    font-size: 20px;
+}
+
+.box_zentrieren {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+
+/* ============================================
+   NAVIGATION
+   ============================================ */
+
+.navbar {
+    background-color: var(--background-dark);
+    position: relative;
+}
+
+.navbar > ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    background-color: var(--background-dark);
+}
+
+.navbar > ul > li {
+    position: relative;
+    z-index: 2;
+}
+
+.navbar > ul > li > a {
+    display: block;
+    padding: 14px 20px;
+    color: var(--text-color-light);
+    text-decoration: none;
+}
+
+.navbar > ul > li > a:hover {
+    background-color: var(--text-color-dark);
+}
+
+.navbar li ul {
+    display: none;
+    position: absolute;
+    background-color: var(--background-dark);
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    top: 100%;
+    left: 0;
+    min-width: 160px;
+}
+
+.navbar li:hover ul {
+    display: block;
+}
+
+.navbar li ul li a {
+    display: block;
+    padding: 12px 16px;
+    color: var(--text-color-light);
+    text-decoration: none;
+}
+
+.navbar li ul li a:hover {
+    background-color: var(--text-color-dark);
+}
+
+.navbar li ul li a.disabled {
+    pointer-events: none;
+    color: var(--error-color) !important;
+    cursor: not-allowed;
+    background-color: transparent !important;
+}
+
+/* Hamburger Menu */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    padding: 14px 20px;
+    z-index: 1000;
+}
+
+.hamburger span {
+    width: 25px;
+    height: 3px;
+    background-color: var(--text-color-light);
+    margin: 3px 0;
+    transition: 0.3s;
+}
+
+.hamburger.active span:nth-child(1) {
+    transform: rotate(-45deg) translate(-5px, 6px);
+}
+
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+    transform: rotate(45deg) translate(-5px, -6px);
+}
+
+
+/* ============================================
+   PORTAL SPEZIFISCHE ELEMENTE
+   ============================================ */
+
+#portalmenu2 {
+    padding: 10px 10px 0 20px;
+}
+
+#portalmenu2 h2 {
+    margin: 10px;
+}
+
+#portalmenu2 input {
+    border: solid 1px var(--border-color);
+    border-radius: 5px;
+    background-color: var(--text-color-light);
+}
+
+#portal-inhalt {
+    display: block;
+    margin: 10px;
+    padding: 10px;
+    background-color: var(--text-color-light);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    text-align: left;
+    overflow: auto;
+    max-height: calc(100vh - 320px);
+}
+
+#vereinsnamen {
+    font-size: 1em;
+    text-align: left;
+    margin: 0;
+    padding: 0;
+}
+
+#login-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+
+/* ============================================
+   TABELLEN
+   ============================================ */
+
+.portal-table {
+    width: 100%;
+    max-width: 900px;
+    border-collapse: collapse;
+    margin: 0 auto;
+    text-align: center;
+    margin-left: 0;
+    margin-top: 20px;
+    max-width: none;
+}
+
+.portal-table td {
+    padding: 2px 5px;
+    border: 1px solid var(--border-color);
+}
+
+.preisliste-table {
+    width: 100%;
+    max-width: 900px;
+    border-collapse: collapse;
+    margin: 0 auto;
+    text-align: center;
+    margin-left: 0;
+    margin-top: 20px;
+    max-width: none;
+    font-size: 30px;
+}
+
+.preisliste-table tr {
+    vertical-align: top;
+    height: 50px;
+}
+
+.preisliste-print button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.summenzeile {
+    border-top: 1px solid black;
+}
+
+.links {
+    text-align: left;
+}
+
+.rechts {
+    text-align: right;
+}
+
+.zentriert {
+    text-align: center;
+}
+
+.top {
+    vertical-align: top;
+}
+
+.währung {
+    text-align: right;
+    vertical-align: bottom;
+    width: 100px;
+}
+
+.datumspalte {
+    width: 100px;
+}
+
+.kundenspalte {
+    min-width: 200px;
+    text-align: left;
+    vertical-align: top;
+}
+
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.button {
+    background-color: var(--button-color);
+    color: var(--text-color-light);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+    width: 200px;
+    height: 40px;
+    font-size: 15px;
+}
+
+.button:hover {
+    background-color: var(--button-hover);
+}
+
+.kleinerBt {
+    height: 38px;
+}
+
+
+/* ============================================
+   FORMULARE
+   ============================================ */
+
+.EinstellungsFrm label {
+    margin-left: 20px;
+}
+
+.EinstellungsFrm input {
+    max-height: 24px;
+    border: none;
+    padding: 0 10px;
+    font-size: 16px;
+}
+
+p.beschreibung {
+    font-size: 0.8em;
+    color: var(--text-color-dark);
+    margin: 0;
+    height: 20px;
+    overflow: hidden;
+}
+
+p.beschreibung:hover {
+    height: auto;
+    overflow: visible;
+    color: var(--secondary-color);
+}
+
+p.formularunterüberschrift {
+    font-family: 'Carlito', sans-serif;
+    font-size: 1.2em;
+    font-style: italic;
+    color: var(--text-color-dark);
+    margin: 0;
+    grid-column: span 3;
+    background-color: var(--border-color);
+    padding-left: 10px;
+    margin-top: 20px;
+    border-radius: 5px;
+}
+
+.inputfeld {
+    background-color: var(--background-light);
+    font-size: 16px;
+}
+
+.DatumInput {
+    font-family: 'Carlito', sans-serif;
+    font-size: 25px;
+    font-weight: bold;
+    width: 150px;
+    margin: 0 20px;
+}
+
+
+/* ============================================
+   HILFSELEMENTE
+   ============================================ */
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 38.4px;
+    height: 21.6px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--border-color);
+    transition: 0.4s;
+    border-radius: 21.6px;
+}
+
+.switch .slider:before {
+    position: absolute;
+    content: "";
+    height: 16.8px;
+    width: 16.8px;
+    left: 2.4px;
+    bottom: 2.4px;
+    background-color: var(--text-color-light);
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+    background-color: var(--button-color);
+}
+
+.switch input:checked + .slider:before {
+    transform: translateX(16.8px);
+}
+
+.preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.spinner {
+    border: 8px solid rgba(255, 255, 255, 0.3);
+    border-top: 8px solid #fff;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.barcode {
+    font-family: '3-of-9', 'Courier New', monospace;
+    font-size: 2em;
+}
+
+.icon {
+    font-size: 16px;
+}
+
+.no-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+
+/* ============================================
+   ZUSTANDSKLASSEN
+   ============================================ */
+
+.edited {
+    background-color: yellow;
+}
+
+.new {
+    background-color: lightgreen;
+}
+
+.deleted td {
+    background-color: #fdd;
+}
+
+.deleted .text {
+    text-decoration: line-through;
+}
+
+
+/* ============================================
+   RECHNUNGEN
+   ============================================ */
+
+.Rechnung {
+    all: unset;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: var(--text-color-dark);
+    text-align: left;
+    margin: 40px;
+}
+
+.Rechnung p {
+    margin: 0;
+    text-align: left;
+}
+
+.Rechnung table {
+    font-size: 14px;
+    border-collapse: collapse;
+    margin: 0 auto;
+    text-align: left;
+    margin-left: 0;
+    margin-top: 20px;
+    max-width: none;
+}
+
+.Rechnung th {
+    background: none;
+    margin: 0;
+    padding: 0;
+}
+
+.Rechnung td {
+    padding-right: 20px;
+}
+
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media screen and (max-width: 768px) {
+    .hamburger {
+        display: flex;
+    }
+
+    .navbar > ul {
+        display: none;
+        flex-direction: column;
+        width: 100%;
+        position: absolute;
+        top: 51px;
+        left: 0;
+        background-color: var(--background-dark);
+    }
+
+    .navbar > ul.active {
+        display: flex;
+    }
+
+    .navbar > ul > li {
+        width: 100%;
+    }
+
+    .navbar > ul > li > a {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .navbar li ul {
+        position: static;
+        width: 100%;
+        box-shadow: none;
+    }
+
+    .navbar li ul li a {
+        padding-left: 40px;
+    }
+
+    .navbar li:hover ul {
+        display: none;
+    }
+
+    .navbar li ul.active {
+        display: block;
+    }
+
+    .navbar > ul > li > a::after {
+        content: ' ▼';
+        font-size: 0.8em;
+        float: right;
+    }
+}
+
+@media print {
+    .preisliste-print button {
+        display: none;
+    }
+}

@@ -116,7 +116,7 @@ if (isset($_GET['error'])) {
     <!-- Anweisung an Suchmaschinen, die Seite NICHT zu indexieren -->
     <meta name="robots" content="noindex, nofollow">
 	
-	<link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+	<link rel="stylesheet" href="style-portal.css?v=<?php echo time(); ?>">
 
 	<link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
 

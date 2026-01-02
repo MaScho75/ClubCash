@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ClubCash Initialisierung</title>
     <meta name="robots" content="noindex, nofollow">
-    <link rel="stylesheet" href="style.css?v=<?= time(); ?>">
+    <link rel="stylesheet" href="style-portal.css?v=<?= time(); ?>">
     <link rel="stylesheet" href="farben.css?v=<?= time(); ?>">
 </head>
 <body class="portal">

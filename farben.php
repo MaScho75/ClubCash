@@ -24,7 +24,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Farben</title>
-    <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="style-portal.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
 </head>
 <body style="display: flex; flex-wrap: wrap; justify-content: center;">

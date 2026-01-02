@@ -19,7 +19,7 @@ const CACHE_NAME = 'clubcash-v3';
 const ASSETS = [
   './',
   './index.html',
-  '../style.css',
+  './style-kasse.css',
   '../farben.css',
   '../daten/config.json',
   '../daten/produkte.json',
