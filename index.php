@@ -243,7 +243,7 @@ if ($config === null) {
             <div style="text-align: center;">
                 <input id="submit-button" class="green button" type="submit" value="Anmelden">
                 <br>
-                <button class="button" type="button" onclick="window.location.href='admin.php';">Admin-Login</button>
+                <button style="background-color: var(--success-color);"   class="button" type="button" onclick="window.location.href='admin.php';">Admin-Login</button>
             </div>
         </form>
 

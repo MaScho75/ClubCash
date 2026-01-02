@@ -646,9 +646,8 @@ p.formularunterüberschrift {
         float: right;
     }
 }
-
 @media print {
-    .preisliste-print button {
-        display: none;
+    .no-print, button {
+        display: none !important;
     }
 }

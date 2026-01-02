@@ -200,7 +200,11 @@ if ($response !== false) {
 
 <script>
 
-    // Hamburger Menu Toggle
+// ============================================================================
+// INITIALISIERUNG & EVENT LISTENER
+// ============================================================================
+
+    // Hamburger Menu Toggle - Öffnet/Schließt das mobile Navigationsmenü
     document.getElementById('hamburger').addEventListener('click', function() {
         document.getElementById('navMenu').classList.toggle('active');
         this.classList.toggle('active');
@@ -395,6 +399,14 @@ if ($response !== false) {
                 window.history.replaceState({}, '', newUrl);
            }
 
+// ============================================================================
+// BUCHUNGEN & VERKÄUFE
+// ============================================================================
+
+    /**
+     * Löscht einen Verkauf aus der Umsatzdatei
+     * @param {number} index - Index des zu löschenden Verkaufs im Array
+     */
     function deleteVerkauf(index) {
         if (confirm(`Möchtest du den ausgewählten Verkauf wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden!`)) {
             // Verkauf aus dem Array entfernen
@@ -431,7 +443,10 @@ if ($response !== false) {
         }
     }       
 
-
+    /**
+     * Zeigt Produktauswahl für manuelle Buchung auf ein Kundenkonto
+     * @param {string} KdNr - Kundennummer des ausgewählten Kunden
+     */
     function OnlineBuchung(KdNr) {
         let AusgewählterKunde = käufer.find(kunde => kunde.uid === KdNr);
         let AusgewählterKundenname = AusgewählterKunde ? `${AusgewählterKunde.firstname} ${AusgewählterKunde.lastname}` : 'Unbekannt';
@@ -465,6 +480,16 @@ if ($response !== false) {
         portalInhalt.innerHTML = html;
     }
 
+    /**
+     * Bucht ein ausgewähltes Produkt auf das Kundenkonto
+     * @param {string} EAN - EAN-Code des Produkts
+     * @param {string} Bezeichnung - Produktbezeichnung
+     * @param {string} Kategorie - Produktkategorie
+     * @param {number} Preis - Produktpreis
+     * @param {number} MwSt - Mehrwertsteuersatz
+     * @param {string} KdNr - Kundennummer
+     * @param {string} AusgewählterKundenname - Name des Kunden für Bestätigung
+     */
     function OnlineBuchung_Produkt(EAN, Bezeichnung, Kategorie, Preis, MwSt, KdNr, AusgewählterKundenname) {
         
         Preis = parseFloat(Preis).toFixed(2); // Sicherstellen, dass Preis eine Zahl mit 2 Dezimalstellen ist
@@ -511,6 +536,14 @@ if ($response !== false) {
     }
 
 
+// ============================================================================
+// KUNDENVERWALTUNG
+// ============================================================================
+
+    /**
+     * Verwaltet externe Kunden (ohne Vereinsflieger-Zugang)
+     * Ermöglicht Hinzufügen, Bearbeiten und Löschen von externen Kunden
+     */
     function ExterneKunden() {
         let data = externe ? [...externe] : []; // Copy of original data
         let originalData = externe ? [...externe] : [];
@@ -766,6 +799,14 @@ if ($response !== false) {
         document.head.appendChild(style);
     }
 
+// ============================================================================
+// PREISLISTEN & DRUCKFUNKTIONEN
+// ============================================================================
+
+    /**
+     * Erstellt druckbare Eiskarte mit allen Eisprodukten
+     * Öffnet neues Fenster mit formatierten Preisen
+     */
     function Preisliste_Eiskarte() {
       
         // Neues Fenster öffnen
@@ -816,7 +857,7 @@ if ($response !== false) {
         html += `
                         </tbody>
                     </table>
-                    <button onclick="window.print();">drucken</button>
+                    <button class="no-print" style="position: absolute; top: 10px; right: 10px;" onclick="window.print();">drucken</button>
                 </div>
             </body>
             </html>
@@ -827,6 +868,10 @@ if ($response !== false) {
         printWindow.document.close();
     }
 
+    /**
+     * Erstellt druckbare Preisliste aller Produkte (außer manuelle Buchungen)
+     * Gruppiert nach Kategorien und Sortierung
+     */
     function Preisliste_drucken() {
         // Öffne neues Fenster mit der Preisliste
         let printWindow = window.open('', '_blank', 'width=800,height=600');
@@ -895,6 +940,10 @@ if ($response !== false) {
         printWindow.document.close();
     }
 
+    /**
+     * Erstellt Preisliste mit Barcodes (Code 39) für alle Produkte
+     * Ermöglicht Scannen der Produkte an der Kasse
+     */
     function Preisliste_strichcode() {
 
         // Öffne neues Fenster mit der Preisliste
@@ -969,6 +1018,15 @@ if ($response !== false) {
         printWindow.document.close();
     }   
 
+// ============================================================================
+// WARENBESTAND & WARENVERWALTUNG
+// ============================================================================
+
+    /**
+     * Berechnet aktuellen Warenbestand
+     * Addiert Wareneingang, subtrahiert Verkäufe
+     * @returns {Array} Array mit EAN und Bestand für jedes Produkt
+     */
     function Warenbestand() {
         warenbestand = [];
         
@@ -1000,6 +1058,10 @@ if ($response !== false) {
         return warenbestand;
     }
 
+    /**
+     * Verwaltet Wareneingänge in editierbarer Tabelle
+     * Ermöglicht Hinzufügen, Bearbeiten und Löschen von Wareneingangsposten
+     */
     function Wareneingang() {
 
         let menu2 = "<h2 style='display: inline;' >Wareneingang</h2>";
@@ -1278,6 +1340,13 @@ if ($response !== false) {
         } 
     }
 
+// ============================================================================
+// HILFSFUNKTIONEN & UTILITIES
+// ============================================================================
+
+    /**
+     * Zeigt verwendete Farbpalette aus farben.php
+     */
     function Farben() {
 
         portalmenu2.innerHTML = "<h2 style='display: inline;'>verwendete Farbpalette</h2>";
@@ -1295,6 +1364,11 @@ if ($response !== false) {
 
     }
 
+    /**
+     * Escaped HTML-Sonderzeichen zur sicheren Anzeige
+     * @param {string} text - Zu escapender Text
+     * @returns {string} HTML-sicherer Text
+     */
     function escapeHtml(text) {
         return text
             .replace(/&/g, "&amp;")
@@ -1304,6 +1378,10 @@ if ($response !== false) {
             .replace(/'/g, "&#039;");
     }
 
+    /**
+     * Zeigt Tagesübersicht der Umsätze pro Kunde
+     * Listet nur Kunden mit Umsätzen am heutigen Tag
+     */
     function Kundentagesübersicht() {
 
         portalmenu2.innerHTML = "<h2 style='display: inline;'>Kundentagesübersicht</h2>";
@@ -1356,6 +1434,14 @@ if ($response !== false) {
 
     }    
 
+// ============================================================================
+// PRODUKTVERWALTUNG
+// ============================================================================
+
+    /**
+     * Verwaltet Produktkatalog in editierbarer Tabelle
+     * Zeigt auch aktuellen Warenbestand, ermöglicht Sortierung
+     */
     function Produkte_editieren() {
        
         let menu2 = "<h2 style='display: inline;''>Produktkatalog editieren</h2>";
@@ -1708,6 +1794,14 @@ if ($response !== false) {
         }
     }
 
+// ============================================================================
+// MITGLIEDERVERWALTUNG
+// ============================================================================
+
+    /**
+     * Zeigt Liste aller Mitglieder mit Kontoinformationen
+     * Listet ID, Mitgliedsnr, Name, Email, Rollen, Kontostand
+     */
     function Mitgliederdaten_anzeigen() {
 
         let menu2 = `<h2 style='display: inline;'>Kundenliste</h2> 
@@ -1759,6 +1853,10 @@ if ($response !== false) {
 
     }	
 
+    /**
+     * Erstellt druckbare Barcode-Liste aller Mitglieder
+     * Sortiert nach Nachnamen, zeigt Code 39 Barcodes
+     */
     function MitgliederStrichcodeliste() {
 
         // Neues Fenster für die Strichcodeliste öffnen
@@ -1805,6 +1903,10 @@ if ($response !== false) {
         printWindow.document.close();
     }
 
+    /**
+     * Erstellt Mitglieder-Bezahlkarten im Kreditkartenformat (8.5 x 5.5 cm)
+     * @param {string} schlüsselDruck - Optional: Nur eine bestimmte Karte drucken
+     */
     function MitgliederAusweise(schlüsselDruck) {
 
         // Neues Fenster für die Ausweise öffnen
@@ -1867,6 +1969,16 @@ if ($response !== false) {
         printWindow.document.close();
     }   
 
+// ============================================================================
+// KONTOVERWALTUNG & FINANZEN
+// ============================================================================
+
+    /**
+     * Gleicht Kontostand eines Kunden aus (setzt auf 0)
+     * Erstellt Buchung mit Terminal 'Z' und EAN 9999999999
+     * @param {string} kundennummer - ID des Kunden
+     * @param {number} betrag - Auszugleichender Betrag
+     */
     function KontoAusgleichen(kundennummer, betrag) {
         let menu2 = `<h2 style='display: inline;'>Konto ausgleichen</h2>`;
         let kunde = käufer.find(k => k.uid == kundennummer);
@@ -1926,6 +2038,14 @@ if ($response !== false) {
         });
     }
 
+    /**
+     * Bucht Kontostand eines externen Kunden auf Hauptkonto um
+     * @param {string} kundennummer - ID des externen Kunden
+     * @param {string} beziehunguid - ID des Hauptkunden
+     * @param {string} vorname - Vorname des externen Kunden
+     * @param {string} nachname - Nachname des externen Kunden
+     * @param {number} kontostand - Umzubuchender Betrag
+     */
     function KontostandUmbuchen(kundennummer, beziehunguid, vorname, nachname, kontostand) {
         let menu2 = `<h2 style='display: inline;'>Kontostand umbuchen</h2>`;
 
@@ -1993,114 +2113,57 @@ if ($response !== false) {
         });
     }
 
+// ============================================================================
+// RECHNUNGEN & BERICHTE
+// ============================================================================
+
+    /**
+     * Erstellt druckbare Rechnung für einen Kunden und Zeitraum
+     * Öffnet neues Fenster mit vollständiger Rechnungsansicht
+     * @param {string} kundennummer - ID des Kunden
+     * @param {Date} datum1 - Startdatum
+     * @param {Date} datum2 - Enddatum
+     */
     function RechnungErstellen(kundennummer, datum1, datum2) {
     
-        // Input validation
-        if (!kundennummer || !datum1 || !datum2) {
-            console.error('Missing required parameters');
-            return;
-        }
-
         // Datum-Strings in Date-Objekte umwandeln
         if (typeof datum1 === 'string') datum1 = new Date(datum1);
         if (typeof datum2 === 'string') datum2 = new Date(datum2);
 
-        let kunde = käufer.find(k => String(k.uid) === String(kundennummer));
-        if (!kunde) {
-            console.error('Customer not found');
-            return;
-        }
-
-        // ein neues Fenster für die Rechnung in der Größe DIN A4 öffnen
-        let printWindow = window.open('', '_blank', 'width=800,height=1000');
-        if (!printWindow) {
-            console.error('Could not open print window - popup might be blocked');
-            return;
-        }
-
         // HTML-Inhalt für die Rechnung erstellen
         let html = `
-            <html>
             <head>
                 <title>Abrechnung</title>
                 <link rel="stylesheet" href="style-portal.css?v=<?php echo time(); ?>">
                 <link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
-
             </head>
-            <body class="Rechnung">
-                <button style="position: absolute; top: 10px; right: 10px; media-print: none;" onclick="window.print();">drucken</button>
-                <button style="position: absolute; top: 100px; right: 10px; media-print: none;" onclick="sendEmail();">Email</button>
-                <div style="margin: 50px">
-                    <div style="text-align: center;">
-                        <p><b>${config.Vereinsname}</b></p>
-                        <p>${config.Straße}</p>
-                        <p>${config.PLZ} ${config.Ort}</p>
-                        <p>Telefon: ${config.Telefon}</p>
-                        <p>Email: ${config.Email}</p>
-                        <p>USt-IdNr: ${config.UStID}</p>
-                        <p>Bankverbindung: ${config.Bankverbindung}</p>
-                        <p>IBAN: ${config.IBAN}</p>
-                        <p>Kontoinhaber: ${config.Kontoinhaber}</p>
+        `;
+        html += RechnungstextErstellen(kundennummer, datum1, datum2);
+        html += `<button style="position: absolute; top: 10px; right: 10px; media-print: none;" onclick="window.print();">drucken</button>`;
 
-                        <p style="margin: 50px 0 0 0;"><b>${kunde.firstname} ${kunde.lastname}</b></p>
-                        <p>${kunde.email}</p>
-                        <p>${kunde.memberid ? 'Mitgliedsnr: ' + kunde.memberid : 'ohne Mitgliedsnr'}</p>
-
-                        <p style="margin: 50px 0 0 0;"><b>Abrechnung ClubCash</b></p>
-                        <p>Umsätze von ${datum1.toLocaleDateString('de-DE')} bis ${datum2.toLocaleDateString('de-DE')}</p>
-                        <p>Stand: ${heute.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
-                    
-                    </div>
-
-                    <div style="margin: 50px 0 0 0;">
-                        <table>
-                            <thead>
-                                <tr>        
-                                    <th>Datum</th>
-                                    <th>Zeit</th>
-                                    <th>Buchungstext</th>
-                                    <th style="text-align: center;">Preis</th>
-                                </tr>
-                            </thead>
-                            <tbody>`;
-        let KäufeFilter = verkäufe.filter(auswahl => auswahl.Kundennummer == kundennummer && auswahl.Datum >= datum1.toISOString().split('T')[0] && auswahl.Datum <= datum2.toISOString().split('T')[0]);
-        let summe = 0;
-        KäufeFilter.forEach(verkauf => {
-            html += `
-                <tr>
-                    <td style="vertical-align: top;">${verkauf.Datum}</td>
-                    <td style="vertical-align: top;">${verkauf.Zeit}</td>
-                    <td style="width: 300px;">${verkauf.Produkt}</td>
-                    <td style="text-align: right; vertical-align: bottom;">${parseFloat(verkauf.Preis).toFixed(2)} €</td>
-                </tr>`;
-            summe += parseFloat(verkauf.Preis);
-        });
-        html += `
-                    </tbody>
-                        <tfoot>
-                                <tr>
-                                    <td colspan="3" style="text-align: right;"><b>Summe</b></td>
-                                    <td style="text-align: right;"><b>${summe.toFixed(2)} €</b></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    <hr>
-                    <div style="text-align: center;">
-                        <p style="margin-top: 30px; text-align: center;">Die Rechnung wurde automatisiert erstellt mit <br> ClubCash - Das bargeldlose Bezahlsystem für Flugsportvereine <br>&copy; 2025 Marcel Schommer</p>
-                    </div>
-                </div>    
-            </body>
-            </html>`;
+        // ein neues Fenster für die Rechnung in der Größe DIN A4 öffnen
+        let printWindow = window.open('', 'Abrechnung', 'width=800,height=1000');
+        if (!printWindow) {
+            console.error('Could not open print window - popup might be blocked');
+            window.alert('Popup-Blocker erkannt. Bitte erlauben Sie Popups für diese Seite.');
+            return;
+        }
+          
         printWindow.document.write(html);
         printWindow.document.close();
         printWindow.onload = () => {
             printWindow.focus(); // Fokus auf das neue Fenster setzen
         };
         
-
     }
 
+    /**
+     * Zeigt detaillierte Kundenübersicht mit allen Umsätzen
+     * Gruppiert nach: Einzelumsätze, Produkte, Produktgruppen
+     * @param {string} kundennummer - ID des Kunden
+     * @param {Date} datum1 - Startdatum (optional)
+     * @param {Date} datum2 - Enddatum (optional)
+     */
     function Kundenübersicht(kundennummer,datum1,datum2) {
 
         let menu2 = "<h2 style='display: inline;'>Übersicht</h2>";
@@ -2158,7 +2221,8 @@ if ($response !== false) {
 
         html += `
 
-            <button class="kleinerBt" onclick="RechnungErstellen('${kunde.uid}', '${datum1}', '${datum2}')" style="margin-left: 10px;">Rechnung</button>
+            <button class="kleinerBt" onclick="AbrechnungErstellen('${kunde.uid}', '${datum1}', '${datum2}')" style="margin-left: 10px;">Abrechnung</button>
+            <button class="kleinerBt" onclick="Emailabrechnung('${kunde.uid}', '${datum1}', '${datum2}'); alert('Email wurde gesendet.');" style="margin-left: 10px;">Email-Abrechnung</button>
                 `;
         if (angemeldetesMitglied.cc_admin == true) {
             html += `<button class="kleinerBt" onclick="MitgliederAusweise('${kunde.schlüssel}')" style="margin-left: 10px;">Bezahlkarte</button>
@@ -2362,6 +2426,10 @@ if ($response !== false) {
         });
     }
 
+    /**
+     * Lädt Mitgliederdaten aus Vereinsflieger API
+     * Aktualisiert lokale Kundendatenbank mit aktuellen Vereinsdaten
+     */
     function Mitgliedsdaten_ziehen() {
         portalmenu2.innerHTML = "<h2 style='display: inline;'>Vereinsflieger Datenimport</h2>";
         portalInhalt.innerHTML = "<p>Bitte warten, die Mitgliederdaten werden aus Vereinsflieger abgerufen...</p>";
@@ -2375,6 +2443,10 @@ if ($response !== false) {
         xhr.send();
     }
 
+    /**
+     * Zeigt Liste aller gespeicherten Backup-Dateien
+     * Lädt Dateiliste von get-backup-files.php
+     */
     function backupliste() {
         portalmenu2.innerHTML = "<h2 style='display: inline;'>gespeicherte Backups</h2>";
         fetch('get-backup-files.php')
@@ -2385,6 +2457,11 @@ if ($response !== false) {
         .catch(error => console.error('Fehler beim Laden der Dateien:', error));
     }
 
+    /**
+     * Führt Mitglieder und externe Kunden zu einer gemeinsamen Liste zusammen
+     * Externe Kunden werden als Gäste mit angepassten Eigenschaften hinzugefügt
+     * @returns {Array} Kombiniertes Array aus Mitgliedern und externen Kunden
+     */
     function MitgliederExterneZusammenführen() {
 
         let käufer = [...kunden];
@@ -2405,6 +2482,10 @@ if ($response !== false) {
         return [...käufer, ...externeTemp];
     }
 
+    /**
+     * Zeigt alle Verkäufe des aktuellen Tages
+     * Listet Datum, Zeit, Produkt, Kategorie, Preis und Gesamtsumme
+     */
     function Tagesumsätze() {
 
         let datum1 = heute; // Aktuelles Datum im Format YYYY-MM-DD
@@ -2468,6 +2549,12 @@ if ($response !== false) {
   
     }
 
+    /**
+     * Zeigt Umsätze für einen wählbaren Zeitraum
+     * Gruppiert nach: Einzelumsätze, Produkte, Produktgruppen
+     * @param {Date} datum1 - Startdatum (optional, Standard: Jahresbeginn)
+     * @param {Date} datum2 - Enddatum (optional, Standard: Heute)
+     */
     function Umsätze(datum1, datum2) {
 
         // Wenn kein Datum angegeben ist, setze es auf den 1. Januar des aktuellen Jahres
@@ -2656,6 +2743,10 @@ if ($response !== false) {
         });
     }
 
+    /**
+     * Erstellt Tageszusammenfassung mit Statistiken
+     * Zeigt Verkaufszahlen nach Produkten und Kategorien
+     */
     function Tageszusammenfassung() { 
 
         let datum1 = heute; // Aktuelles Datum im Format YYYY-MM-DD
@@ -2722,6 +2813,12 @@ if ($response !== false) {
         portalInhalt.innerHTML = html;
     }
     
+    /**
+     * Berechnet Kontostände aller Kunden aus Verkaufsdaten
+     * Gruppiert nach Kundennummer und Kategorie
+     * @param {Array} daten - Array mit Verkaufsdaten
+     * @returns {Array} Array mit Kundennummer, Summe und Kategorien
+     */
     function Kundenkontostand(daten) {
         const kundenDaten = daten.reduce((acc, eintrag) => {
             const { Kundennummer, Kategorie, Produkt, Preis } = eintrag;
@@ -2766,6 +2863,11 @@ if ($response !== false) {
         }));
     }
 
+    /**
+     * Zeigt/Versteckt Tabellen und ändert Pfeil-Icon
+     * @param {string} tabelleId - ID der zu toggelnden Tabelle
+     * @param {string} linkId - ID des Link-Elements mit Pfeil
+     */
     function toggleTabelle(tabelleId, linkId) {
         var tabelle = document.getElementById(tabelleId);
         var link = document.getElementById(linkId);
@@ -2782,6 +2884,12 @@ if ($response !== false) {
         }
     }
 
+    /**
+     * Erstellt Abrechnungsübersicht mit MwSt-Aufschlüsselung
+     * Gruppiert Umsätze nach Kunden und Steuersätzen
+     * @param {Date} datum1 - Startdatum (optional)
+     * @param {Date} datum2 - Enddatum (optional)
+     */
     function Abrechnung(datum1, datum2) {
         // Default dates if none provided (full year)
         if(!datum1 || !datum2) {
@@ -2848,6 +2956,7 @@ if ($response !== false) {
                 <button class="kleinerBt" onclick="Abrechnung(wochenbeginn, heute)">Woche</button>
                 <button class="kleinerBt" onclick="Abrechnung(heute, heute)">Tag</button>
                 <button id="bt-abrechnungExport" class="kleinerBt">Export an VF</button>
+                <button id="bt-emailAlle" class="kleinerBt">Email an alle</button>
             </div> `;
 
             let html = `
@@ -2890,7 +2999,7 @@ if ($response !== false) {
             btn.addEventListener("click", () => {
                 const datumA = document.getElementById("datum_anfang").value;
                 const datumE = document.getElementById("datum_ende").value;
-                Abrechnung(kundennummer, new Date(datumA), new Date(datumE));
+                Abrechnung(new Date(datumA), new Date(datumE));
             });
         }
         
@@ -2899,8 +3008,21 @@ if ($response !== false) {
         exportBtn.addEventListener("click", () => {
                 abrechnungExport(abrechnung);
         });
+
+        // Event Listener für Email an alle Button
+        const emailAlleBtn = document.getElementById("bt-emailAlle");
+        if(emailAlleBtn) {
+            emailAlleBtn.addEventListener("click", () => {
+                Emailabrechnung_alle(datum1, datum2);
+            });
+        }
     }
 
+    /**
+     * Exportiert Abrechnungsdaten als JSON-Datei
+     * Startet automatischen Download im Browser
+     * @param {Object} abrechnungsdaten - Zu exportierende Abrechnungsdaten
+     */
     function abrechnungExport(abrechnungsdaten) {
 
         portalmenu2.innerHTML = "<h2 style='display: inline;'>Export der Abrechnung an Vereinsflieger</h2>";
@@ -2939,11 +3061,124 @@ if ($response !== false) {
         });         
     }
 
-    // Function to append HTML content to portalInhalt
+    /**
+     * Erstellt den HTML-Rechnungstext für einen Kunden
+     * @param {string} kundennummer - ID des Kunden
+     * @param {Date} datum1 - Startdatum
+     * @param {Date} datum2 - Enddatum
+     * @returns {string} - HTML-Rechnungstext
+     */
+    function RechnungstextErstellen(kundennummer, datum1, datum2) {
+
+        let kunde = käufer.find(k => String(k.uid) === String(kundennummer));
+
+        let html = `
+            <html>
+            <style>
+                body {
+                    margin: 0;
+                    font-family: 'Courier New', Courier;
+                    font-size: 14px; color: #000;
+                    max-width: 600px;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+                th, td {
+                    text-align: left;
+                    padding: 0 10px 0px 0;
+                }
+                th {
+                    background-color: #f2f2f2;
+                }
+                pre {
+                    margin: 0;
+                }
+            </style>
+            <body>
+                    <div>
+                        <pre><b>${config.Vereinsname}</b></pre>
+                        <pre>${config.Straße}</pre>
+                        <pre>${config.PLZ} ${config.Ort}</pre>
+                        <pre>Telefon: ${config.Telefon}</pre>
+                        <pre>Email: ${config.Email}</pre>
+                        <pre>USt-IdNr: ${config.UStID}</pre>
+                        <pre>Bankverbindung: ${config.Bankverbindung}</pre>
+                        <pre>IBAN: ${config.IBAN}</pre>
+                        <pre>Kontoinhaber: ${config.Kontoinhaber}</pre>
+                        <br> <br> <br>
+                        <pre><b>${kunde.firstname} ${kunde.lastname}</b></pre>
+                        <pre>${kunde.email}</pre>
+                        <pre>${kunde.memberid ? 'Mitgliedsnr: ' + kunde.memberid : 'ohne Mitgliedsnr'}</pre>
+                        <br> <br> <br>
+                        <pre><b>Abrechnung ClubCash</b></pre>
+                        <pre>Umsätze von ${datum1.toLocaleDateString('de-DE')} bis ${datum2.toLocaleDateString('de-DE')}</pre>
+                        <pre>Stand: ${heute.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' })}</pre>
+                        <br> <br> <br>    
+                    </div>
+
+                    <div">
+                        <table>
+                            <thead>
+                                <tr>        
+                                    <th><pre>Datum</pre></th>
+                                    <th><pre>Zeit</pre></th>
+                                    <th><pre>Buchungstext</pre></th>
+                                    <th style="text-align: right;"><pre>Preis</pre></th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+        let KäufeFilter = verkäufe.filter(auswahl => auswahl.Kundennummer == kundennummer && auswahl.Datum >= datum1.toISOString().split('T')[0] && auswahl.Datum <= datum2.toISOString().split('T')[0]);
+        let summe = 0;
+        KäufeFilter.forEach(verkauf => {
+            html += `
+                <tr>
+                    <td><pre>${verkauf.Datum}</pre></td>
+                    <td><pre>${verkauf.Zeit}</pre></td>
+                    <td><pre>${verkauf.Produkt}</pre></td>
+                    <td style="text-align: right; vertical-align: bottom;"><pre>${parseFloat(verkauf.Preis).toFixed(2)} €</pre></td>
+                </tr>`;
+            summe += parseFloat(verkauf.Preis);
+        });
+        html += `
+                    </tbody>
+                        <tfoot style="background-color: #f2f2f2">
+                                <tr>
+                                    <td colspan="3" style="text-align: right;"><pre><b>Summe</b></pre></td>
+                                    <td style="text-align: right;"><pre><b>${summe.toFixed(2)} €</b></pre></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <hr>
+                    <div>
+                        <pre style="text-align: center;">Die Rechnung wurde automatisiert erstellt mit <br> ClubCash - Das bargeldlose Bezahlsystem für Flugsportvereine <br>&copy; 2026 Marcel Schommer</pre>
+                    </div>
+                </div>    
+            </body>
+            </html>`;
+        return html;
+    }
+    
+
+
+// ============================================================================
+// SYSTEM & ADMINISTRATION
+// ============================================================================
+
+    /**
+     * Fügt HTML-Inhalt an portalInhalt an (statt zu ersetzen)
+     * @param {string} htmlContent - Hinzuzufügender HTML-Code
+     */
     function appendHTMLToPortalInhalt(htmlContent) {
         portalInhalt.insertAdjacentHTML("beforeend", htmlContent);
     }
 
+    /**
+     * Prüft auf verfügbare Updates von GitHub
+     * Vergleicht lokale Version mit neuester Release-Version
+     */
     function Update() {
         portalmenu2.innerHTML = "<h2 style='display: inline;'>Update</h2>";
         html = "";
@@ -2965,6 +3200,10 @@ if ($response !== false) {
 
     }
 
+    /**
+     * Führt Update-Prozess durch
+     * Lädt update.php und zeigt Fortschritt an
+     */
     function Update2() {
         portalmenu2.innerHTML = "<h2 style='display: inline;'>Update</h2>";
         portalInhalt.innerHTML = "<p>Bitte warten, das Update wird installiert...</p>";
@@ -2979,9 +3218,13 @@ if ($response !== false) {
                 document.getElementById("preloader").style.display = "none";
             }
         };
-        xhr.send(); 
+        xhr.send();
     }
 
+    /**
+     * Erstellt Systembackup aller Daten
+     * Sichert JSON-Dateien und CSV-Umsätze
+     */
     function Systembackup() {
         if (confirm('Soll jetzt ein Systembackup erstellt werden? Es kann mehrere Minuten dauern. Das Backup kann als ZIP-Datei im Anschluss heruntergeladen werden. Zusätzlich ist sie im Order /backup/ gespeichert.')) {
         
@@ -3003,6 +3246,10 @@ if ($response !== false) {
         }
     }
     
+    /**
+     * Prüft Sicherheitseinstellungen des Systems
+     * Überprüft Dateiberechtigungen und Konfiguration
+     */
     function Sicherheitscheck() {
         portalmenu2.innerHTML = "<h2 style='display: inline;'>Sicherheitscheck</h2>";
         portalInhalt.innerHTML = "<p>Bitte warten, bis der Ceck durchgeführt wurde...</p>";
@@ -3028,7 +3275,11 @@ if ($response !== false) {
             preloader.style.display = "none";
         });
     }
-    
+
+    /**
+     * Startet Absicherungsprozess
+     * Setzt Dateiberechtigungen und .htaccess-Regeln
+     */
     function absicherungStarten() {
         portalmenu2.innerHTML = "<h2 style='display: inline;'>Absicherung</h2>";
         portalInhalt.innerHTML = "<p>Bitte warten, bis die Absicherung durchgeführt wurde...</p>";
@@ -3056,6 +3307,14 @@ if ($response !== false) {
     
     }
 
+// ============================================================================
+// EINSTELLUNGEN & KONFIGURATION
+// ============================================================================
+
+    /**
+     * Zeigt und speichert Programmeinstellungen
+     * Verwaltet alle Konfigurationsparameter inkl. SMTP-Einstellungen
+     */
     function Programmeinstellungen() {
         let menu2 = "<h2 style='display: inline;'>Konfiguration</h2>";
         menu2 += `
@@ -3571,6 +3830,10 @@ if ($response !== false) {
 
     }
 	
+    /**
+     * Lädt alle Mitgliederdaten aus Vereinsflieger
+     * Ruft API auf und zeigt Ergebnis an
+     */
 	function Mitgliederdaten() {
 		portalmenu2.innerHTML = "<h2 style='display: inline;'>Vereinsflieger Datenimport</h2>";
         portalInhalt.innerHTML = "<p>Bitte warten, die Mitgliederdaten werden aus Vereinsflieger abgerufen...</p>";
@@ -3584,7 +3847,15 @@ if ($response !== false) {
         xhr.send();
 	}
 	
-	// Beispiel für einen Download-Link
+// ============================================================================
+// DATEI-DOWNLOADS
+// ============================================================================
+
+    /**
+     * Lädt Datei herunter (JSON oder CSV)
+     * Erstellt temporären Download-Link und entfernt ihn nach Download
+     * @param {string} filename - Pfad zur herunterzuladenden Datei
+     */
     function downloadFile(filename) {
 
         // Erstellung des Download Links
@@ -3666,6 +3937,14 @@ if ($response !== false) {
         return false;
     }
 
+// ============================================================================
+// E-MAIL FUNKTIONEN
+// ============================================================================
+
+    /**
+     * Sendet Test-E-Mail zur Überprüfung der SMTP-Konfiguration
+     * Ruft send_test_email.php auf und zeigt Ergebnis an
+     */
     function Testemail() {
         portalInhalt.innerHTML = "<p>Bitte warten, die Testemail wird gesendet...</p>";
         var xhr = new XMLHttpRequest();
@@ -3681,6 +3960,162 @@ if ($response !== false) {
             portalInhalt.innerHTML = "<p>Fehler beim Senden der Testemail. Bitte überprüfen Sie die SMTP-Einstellungen und Ihre Internetverbindung.</p>";
         };
     }   
+
+    /**
+     * Sendet Einzelrechnung per E-Mail (Platzhalter-Funktion)
+     * @param {string} kundennummer - ID des Kunden
+     * @param {Date} datum1 - Startdatum
+     * @param {Date} datum2 - Enddatum
+     */
+    function Emailrechnung(kundennummer, datum1, datum2) {
+
+        console.log("Sende Einzelrechnung an KundeID: " + kundennummer + " für Zeitraum: " + datum1 + " bis " + datum2);
+
+        let Statusmeldung;
+
+        let kunde = käufer.find(k => String(k.uid) === String(kundennummer));
+
+        if (!kunde.email || kunde.email.trim() === "") {
+            let Statusmeldung = "<p>❌ <b>" + kunde.firstname + ", " + kunde.lastname + "</b> hat keine E-Mail-Adresse. Rechnung wurde nicht gesendet.</p>";
+            //portalInhalt.innerHTML = Statusmeldung;
+            return Statusmeldung;
+        }
+
+        // Datum-Strings in Date-Objekte umwandeln
+        if (typeof datum1 === 'string') datum1 = new Date(datum1);
+        if (typeof datum2 === 'string') datum2 = new Date(datum2);
+
+        // HTML-Inhalt für die Rechnung erstellen
+        let html = RechnungstextErstellen(kundennummer, datum1, datum2);
+        
+       // E-Mail Senden via AJAX
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "Emailrechnung.php", true); 
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    //alert("Rechnung erfolgreich per E-Mail gesendet.");
+                    Statusmeldung = "<p>✅ Rechnung an <b>" + kunde.firstname + ", " + kunde.lastname + "</b> (" + kunde.email + ") gesendet</p>";
+                    //portalInhalt.innerHTML = Statusmeldung;
+                } else {
+                    //alert("Fehler beim Senden der Rechnung per E-Mail: " + xhr.responseText);
+                    Statusmeldung = "<p>❌ Es konnte keine Rechnung an <b>" + kunde.firstname + ", " + kunde.lastname + "</b> gesendet werden. Fehler: " + xhr.responseText + "</p>";
+                    //portalInhalt.innerHTML = Statusmeldung;
+                }
+            }
+        };
+
+        //Ich möchte die html als Anlage senden
+
+        xhr.send(JSON.stringify({
+            kundennummer: kundennummer,
+            name: kunde.lastname,
+            vorname: kunde.firstname,
+            email: kunde.email,
+            datum1: datum1.toISOString().split('T')[0],
+            datum2: datum2.toISOString().split('T')[0],
+            html: html,
+            anhang: true
+        }));
+
+        return Statusmeldung;
+    }
+
+    /**
+     * Sendet Abrechnungs-E-Mails an alle Kunden mit Umsatz im Zeitraum
+     * @param {Date|string} datum1 - Startdatum
+     * @param {Date|string} datum2 - Enddatum
+     */
+    function Emailabrechnung_alle(datum1, datum2) {
+
+        // Datum-Strings in Date-Objekte umwandeln
+        if (typeof datum1 === 'string') datum1 = new Date(datum1);
+        if (typeof datum2 === 'string') datum2 = new Date(datum2);
+       
+        portalmenu2.innerHTML = "<h2>E-Mail Versand läuft...</h2>";
+        portalInhalt.innerHTML = "<p>Bitte warten, E-Mails werden versendet...</p>";
+
+        let gesamtStatus = "<h3>E-Mail Versand Status</h3>";
+        let erfolgreich = 0;
+        let fehler = 0;
+
+        // Nur Kunden mit Umsatz im Zeitraum
+        const kundenMitUmsatz = kunden.filter(kunde => {
+            return verkäufe.some(verkauf => 
+                verkauf.Kundennummer === kunde.uid &&
+                verkauf.Datum >= datum1.toISOString().split('T')[0] && 
+                verkauf.Datum <= datum2.toISOString().split('T')[0]
+            );
+        });
+
+        if (kundenMitUmsatz.length === 0) {
+            portalInhalt.innerHTML = "<p>⚠️ Keine Mitglieder mit Umsatz im gewählten Zeitraum gefunden.</p>";
+            return;
+        }
+
+        gesamtStatus += `<p>Versende ${kundenMitUmsatz.length} Abrechnungen...</p>`;
+        portalInhalt.innerHTML = gesamtStatus;
+
+        // E-Mails sequenziell versenden
+        let index = 0;
+
+        function sendeNächsteEmail() {
+            if (index >= kundenMitUmsatz.length) {
+                // Fertig
+                gesamtStatus += `<hr><p><b>Fertig!</b> ✅ ${erfolgreich} erfolgreich | ❌ ${fehler} Fehler</p>`;
+                portalInhalt.innerHTML = gesamtStatus;
+                return;
+            }
+
+            const kunde = kundenMitUmsatz[index];
+            if (!kunde.email || kunde.email.trim() === "") {
+                fehler++;
+                gesamtStatus += `<p>❌ ${index + 1}/${kundenMitUmsatz.length} - <b>${kunde.firstname} ${kunde.lastname}</b> hat keine E-Mail-Adresse. Abrechnung wurde nicht gesendet.</p>`;
+                portalInhalt.innerHTML = gesamtStatus;
+                index++;
+                // Nächste E-Mail nach kurzer Verzögerung
+                setTimeout(sendeNächsteEmail, 500);
+                return; 
+            }
+            index++;
+
+            // E-Mail senden
+            const html = RechnungstextErstellen(kunde.uid, datum1, datum2);
+            
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "Emailrechnung.php", true); 
+            xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        erfolgreich++;
+                        gesamtStatus += `<p>✅ ${index}/${kundenMitUmsatz.length} - <b>${kunde.firstname} ${kunde.lastname}</b> (${kunde.email})</p>`;
+                    } else {
+                        fehler++;
+                        gesamtStatus += `<p>❌ ${index}/${kundenMitUmsatz.length} - <b>${kunde.firstname} ${kunde.lastname}</b> - Fehler: ${xhr.responseText}</p>`;
+                    }
+                    portalInhalt.innerHTML = gesamtStatus;
+                    
+                    // Nächste E-Mail nach kurzer Verzögerung
+                    setTimeout(sendeNächsteEmail, 500);
+                }
+            };
+
+            xhr.send(JSON.stringify({
+                kundennummer: kunde.uid,
+                name: kunde.lastname,
+                vorname: kunde.firstname,
+                email: kunde.email,
+                datum1: datum1.toISOString().split('T')[0],
+                datum2: datum2.toISOString().split('T')[0],
+                html: html,
+                anhang: true
+            }));
+        }
+
+        sendeNächsteEmail();
+    }
 
 </script>
 </body>

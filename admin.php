@@ -156,7 +156,7 @@ if (isset($_GET['error'])) {
             <div style="text-align: center;">
                 <input class="green button" type="submit" value="Anmelden">
                 <br>
-                <button class="button" type="button" onclick="window.location.href='index.php';">Kunden-Login</button>
+                <button style="background-color: var(--success-color);"  class="button" type="button" onclick="window.location.href='index.php';">Kunden-Login</button>
             </div>
 
         </form>
