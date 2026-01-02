@@ -209,6 +209,24 @@ p.formularunterüberschrift {
     right: 10px;
 }
 
+.tastaturtabelle {
+    width: 22cqw;
+    border-spacing: 1cqw;
+    font-size: 4cqw;
+    font-weight:  bold;
+}
+
+.tastaturtabelle td {
+    width: 5cqw;
+    height: 5cqw;
+    border-spacing: 2cqw;
+    /* font-size: 3cqw; */
+    vertical-align: middle;
+    text-align: center;
+    background: var(--button-color);
+    border-radius: 1cqw;
+}
+
 @media print {
     .preisliste-print button {
         display: none;
@@ -436,7 +454,9 @@ body {
     align-items: center;
     color: var(--text-color-dark);
     position: absolute;
-    margin: 1.5vw;
+    margin: 1.5cqw;
+    position:  absolute;
+    left: 0;
 }
 
 /* Hamburger-Icon */
@@ -445,7 +465,7 @@ body {
     cursor: pointer;
     /* margin: 0vw; */
     /* padding: 0vw; */
-    font-size: 2cqw;
+    font-size: 2.5cqw;
 }
 
 /* Menü-Container */
@@ -453,8 +473,8 @@ body {
     flex-direction: column;
     background: var(--background-light);
     position: absolute;
-    top: 3.4cqw;
-    left: -1cqw;
+    top: 4.5cqw;
+    left: -2cqw;
     text-align: center;
     border: solid 1px var(--border-color);
     border-top: none;
@@ -523,14 +543,14 @@ h2 {
 button {
     font-size: 2.2cqw;
     height: 8cqw;
-    width: 20cqw;
-    margin: .3cqw;
+    width: 22cqw;
     font-weight: bold;
     /* font-size: 2.5vw; */
     background-color: var(--button-color);
     border: none;
     border-radius: 1cqw;
-    color: var(--text-color-dark)
+    color: var(--text-color-dark);
+    margin: 0.3cqw;
 }
 
 #vereinsnamen {
@@ -580,17 +600,16 @@ button:hover {
 
 /* Preisfenster */
 #preisfenster {
-    display: none;
-    position: absolute;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 1cqw;
     background-color: var(--background-light);
     margin: 0;
     padding: 0;
-    height: 480px;
-    width: 800px;
+    height: 100cqh;
+    width: 100cqw;
     z-index: 3;
+    display: none;
 }
 
 #preisfenster_inhalt {
@@ -601,19 +620,20 @@ button:hover {
     align-items: center;
     border: solid 1px var(--border-color);
     height: 100%;
-    margin: 15px;
-    padding: 10px;
+    margin: 1cqw;
+    padding: 1cqw;
+    border-radius: 1cqw;
 }
 
 #preisliste_schließen {
     background-color: var(--success-color);
     position: absolute;
-    top: 2px;
-    right: 20px;
+    top: 1cqw;
+    right: 3cqw;
     border: 1px solid;
-    height: 50px;
-    width: 50px;
-    font-size: 30px;
+    height: 6cqw;
+    width: 6cqw;
+    font-size: 4cqw;
 }
 
 #preislistentabelle thead {
@@ -658,7 +678,6 @@ button:hover {
     min-height: 100cqh;
 }
 
-/* Removed empty ruleset for #rechteSpalte */
 
 /* Tastatur */
 #tastatur {
@@ -669,16 +688,16 @@ button:hover {
     left: 76cqw;
     top: 20cqw;
     border: solid 1px;
-    height: 36cqw;
+    height: 34cqw;
     padding: 0.5cqw;
     border-radius: 1cqw;
 }
 
 #tastatur button {
-    width: 6cqw;
-    height: 6cqw;
-    margin: .5cqw;
-    font-size: 4cqw;
+    width: 5cqw;
+    height: 5cqw;
+    font-size: 3cqw;
+    padding: 0;
 }
 
 /* Warenkorb Tabelle */
@@ -767,7 +786,7 @@ button:hover {
     align-items: center;
     font-weight: bold;
     color: var(--text-color-dark);
-    padding: 0vw;
+    padding: 0;
     font-size: 4cqw;
     height: 5cqw;
 }
@@ -789,7 +808,7 @@ th {
     position: sticky;
     top: 0;
     z-index: 1;
-    padding: 1cqw;
+    padding: 0.5cqw;
     border: 0.5cqw white solid;
     font-size: 3cqw;
 }
@@ -836,8 +855,8 @@ th {
 
 .preisliste_rechts_groß {
     text-align: right;
-    font-size: 30px;
-    padding-right: 10px;
+    font-size: 4cqw;
+    padding-right: 2cqw;
 }
 
 .zeit {
@@ -855,6 +874,11 @@ th {
 .zentriertTop {
     text-align: center;
     vertical-align: top;
+}
+
+#preisliste_überschrift {
+    font-size: 5cqw;
+    margin-bottom: 1cqw;
 }
 
 /* Weitere spezifische IDs */
@@ -886,6 +910,8 @@ th {
 .plus-button-zelle {
     text-align: center;
     vertical-align: middle;
+    font-size: 4cqw;
+    padding-right: 1cqw;
 }
 
 /* Breite des Scrollbalkens */
@@ -895,13 +921,13 @@ th {
 
 /* Hintergrund des Scrollbalkens */
 .scrollbalken::-webkit-scrollbar-track {
-    background: var(--secondary-color);
+    background: var(--text-color-light);
     border-radius: 2xqw;
 }
 
 /* Farbe des Scrollbalkens */
 .scrollbalken::-webkit-scrollbar-thumb {
-    background: var(--tertiary-color);
+    background: var(--border-color);
     border-radius: 2cqw;
 }
 
@@ -913,15 +939,14 @@ th {
 
 #bildschirmschoner {
     display: none;
-    width: 800px;
-    height: 480px;
+    width: 100%;
+    height: 100%;
     border: none;
     overflow: hidden;
     position: absolute;
     top: 0px;
     background-color: black;
     z-index: 20;
-    
 }
 
 .input-button {
@@ -930,19 +955,6 @@ th {
 
 
 #Wartungsfenster {
-    display: block;
-    background-color: var(--background-dark);
-    color: var(--text-color-light);
-    text-align: center;
-    font-size: 20px;
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    width: 100%;
-    height: 100%;
-}
-
-#OfflineBildschirm {
     display: none;
     background-color: var(--background-dark);
     color: var(--text-color-light);
@@ -953,7 +965,39 @@ th {
     left: 0px;
     width: 100%;
     height: 100%;
+    max-height: 100cqh;
+    justify-content: center; /* horizontal */
+    align-items: center;     /* vertikal */
+    flex-direction: column;
 }
+
+#Wartungsfenster h1 {
+    font-size: 3cqw;
+    max-width: 106cqw;
+}
+
+#OfflineBildschirm {
+    display: flex;
+    background-color: var(--background-dark);
+    color: var(--text-color-light);
+    text-align: center;
+    font-size: 20px;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#OfflineBildschirm h1 {
+    font-size: 4cqw;
+    }
 
 @keyframes scale-image {
     0% { width: 0px; opacity: 0; }
@@ -995,7 +1039,10 @@ th {
     align-items: center;
     font-family: sans-serif;
     color: #4CAF50;
-    margin-top: 40px;
+    position: absolute;
+    top: 30cqw;
+    left: 25cqw;
+    z-index: 1000;
     }
 
     #checkmark {
@@ -1036,7 +1083,7 @@ th {
 /* Logo Bild */
 #logo-bild {
     width: 16cqw;
-    padding: 5px;
+    padding: 1cqw;
 }
 
 /* Terminal Info Text */
@@ -1063,39 +1110,24 @@ th {
     display: none;
 }
 
-/* Bildschirmschoner */
-#bildschirmschoner {
-    display: none;
-}
-
-/* Wartungsfenster */
-#Wartungsfenster {
-    display: none;
-}
-
 .menubuttondown {
-    font-size: 8vw;
+    font-size: 2cqw;
 }
 
 
 /* Wartungsfenster Logo */
 #wartungs-logo {
-    margin: 50px;
-    height: 200px;
+    margin: 1cqw;
+    height: 30cqw;
+    max-height: 22cqh;
 }
 
 #rechteSpalte {}
 
-
-/* Offline Bildschirm */
-#OfflineBildschirm {
-    display: none;
-}
-
 /* Offline Bildschirm Logo */
 #offline-logo {
-    margin: 50px;
-    height: 200px;
+    width:  30cqw;
+    max-height: 50cqh;
 }
 
 /* Checkmark Container */
@@ -1105,29 +1137,30 @@ th {
 
 /* Preis geändert Erfolgsmeldung */
 .preis-geaendert-erfolg {
-    font-size: 30px;
+    font-size: 4cqw;
     color: var(--success-color);
 }
 
 /* Preis geändert Info */
 .preis-geaendert-info {
-    font-size: 30px;
+    font-size: 3cqw;
 }
 
 /* Preis geändert Wert */
 .preis-geaendert-wert {
     color: var(--success-color);
+    font-size: 12cqw;
 }
 
 /* Preis Fehler Meldung */
 .preis-fehler {
-    font-size: 30px;
+    font-size: 3.5cqw;
     color: var(--success-color);
 }
 
 /* Warenkorb Übertragung Text */
 .warenkorb-uebertragung-text {
-    font-size: 30px;
+    font-size: 3.5cqw;
 }
 
 /* Warenkorb Checkmark Container (in dynamischem HTML) */

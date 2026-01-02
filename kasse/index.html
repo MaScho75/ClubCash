@@ -183,22 +183,10 @@ DATENÜBERTRAGUNG
         </div>
     </div>
 
-    <div id="navbar" onclick="toggleMenu()">
-        <div class="menu-icon">☰</div>
-        <div class="menu">
-            <button class="menubuttondown" id="bt_tagesabrechnung" onclick="tagesabrechnung();">Tagesabrechnung</button>
-            <button class="menubuttondown" id="bt_tageszusammenfassung" onclick="tageszusammenfassung();">Tageszusammenfassung</button>
-            <button class="menubuttondown" id="bt_kundentagesübersicht" onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
-            <button class="menubuttondown" id="bt_mittagspreis" onclick="mittagspreis();">Preisanpassung Essen</button>
-            <button class="menubuttondown" id="bt_info" onclick="info();">Programminfos</button>
-            <button class="menubuttondown" id="bt_systeminfo" onclick="systeminfo()">Systeminfo</button>
-        </div>
-    </div>
-
     <div id="preisfenster">
 
         <div class="scrollbalken" id="preisfenster_inhalt">
-            <h1>Preisliste</h1>
+            <h1 id="preisliste_überschrift">Produktliste</h1>
             <button id="preisliste_schließen" onclick="preisfenster.style.display = 'none';">X</button>
             <table id="preislistentabelle" border="0">
                 <thead>
@@ -214,6 +202,18 @@ DATENÜBERTRAGUNG
     </div>
     
     <div id="display">
+
+        <div id="navbar" onclick="toggleMenu()">
+            <div class="menu-icon">☰</div>
+            <div class="menu">
+                <button class="menubuttondown" id="bt_tagesabrechnung" onclick="tagesabrechnung();">Tagesabrechnung</button>
+                <button class="menubuttondown" id="bt_tageszusammenfassung" onclick="tageszusammenfassung();">Tageszusammenfassung</button>
+                <button class="menubuttondown" id="bt_kundentagesübersicht" onclick="kundentagesübersicht();">Kunden Tagesübersicht</button>
+                <button class="menubuttondown" id="bt_mittagspreis" onclick="mittagspreis();">Preisanpassung Essen</button>
+                <button class="menubuttondown" id="bt_info" onclick="info();">Programminfos</button>
+                <button class="menubuttondown" id="bt_systeminfo" onclick="systeminfo()">Systeminfo</button>
+            </div>
+        </div>
 
         <div id="linkeSpalte">
 
@@ -265,18 +265,40 @@ DATENÜBERTRAGUNG
 
         <div id=tastatur>
             <p class="preiseingabe"><b><span id="zifferneingabefeld">0.00</span> <span id="einheit">€</span></b></p>
-            <button onclick="meingabe(1)">1</button>
-            <button onclick="meingabe(2)">2</button>
-            <button onclick="meingabe(3)">3</button>
-            <button onclick="meingabe(4)">4</button>
-            <button onclick="meingabe(5)">5</button>
-            <button onclick="meingabe(6)">6</button>
-            <button onclick="meingabe(7)">7</button>
-            <button onclick="meingabe(8)">8</button>
-            <button onclick="meingabe(9)">9</button>
-            <button onclick="meingabe(0)">0</button>
-            <button id="BT_EingabeBestätigt" class="BT_Eingabe" onclick="meingabe('E')">E</button>
-            <button id="BT_Abbruch" onclick="NeuLaden();">X</button>
+            <table class="tastaturtabelle">
+                <tr>
+                    <td onclick="meingabe(1)">1</td>
+                    <td onclick="meingabe(2)">2</td>
+                    <td onclick="meingabe(3)">3</td>
+                </tr>
+                <tr>
+                    <td onclick="meingabe(4)">4</td>
+                    <td onclick="meingabe(5)">5</td>
+                    <td onclick="meingabe(6)">6</td>
+                </tr>
+                <tr>
+                    <td onclick="meingabe(7)">7</td>
+                    <td onclick="meingabe(8)">8</td>
+                    <td onclick="meingabe(9)">9</td>
+                </tr>
+                <tr>
+                    <td onclick="meingabe(0)">0</td>
+                    <td id="BT_EingabeBestätigt" class="BT_Eingabe" onclick="meingabe('E')">E</td>
+                    <td id="BT_Abbruch" onclick="NeuLaden();">X</td>   
+                </tr>
+            </table>
+        </div>
+
+        <div id="checkmark-container">
+            <svg width="25cqw" height="25cqw" viewBox="0 0 100 100">
+                <path id="checkmark" d="M25 50 L45 70 L75 35"
+                    stroke="#4CAF50" stroke-width="8"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-dasharray="100"
+                    stroke-dashoffset="100" />
+            </svg>
         </div>
 
     </div>
@@ -300,17 +322,7 @@ DATENÜBERTRAGUNG
          <p>Bitte stellen Sie die Internetverbindung her...</p>
     </div>
 
-    <div id="checkmark-container">
-        <svg width="200" height="200" viewBox="0 0 100 100">
-            <path id="checkmark" d="M25 50 L45 70 L75 35"
-                stroke="#4CAF50" stroke-width="8"
-                fill="none"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-dasharray="100"
-                stroke-dashoffset="100" />
-        </svg>
-    </div>
+    
 
     <script>
 
@@ -536,7 +548,7 @@ DATENÜBERTRAGUNG
 
         function configuration() {
             // Konfigutarionen - Ansicht anpassen je nach Benutzergruppe
-            if (config.wartungsmodus == "true") document.getElementById("Wartungsfenster").style = "display: block"; // Offlinemodus
+            if (config.wartungsmodus == "true") document.getElementById("Wartungsfenster").style = "display: flex"; // Wartungsmodus
             if (config.tagesabrechnung == "false") document.getElementById("bt_tagesabrechnung").style = "display: none";
             if (config.tageszusammenfassung == "false") document.getElementById("bt_tageszusammenfassung").style = "display: none";
             if (config.kundentagesübersicht == "false") document.getElementById("bt_kundentagesübersicht").style = "display: none";
@@ -772,7 +784,7 @@ DATENÜBERTRAGUNG
             zelle2.className = "preisliste_rechts_groß";
             let zelle3 = zeile.insertCell();
             zelle3.className = "plus-button-zelle";
-            zelle3.innerHTML = "<button onclick='aus_preisliste_buchen(\"" + produkt.EAN + "\")' class='plus-button'>1+</button>";
+            zelle3.innerHTML = "<button onclick='aus_preisliste_buchen(\"" + produkt.EAN + "\")' class='plus-button'>+</button>";
             
             });
         }
@@ -884,8 +896,8 @@ DATENÜBERTRAGUNG
             zelle2.className = "rechts_groß";
             if (produkt.EAN != 9990000000000) {
             let zelle3 = zeile.insertCell();
-            zelle3.innerHTML = "<button onclick='produktprüfung(`" + produkt.EAN + "`)' class='plus-button'>+</button>";
-            }
+            zelle3.innerHTML = "<button onclick='produktprüfung(`" + produkt.EAN + "`)' class='plus-button'>+</button>"; 
+            zelle3.className = "plus-button-zelle";}
         }
 
         function manuell() {
@@ -981,28 +993,26 @@ DATENÜBERTRAGUNG
                 übertragung_umsatz(warenkorb2);
 
                 tbody.innerHTML = `
-                    <tr>
-                        <td class="zentriert">
-                        <p class="warenkorb-uebertragung-text">Alle Produkte aus dem Warenkorb
-                        <br>wurden dem Kundenkonto von</p>
-                        <h1><b>` + kunde.firstname + ` ` + kunde.lastname + `</b></h1>
-                        <p class="warenkorb-uebertragung-text">übertragen.</p>
-                        </td>
-                    </tr> 
-                <tr>
-                <div class="warenkorb-checkmark-container">
-                    <svg width="200" height="200" viewBox="0 0 100 100" id="warenkorb-checkmark-svg">
-                    <path id="checkmark" d="M25 50 L45 70 L75 35"
-                        stroke="#4CAF50" stroke-width="8"
-                        fill="none"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-dasharray="100"
-                        stroke-dashoffset="100" />
-                    </svg>
-                </div>
-                </tr>
-                    `;
+    <tr>
+        <td colspan="3" class="zentriert">
+            <p class="warenkorb-uebertragung-text">Alle Produkte aus dem Warenkorb
+            <br>wurden dem Kundenkonto von
+            <br><b>` + kunde.firstname + ` ` + kunde.lastname + `</b>
+            <br>übertragen.</p>
+            <div id="checkmark-container">
+                <svg width="25cqw" height="25cqw" viewBox="0 0 100 100">
+                <path id="checkmark" d="M25 50 L45 70 L75 35"
+                    stroke="#4CAF50" stroke-width="8"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-dasharray="100"
+                    stroke-dashoffset="100" />
+                </svg>
+            </div>
+        </td>
+    </tr>
+`;
 
                 thead.innerHTML = "";
 
@@ -1432,7 +1442,6 @@ DATENÜBERTRAGUNG
             }
             
             html = `
-                <h1>Systeminformationen</h1>
                 <p>Terminal: <b>${terminal}</b></p>
                 <p>Version: <b>${config.Version}</b></p>
                 <p>Vereinsname: <b>${config.Vereinsname}</b></p>
