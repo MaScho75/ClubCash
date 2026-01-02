@@ -187,7 +187,7 @@ DATENÜBERTRAGUNG
 
         <div class="scrollbalken" id="preisfenster_inhalt">
             <h1 id="preisliste_überschrift">Produktliste</h1>
-            <button id="preisliste_schließen" onclick="preisfenster.style.display = 'none';">X</button>
+            <button id="preisliste_schließen" onclick="preisfenster_schliessen()">X</button>
             <table id="preislistentabelle" border="0">
                 <thead>
                     <tr>
@@ -338,6 +338,7 @@ DATENÜBERTRAGUNG
             let spritt = false; // Variable für die Spritt
             let ProduktTemp = []; // Temporäre Variable für das Produkt, wenn es sich um ein Produkt mit Mengeneingabe handelt
 
+            const display_fenster = document.getElementById("display");
             const datenfeld = document.getElementById("datenfeld");
             const warenkorbtabelle = document.getElementById("warenkorbtabelle");
             const tbody = document.querySelector("#warenkorbtabelle tbody");
@@ -679,6 +680,12 @@ DATENÜBERTRAGUNG
         function preisfenster_öffnen() {
             document.querySelector(".menu").classList.remove("active");
             preisfenster.style.display = 'flex';
+            display_fenster.style.display = 'none';
+        }
+
+        function preisfenster_schliessen() {
+            preisfenster.style.display = 'none';
+            display_fenster.style.display = 'flex';
         }
 
         function eingabestopp() {
