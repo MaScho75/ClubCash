@@ -454,6 +454,19 @@ th {
     margin-bottom: 1cqw;
 }
 
+#preislistentabelle {
+    font-size: 3cqw;
+}
+
+#preislistentabelle td {
+}
+
+.preisliste_rechts_groß {
+    text-align: right;
+    padding: 0 1cqw 0 0;
+    max-width: 50cqw;
+}
+
 #preislistentabelle thead {
     position: sticky;
     top: 0;
@@ -468,10 +481,10 @@ th {
 }
 
 .plus-button-zelle {
-    text-align: center;
+    /* text-align: center; */
     vertical-align: middle;
     font-size: 4cqw;
-    padding-right: 1cqw;
+    padding: 0 1cqw;
 }
 
 

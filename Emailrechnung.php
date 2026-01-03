@@ -76,6 +76,7 @@ try {
     $mail->addReplyTo($config['SMTPAntwortadresse']);
 
     $mail->addAddress($input['email']);
+    $mail->addBCC($config['SMTPAbsenderadresse']); 
 
     $mail->isHTML(true);
     $mail->Subject = 'ClubCash Abrechnung für ' . $input['vorname'] . ' ' . $input['name'] . ' (' . $input['kundennummer'] . ')';
