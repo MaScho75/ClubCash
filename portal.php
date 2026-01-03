@@ -26,6 +26,11 @@ if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !
     exit();
 }
 
+//Erfoderlichekeiten, damit PHPMailer funktioniert
+require __DIR__ . '/vendor/autoload.php';
+use PHPMailer\PHPMailer\PHPMailer;
+
+
 // Mitgliederdaten laden
     clearstatcache(true, "daten/kunden.json"); // Clear file cache for this specific file
     $jsonKundenDatei = file_get_contents("daten/kunden.json");
