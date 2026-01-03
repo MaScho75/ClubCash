@@ -2130,7 +2130,7 @@ if ($response !== false) {
         if (typeof datum1 === 'string') datum1 = new Date(datum1);
         if (typeof datum2 === 'string') datum2 = new Date(datum2);
 
-        // HTML-Inhalt für die Rechnung erstellen
+        // HTML-Inhalt für die Abrechnung erstellen
         let html = `
             <head>
                 <title>Abrechnung</title>
@@ -2141,7 +2141,7 @@ if ($response !== false) {
         html += RechnungstextErstellen(kundennummer, datum1, datum2);
         html += `<button style="position: absolute; top: 10px; right: 10px; media-print: none;" onclick="window.print();">drucken</button>`;
 
-        // ein neues Fenster für die Rechnung in der Größe DIN A4 öffnen
+        // ein neues Fenster für die Abrechnung in der Größe DIN A4 öffnen
         let printWindow = window.open('', 'Abrechnung', 'width=800,height=1000');
         if (!printWindow) {
             console.error('Could not open print window - popup might be blocked');
@@ -2222,7 +2222,7 @@ if ($response !== false) {
         html += `
 
             <button class="kleinerBt" onclick="AbrechnungErstellen('${kunde.uid}', '${datum1}', '${datum2}')" style="margin-left: 10px;">Abrechnung</button>
-            <button class="kleinerBt" onclick="Emailabrechnung('${kunde.uid}', '${datum1}', '${datum2}'); alert('Email wurde gesendet.');" style="margin-left: 10px;">Email-Abrechnung</button>
+            <button class="kleinerBt" onclick="Emailrechnung('${kunde.uid}', '${datum1}', '${datum2}'); alert('Email wurde gesendet.');" style="margin-left: 10px;">@ Abrechnung</button>
                 `;
         if (angemeldetesMitglied.cc_admin == true) {
             html += `<button class="kleinerBt" onclick="MitgliederAusweise('${kunde.schlüssel}')" style="margin-left: 10px;">Bezahlkarte</button>
@@ -3124,6 +3124,7 @@ if ($response !== false) {
                                 <tr>        
                                     <th><pre>Datum</pre></th>
                                     <th><pre>Zeit</pre></th>
+                                    <th><pre>Terminal</pre></th>
                                     <th><pre>Buchungstext</pre></th>
                                     <th style="text-align: right;"><pre>Preis</pre></th>
                                 </tr>
@@ -3136,6 +3137,7 @@ if ($response !== false) {
                 <tr>
                     <td><pre>${verkauf.Datum}</pre></td>
                     <td><pre>${verkauf.Zeit}</pre></td>
+                    <td><pre>${verkauf.Terminal}</pre></td>
                     <td><pre>${verkauf.Produkt}</pre></td>
                     <td style="text-align: right; vertical-align: bottom;"><pre>${parseFloat(verkauf.Preis).toFixed(2)} €</pre></td>
                 </tr>`;
@@ -3153,7 +3155,7 @@ if ($response !== false) {
                     </div>
                     <hr>
                     <div>
-                        <pre style="text-align: center;">Die Rechnung wurde automatisiert erstellt mit <br> ClubCash - Das bargeldlose Bezahlsystem für Flugsportvereine <br>&copy; 2026 Marcel Schommer</pre>
+                        <pre style="text-align: center;">Die Abrechnung wurde automatisiert erstellt mit <br> ClubCash - Das bargeldlose Bezahlsystem für Flugsportvereine <br>&copy; 2026 Marcel Schommer</pre>
                     </div>
                 </div>    
             </body>
@@ -3985,7 +3987,7 @@ if ($response !== false) {
         if (typeof datum1 === 'string') datum1 = new Date(datum1);
         if (typeof datum2 === 'string') datum2 = new Date(datum2);
 
-        // HTML-Inhalt für die Rechnung erstellen
+        // HTML-Inhalt für die Abrechnung erstellen
         let html = RechnungstextErstellen(kundennummer, datum1, datum2);
         
        // E-Mail Senden via AJAX
