@@ -497,10 +497,18 @@ DATENÜBERTRAGUNG
             });
         
 
-        // Überprüfe offline gespeicherte Verkäufe beim Laden der Seite
-            syncOfflineData();
+        // Zeite an, wie viele Datensätze offline gespeichert sind
+            updateOfflineCounter();
 
+    
+        // Wenn online ist, versuche offline Daten zu synchronisieren
+            if (isOnline) {
+                syncOfflineData();
+                console
+            }
             
+
+
         // ========================================
         // KONFIGURATION & INITIALISIERUNG
         // ========================================
