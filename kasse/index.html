@@ -337,6 +337,7 @@ DATENÜBERTRAGUNG
             let config = [];
             let spritt = false; // Variable für die Spritt
             let ProduktTemp = []; // Temporäre Variable für das Produkt, wenn es sich um ein Produkt mit Mengeneingabe handelt
+            let isSyncing = false; // Verhindert gleichzeitige Synchronisationen
 
             const display_fenster = document.getElementById("display");
             const datenfeld = document.getElementById("datenfeld");
@@ -355,6 +356,22 @@ DATENÜBERTRAGUNG
             const statusbar = document.getElementById("statusfeld");
             const zifferneingabefeld = document.getElementById("zifferneingabefeld");
             const preloader = document.getElementById("preloader");
+
+        // Logs
+            const logs = {
+                log: [],
+                warn: [],
+                error: [],
+                table: []
+            };
+
+            ["log", "warn", "error", "table"].forEach(type => {
+                const original = console[type];
+                console[type] = (...args) => {
+                    logs[type].push(args);
+                    original.apply(console, args);
+                };
+            });    
 
 
         //Prüfung, ob offine Speicherung möglich ist, durch darstellung des letzten Speicherzeitpunkts
@@ -502,9 +519,12 @@ DATENÜBERTRAGUNG
 
     
         // Wenn online ist, versuche offline Daten zu synchronisieren
+            console.log("Seite geladen. Online-Status:", isOnline);
             if (isOnline) {
+                console.log("Starte Synchronisation offline Daten nach dem Laden der Seite");
                 syncOfflineData();
-                console
+                console.log("Synchronisiere offline Daten nach dem Laden der Seite");
+                console.table(localStorage.getItem('offlineVerkäufe'));
             }
             
 
@@ -522,35 +542,60 @@ DATENÜBERTRAGUNG
         // Service Worker registrieren
             if ('serviceWorker' in navigator) {
                 console.log('Service Worker wird registriert...');
-                navigator.serviceWorker.register('./sw.js', { scope: './' })
-                .then(async registration => {
-                    console.log('ServiceWorker erfolgreich registriert:', registration.scope);
-                    console.log('ServiceWorker Status:', registration.active ? 'aktiv' : 'nicht aktiv');
-                    
-                    // Warte auf Aktivierung
-                    if (registration.installing) {
-                        console.log('ServiceWorker wird installiert...');
-                        registration.installing.addEventListener('statechange', e => {
-                            console.log('ServiceWorker State:', e.target.state);
+                console.log('Current URL:', window.location.href);
+                console.log('Base URL:', window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1));
+                
+                // Erst prüfen ob sw.js erreichbar ist
+                fetch('sw.js')
+                    .then(response => {
+                        console.log('sw.js fetch status:', response.status, response.statusText);
+                        console.log('sw.js content-type:', response.headers.get('content-type'));
+                        if (!response.ok) {
+                            throw new Error('sw.js nicht erreichbar: ' + response.status);
+                        }
+                        return response.text();
+                    })
+                    .then(swCode => {
+                        console.log('sw.js geladen, Länge:', swCode.length);
+                        // Jetzt versuchen zu registrieren
+                        return navigator.serviceWorker.register('sw.js', { 
+                            scope: './',
+                            type: 'classic'
                         });
-                    }
-                    
-                    if (navigator.onLine) {
-                        // Bei Online-Betrieb ServiceWorker updaten
-                        console.log('Prüfe auf ServiceWorker Updates...');
-                        await registration.update();
-                    }
-                    
-                    // Cache-Status überprüfen
-                    if ('caches' in window) {
-                        const cacheNames = await caches.keys();
-                        console.log('Verfügbare Caches:', cacheNames);
-                    }
-                })
-                .catch(err => {
-                    console.error('ServiceWorker Registrierung fehlgeschlagen:', err);
-                    statusfeld.innerText = 'Offline-Modus nicht verfügbar: ' + err.message;
-                });
+                    })
+                    .then(async registration => {
+                        console.log('ServiceWorker erfolgreich registriert:', registration.scope);
+                        console.log('ServiceWorker Status:', registration.active ? 'aktiv' : 'nicht aktiv');
+                        
+                        // Warte auf Aktivierung
+                        if (registration.installing) {
+                            console.log('ServiceWorker wird installiert...');
+                            registration.installing.addEventListener('statechange', e => {
+                                console.log('ServiceWorker State:', e.target.state);
+                            });
+                        }
+                        
+                        if (navigator.onLine) {
+                            // Bei Online-Betrieb ServiceWorker updaten
+                            console.log('Prüfe auf ServiceWorker Updates...');
+                            await registration.update();
+                        }
+                        
+                        // Cache-Status überprüfen
+                        if ('caches' in window) {
+                            const cacheNames = await caches.keys();
+                            console.log('Verfügbare Caches:', cacheNames);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('ServiceWorker Registrierung fehlgeschlagen:', err);
+                        console.error('Error Details:', {
+                            name: err.name,
+                            message: err.message,
+                            stack: err.stack
+                        });
+                        statusfeld.innerText = 'Offline-Modus nicht verfügbar: ' + err.message;
+                    });
             } else {
                 console.error('Service Worker nicht unterstützt in diesem Browser');
                 statusfeld.innerText = 'Offline-Modus nicht unterstützt';
@@ -662,22 +707,57 @@ DATENÜBERTRAGUNG
         }
 
         async function syncOfflineData() {
+            if (isSyncing) {
+                console.log("Synchronisation läuft bereits");
+                return;
+            }
+            
             const offlineVerkäufe = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
             if (offlineVerkäufe.length === 0) return;
 
-            try {
-            for (const verkauf of offlineVerkäufe) {
-                await übertragung_umsatz(verkauf);
+            isSyncing = true;
+            console.log(`Starte Synchronisation von ${offlineVerkäufe.length} Verkäufen`);
+            
+            let erfolgreicheSyncs = 0;
+            let fehlerhafte = [];
+
+            for (let i = 0; i < offlineVerkäufe.length; i++) {
+                try {
+                    const response = await fetch("umsatz-api.php", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(offlineVerkäufe[i])
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log(`Verkauf ${i + 1} erfolgreich synchronisiert:`, result);
+                        erfolgreicheSyncs++;
+                    } else {
+                        console.error(`Verkauf ${i + 1} Fehler: ${response.status}`);
+                        fehlerhafte.push(offlineVerkäufe[i]);
+                    }
+                } catch (error) {
+                    console.error(`Verkauf ${i + 1} Sync-Fehler:`, error);
+                    fehlerhafte.push(offlineVerkäufe[i]);
+                }
             }
-            localStorage.removeItem('offlineVerkäufe');
+
+            // Speichere nur die fehlerhaften Verkäufe zurück
+            if (fehlerhafte.length > 0) {
+                localStorage.setItem('offlineVerkäufe', JSON.stringify(fehlerhafte));
+                statusfeld.innerText = `${erfolgreicheSyncs} Verkäufe synchronisiert, ${fehlerhafte.length} fehlgeschlagen`;
+                console.log(`${erfolgreicheSyncs} Verkäufe synchronisiert, ${fehlerhafte.length} fehlgeschlagen`);
+            } else {
+                localStorage.removeItem('offlineVerkäufe');
+                statusfeld.innerText = `${erfolgreicheSyncs} Offline-Verkäufe synchronisiert`;
+                console.log(`${erfolgreicheSyncs} Offline-Verkäufe synchronisiert`);
+            }
+            
             updateOfflineCounter();
-            statusfeld.innerText = "Offline-Daten synchronisiert";
-            console.log("Offline-Daten synchronisiert");
-            } catch (error) {
-            console.error("Sync-Fehler:", error);
-            statusfeld.innerText = "Fehler bei der Synchronisation";
-            console.log("Fehler bei der Synchronisation");
-            }
+            isSyncing = false;
         }
 
         // ========================================
@@ -1424,9 +1504,86 @@ DATENÜBERTRAGUNG
             }
         }
 
+        function offlineVerkäufe() {
+            
+            let offlineHTML = '';
+
+            let offlineVerkäufe = JSON.parse(localStorage.getItem('offlineVerkäufe')) || [];
+
+            if (offlineVerkäufe.length === 0) {
+            offlineHTML = `<p style="text-align:center;">Es sind keine offline Verkäufe gespeichert.</p>`;
+            return offlineHTML;
+            }
+
+            offlineHTML = "<table>"; // Bestehenden Inhalt löschen
+
+            offlineHTML += `
+            <tr>
+            <th>Datum</th>
+            <th>Zeit</th>
+            <th>Kunde</th>
+            <th>Produkt</th>
+            <th class="preisspalte">Preis</th>
+            </tr>
+            `;
+
+            for (const verkauf of offlineVerkäufe) {
+                for (const ds of verkauf) {
+                    offlineHTML += `
+                        <tr>
+                            <td class="zentriert">` + ds.Datum + `</td>
+                            <td class="zentriert">` + ds.Zeit + `</td>
+                            <td class="zentriert">` + ds.Kundennummer + `</td>
+                        <td>` + ds.Produkt + `</td>
+                        <td class="währung">` + ds.Preis + ` €</td>
+                    `;
+                }  
+            };
+            offlineHTML += "</table>";
+            return offlineHTML;
+        }
+
         // ========================================
         // SYSTEM-FUNKTIONEN
         // ========================================
+
+        function loggs() {
+
+            let logsHTML = '<div class="scrollbalken" style="padding: 20px;">';
+                        
+                        // Log-Einträge
+                        if (logs.log.length > 0) {
+                            logsHTML += '<h3>Console Logs:</h3>';
+                            logs.log.forEach((entry, index) => {
+                                logsHTML += `<p><b>[${index}]</b> ${JSON.stringify(entry)}</p>`;
+                            });
+                        }
+                        
+                        // Warning-Einträge
+                        if (logs.warn.length > 0) {
+                            logsHTML += '<h3>Warnings:</h3>';
+                            logs.warn.forEach((entry, index) => {
+                                logsHTML += `<p style="color: orange;"><b>[${index}]</b> ${JSON.stringify(entry)}</p>`;
+                            });
+                        }
+                        
+                        // Error-Einträge
+                        if (logs.error.length > 0) {
+                            logsHTML += '<h3>Errors:</h3>';
+                            logs.error.forEach((entry, index) => {
+                                logsHTML += `<p style="color: red;"><b>[${index}]</b> ${JSON.stringify(entry)}</p>`;
+                            });
+                        }
+                        
+                        if (logs.log.length === 0 && logs.warn.length === 0 && logs.error.length === 0) {
+                            logsHTML += '<p>Keine Logs vorhanden.</p>';
+                        }
+                        
+                        logsHTML += '</div>';
+                        
+                        return logsHTML;
+
+        }
 
         async function systeminfo() {
             preisfenster.style.display = 'none'; //sollte das Preisfenster noch offen sein, wird es geschlossen
@@ -1478,6 +1635,17 @@ DATENÜBERTRAGUNG
                 <p>Caches: <b>${cacheInfo}</b></p>
                 ${cacheDetails}
                `; 
+
+            html +=`<hr>
+                <h2>Logs</h2>
+            `;   
+            html += loggs();
+
+            html +=`<hr>
+                <h2>Offline Verkäufe</h2>
+            `;
+            html += offlineVerkäufe();      
+
             datenfeld.innerHTML = html;
         }
 
@@ -1521,35 +1689,45 @@ DATENÜBERTRAGUNG
         // ========================================
 
         async function übertragung_umsatz(data) {
+            // Wenn offline, speichere direkt
             if (!isOnline) {
-            speichereOfflineVerkauf(data);
-            statusfeld.innerText = "Verkauf offline gespeichert";
-            console.log("Verkauf offline gespeichert");
-            return;
+                speichereOfflineVerkauf(data);
+                statusfeld.innerText = "Verkauf offline gespeichert";
+                console.log("Verkauf offline gespeichert");
+                return;
             }
 
+            // Versuche online zu übertragen
             try {
-            const response = await fetch("umsatz-api.php", {
-                method: "POST",
-                headers: {
-                "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-            });
+                const response = await fetch("umsatz-api.php", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
 
-            if (!response.ok) {
-                throw new Error(`Server-Fehler: ${response.status}`);
-            }
+                if (!response.ok) {
+                    throw new Error(`Server-Fehler: ${response.status}`);
+                }
 
-            const result = await response.json();
-            console.log(result);
-            statusfeld.innerText = "Verkauf online gespeichert";
-            console.log("Verkauf online gespeichert");
+                const result = await response.json();
+                console.log(result);
+                statusfeld.innerText = "Verkauf online gespeichert";
+                console.log("Verkauf online gespeichert");
+                return true; // Erfolgreich übertragen
+                
             } catch (error) {
-            console.error("Fehler:", error);
-            speichereOfflineVerkauf(data);
-            statusfeld.innerText = "Fehler - Verkauf offline gespeichert";
-            console.log("Fehler - Verkauf offline gespeichert");
+                console.error("Fehler:", error);
+                
+                // Nur offline speichern wenn nicht während Sync-Vorgang
+                // (während Sync ist der Verkauf bereits in offlineVerkäufe)
+                if (!isSyncing) {
+                    speichereOfflineVerkauf(data);
+                    statusfeld.innerText = "Fehler - Verkauf offline gespeichert";
+                    console.log("Fehler - Verkauf offline gespeichert");
+                }
+                return false; // Fehler bei Übertragung
             }
         }
     </script>
