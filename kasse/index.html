@@ -248,7 +248,7 @@ DATENÜBERTRAGUNG
             </div>
 
             <div id="menubar">
-                <p class="zentriert" id="terminal-info-text"><b>Terminal <span id=terminal>X</span></b></p>
+                <p class="zentriert" id="terminal-info-text"><b>Terminal <span id="terminal"></span></b></p>
                     <div id="offlineFenster">
                         <p class="zentriert" id="offline-status-text"><b>System offline!</b> (<span id="offlineDS">0</span>)</p>
                     </div>
@@ -401,8 +401,13 @@ DATENÜBERTRAGUNG
 
         // Anzeigen der akteullen Terminalnummer
             if (terminal == null) {
-                terminal = "X"; // Wenn kein "Terminal" in der URL, dann X
+                if (localStorage.getItem('terminalNummer')) {
+                    terminal = localStorage.getItem('terminalNummer'); // Wenn kein "Terminal" in der URL, dann aus dem lokalen Speicher
+                } else {
+                    terminal = "X"; // Wenn kein "Terminal" in der URL und nicht im lokalen Speicher, dann X
+                }
             }
+            localStorage.setItem('terminalNummer', terminal); // Speichert die Terminalnummer im lokalen Speicher
             document.getElementById("terminal").innerText = terminal;
 
 
@@ -1549,11 +1554,10 @@ DATENÜBERTRAGUNG
 
         function loggs() {
 
-            let logsHTML = '<div class="scrollbalken" style="padding: 20px;">';
+            let logsHTML = '';
                         
                         // Log-Einträge
                         if (logs.log.length > 0) {
-                            logsHTML += '<h3>Console Logs:</h3>';
                             logs.log.forEach((entry, index) => {
                                 logsHTML += `<p><b>[${index}]</b> ${JSON.stringify(entry)}</p>`;
                             });
@@ -1578,8 +1582,7 @@ DATENÜBERTRAGUNG
                         if (logs.log.length === 0 && logs.warn.length === 0 && logs.error.length === 0) {
                             logsHTML += '<p>Keine Logs vorhanden.</p>';
                         }
-                        
-                        logsHTML += '</div>';
+
                         
                         return logsHTML;
 
@@ -1605,7 +1608,7 @@ DATENÜBERTRAGUNG
                 const cache = await caches.open(cacheName);
                 const keys = await cache.keys();
                 cacheDetails += `<p><b>${cacheName}</b>: ${keys.length} Dateien</p>`;
-                cacheDetails += '<ul class="systeminfo-cache-liste">';
+                cacheDetails += '<ul style="margin:0px;">';
                 keys.forEach(req => {
                     const url = new URL(req.url);
                     cacheDetails += `<li>${url.pathname}</li>`;
@@ -1618,6 +1621,17 @@ DATENÜBERTRAGUNG
             }
             
             html = `
+                <style>
+                    p, li, th {
+                    margin: 0px;
+                    font-size: 1.5cqw;
+                    }
+                    h2, h3 {
+                    font-size: 2cqw;
+                    font-weight: bold; 
+                    margin: 2px 0;
+                    }
+                </style>
                 <p>Terminal: <b>${terminal}</b></p>
                 <p>Version: <b>${config.Version}</b></p>
                 <p>Vereinsname: <b>${config.Vereinsname}</b></p>
