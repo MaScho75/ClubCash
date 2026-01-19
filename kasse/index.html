@@ -1268,7 +1268,7 @@ DATENÜBERTRAGUNG
                 let kunde = kunden.find(kunden => kunden.schlüssel === row.Schlüssel);
 
                 if (!kunde) {
-                return console.error("Kunde nicht gefunden für Schlüssel: " + row.Schlüssel);
+                    return console.error("Kunde nicht gefunden für Schlüssel: " + row.Schlüssel);
                 }
 
                 let tr = document.createElement("tr");
@@ -1534,11 +1534,16 @@ DATENÜBERTRAGUNG
 
             for (const verkauf of offlineVerkäufe) {
                 for (const ds of verkauf) {
+                    //finde den Kundennamen basierend auf dem Schlüssel
+                    let kunde = kunden.find(kunden => kunden.schlüssel === ds.Schlüssel);
+                    console.log(kunde);
+                    let kundeName = kunde.lastname + ", " + kunde.firstname;
+                    console.log(kundeName);
                     offlineHTML += `
                         <tr>
                             <td class="zentriert">` + ds.Datum + `</td>
                             <td class="zentriert">` + ds.Zeit + `</td>
-                            <td class="zentriert">` + ds.Kundennummer + `</td>
+                            <td class="zentriert">` + kundeName + `</td>>
                         <td>` + ds.Produkt + `</td>
                         <td class="währung">` + ds.Preis + ` €</td>
                     `;
