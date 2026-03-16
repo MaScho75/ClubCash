@@ -15,6 +15,25 @@
  * along with ClubCash. If not, see <https://www.gnu.org/licenses/>.
  */
 
+
+/* ============================================
+   NEU und unsortiert - hier werden die neuen Styles hinzugefügt
+   ============================================ */
+#alter-zaehlerstand {
+    font-size: 5cqw;
+    color: var(--error-color);
+    font-weight: bold;
+    text-align: center;
+    margin: 1cqw;
+}
+
+.abrechnungstabelle {
+    width: 100%;
+    border-spacing: 0.5cqw;
+    font-size: 2.5cqw;
+}   
+
+
 /* ============================================
    FONTS
    ============================================ */
@@ -121,8 +140,17 @@ th {
 .box_zentrieren {
     display: flex;
     justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+}
+
+.box_zentrieren_fullheight {
+    display: flex;
+    justify-content: center;
     align-items: center;
     height: 100%;
+    min-height: 100%;
 }
 
 

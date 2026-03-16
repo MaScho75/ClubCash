@@ -304,7 +304,7 @@ DATENÜBERTRAGUNG
     </div>
         
     <!-- Bildschirmschoner -->
-    <div class="box_zentrieren" id="bildschirmschoner" onclick="window.location.reload(true);">
+    <div class="box_zentrieren_fullheight" id="bildschirmschoner" onclick="window.location.reload(true);">
         <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" class="scaling-img">
         
     </div>
@@ -322,9 +322,8 @@ DATENÜBERTRAGUNG
          <p>Bitte stellen Sie die Internetverbindung her...</p>
     </div>
 
-    
 
-    <script>
+<script>
 
         // Variablen
             let warenkorb = [];
@@ -338,6 +337,9 @@ DATENÜBERTRAGUNG
             let spritt = false; // Variable für die Spritt
             let ProduktTemp = []; // Temporäre Variable für das Produkt, wenn es sich um ein Produkt mit Mengeneingabe handelt
             let isSyncing = false; // Verhindert gleichzeitige Synchronisationen
+            let zaehlerstandAlt = 0; // Variable für den alten Zählerstand bei Sprit-Produkten
+            let zaehlerstandNeu = 0; // Variable für den neuen Zählerstand bei Sprit-Produkten
+            let tankvorgang = false; // Variable, die anzeigt, ob gerade ein Tankvorgang stattfindet
 
             const display_fenster = document.getElementById("display");
             const datenfeld = document.getElementById("datenfeld");
@@ -420,11 +422,13 @@ DATENÜBERTRAGUNG
                     preisfenster.style.display = 'none'; //sollte das Preisfenster noch offen sein, wird es geschlossen
                     document.activeElement.blur(); // ist notwendig, damit nicht ein Button fokussiert bleibt und nach dem Enter eine Aktion auslöst
 
-                    produktprüfung(eingabe);
-
-                    kundenprüfung(eingabe);
-                    
-                    sonderfunktionen(eingabe);
+                    if (!tankvorgang) {
+                        console.log("kein Tankvorgang, daher normale Prüfung");
+                        produktprüfung(eingabe);
+                        sonderfunktionen(eingabe);
+                    }
+                                        
+                    kundenprüfung(eingabe);     
 
                     if (eingabe) {
                         statusfeld.innerText = "Kein Produkt und kein Kunde erkannt."
@@ -852,22 +856,141 @@ DATENÜBERTRAGUNG
             let produkt = produkte.find(produkte => produkte.EAN === EANr);
 
             if (produkt) {
-            if (produkt.Menge == "true") {
-                ProduktTemp = produkt;  // Speichert das Produkt in einer temporären Variable, um es später zu verwenden
-                warenkorbüberschrift()
-                document.getElementById("einheit").innerText = "l";
-                //eingabestopp(); 
-                //öffnet die Tastatur für die Mengeneingabe
-                tastatur.style.display = 'block';
-                statusfeld.innerHTML = "Bitte Menge für <b>&nbsp;" + produkt.Bezeichnung + "&nbsp;</b> in Litern eingeben";
-                spritt = true;
-                return
-            }
+                // Überprüfe, ob das Produkt die Eingange eines Zählerstandes erfordert
 
-            warenkorbüberschrift();
-            warenkorb.push(produkt);
-            warenkorbaddition(produkt);
-            eingabe = "";
+                if (produkt.Zählerstand > 0) {
+                    tankvorgang = true; // Setzt den Tankvorgang auf true, damit andere Funktionen wissen, dass gerade ein Tankvorgang stattfindet
+                    eingabestopp(); // Stoppt die Eingabe, damit während des Tankvorgangs keine anderen Aktionen ausgeführt werden können
+                    ProduktTemp = {...produkt};   // Speichert das Produkt in einer temporären Variable, um es später zu verwenden
+                    zaehlerstandAlt = parseFloat(produkt.Zählerstand); // Speichert den alten Zählerstand in einer Variable, um ihn später zu verwenden
+                    
+                    Bt_manuelleBuchung.style.display = 'none';
+                    Bt_preisfenster.style.display = 'none';
+                    
+                    statusfeld.innerHTML = "<b>" + produkt.Bezeichnung + "</b>";
+
+                    datenfeld.innerHTML = `
+                        <div>
+                            <h1>Zählerstand vor dem Tankvorgang</h1>
+                            <p class="zentriert" id="alter-zaehlerstand">` + zaehlerstandAlt.toFixed(2) + ` l</p>
+                            <p class="zentriert" >Ist der Zählerstand korrekt?</p>
+                            <p class="zentriert">
+                                <button id="bt-zaehlerstand-ja" style="background-color: var(--success-color);">Ja</button>
+                                <button id="bt-zaehlerstand-nein" style="background-color: var(--error-color);">Nein</button>
+                            </p>
+                            <p class="zentriert">Der Zählerstand kann abweichen, wenn das System offline ist oder war oder wenn der Zählerstand bei der letzten Buchung fehlerhaft eingegeben wurde.</p>
+                        </div>`;
+                    
+                    // Event-Listener für die Buttons programmatisch hinzufügen
+                    document.getElementById('bt-zaehlerstand-nein').addEventListener('click', altenZäherstandEingeben);
+                    document.getElementById('bt-zaehlerstand-ja').addEventListener('click', neuenZählerstandEingeben);
+                   
+                    function altenZäherstandEingeben() {
+
+                        datenfeld.innerHTML = `
+                        <div class="box_zentrieren">
+                            <h1>Bitte gebe den alten Zählerstand vor dem Tankvorgang ein.</h1>
+                        </div>`;
+
+                        tastatur.style.display = 'block';
+                        einheit.innerText = "l";
+                        document.getElementById('BT_EingabeBestätigt').onclick = function() {
+                            zaehlerstandAlt = parseFloat(zifferneingabefeld.firstChild.nodeValue);
+                            if (isNaN(zaehlerstandAlt)) {
+                                alert("Bitte einen gültigen Zählerstand eingeben.");
+                                return;
+                            }
+                            ProduktTemp.Zählerstand = zaehlerstandAlt; // Aktualisiert den Zählerstand des Produkts
+                            tastatur.style.display = 'none';
+                            zifferneingabefeld.firstChild.nodeValue = "0.00"; // Setzt die Eingabe zurück
+                            eingabestring = ""; // Setzt die Eingabe-String zurück
+                            produktprüfung(EANr); // Ruft die Produktprüfung erneut auf, um mit dem neuen Zählerstand fortzufahren
+                        };
+                    }
+
+                    function neuenZählerstandEingeben() {
+                        datenfeld.innerHTML = `
+                            <div class="box_zentrieren">
+                                <h1>Bitte gebe den neuen Zählerstand nach dem Tankvorgang ein.</h1>
+                            </div>`;
+
+                        tastatur.style.display = 'block';
+                        einheit.innerText = "l";
+                        document.getElementById('BT_EingabeBestätigt').onclick = function() {
+                            zaehlerstandNeu = parseFloat(zifferneingabefeld.firstChild.nodeValue)
+                            if (zaehlerstandNeu < zaehlerstandAlt || isNaN(zaehlerstandNeu)) {
+                                alert("Der neue Zählerstand muss größer als der alte Zählerstand sein. Bitte einen gültigen Zählerstand eingeben.");
+                                zifferneingabefeld.firstChild.nodeValue = "0.00"; // Setzt die Eingabe zurück
+                                eingabestring = ""; // Setzt die Eingabe-String zurück
+                                return;
+                            }
+   
+                            ProduktTemp.Zählerstand = zaehlerstandNeu; // Aktualisiert den Zählerstand des Produkts
+                            tastatur.style.display = 'none';
+                            zifferneingabefeld.firstChild.nodeValue = "0.00"; // Setzt die Eingabe zurück
+                            eingabestring = ""; // Setzt die Eingabe-String zurück
+                            
+                            datenfeld.display = 'block';
+                            datenfeld.innerHTML = `
+                            <div class="box_zentrieren">
+                                <h1>Abrechnung</h1>
+
+                                <table class="abrechnungstabelle" >
+
+                                    <tr>
+                                        <td class="top">Zählerstand alt</td>
+                                        <td style="text-align: right">` + zaehlerstandAlt.toFixed(2) + ` l</td>
+                                    </tr>
+                                    <tr>    
+                                        <td>Zählerstand neu</td>
+                                        <td style="text-align: right">` + zaehlerstandNeu.toFixed(2) + ` l</td>
+                                    </tr>
+                                    <tr>    
+                                        <td>getankt</td>
+                                        <td style="text-align: right"><b>` + (zaehlerstandNeu - zaehlerstandAlt).toFixed(2) + ` l</b></td>
+                                        <td style="text-align: right"><b>` + parseFloat(ProduktTemp.Preis).toFixed(2) + ` €</b></td>
+                                        <td style="text-align: right"><b>` + ((zaehlerstandNeu - zaehlerstandAlt) * parseFloat(ProduktTemp.Preis)).toFixed(2) + ` €</b></td>
+                                    </tr>
+                                </table>
+                                <p class="zentriert">Ist die Abrechnung korrekt?</p>
+                                <p class="zentriert">Zum Abrechnen bitte jetzt den Chip auflegen!</p>
+                                
+                            </div>`;
+                            
+                            ProduktTemp.Preis = ((zaehlerstandNeu - zaehlerstandAlt) * parseFloat(ProduktTemp.Preis)).toFixed(2); // Aktualisiert den Preis des Produkts basierend auf der getankten Menge
+                            ProduktTemp.Bezeichnung = ProduktTemp.Bezeichnung + " (" + (zaehlerstandNeu - zaehlerstandAlt).toFixed(2) + " l - Zählerstand: " + zaehlerstandAlt.toFixed(2) + " l -> " + zaehlerstandNeu.toFixed(2) + " l)"; // Aktualisiert die Produktbezeichnung, damit in der Abrechnung die getankte Menge und die Zählerstände ersichtlich sind
+                            produkt.Zählerstand = zaehlerstandNeu; // Aktualisiert den Zählerstand des Produkts in der Produktliste, damit bei der nächsten Buchung der neue Zählerstand als alter Zählerstand verwendet wird
+                            warenkorb.push(ProduktTemp);
+                            warenkorbaddition(ProduktTemp);
+                            summenfeld.innerText = (parseFloat(ProduktTemp.Preis)).toFixed(2) ; 
+                            
+                            // EventListener wieder aktivieren, damit Kunde den Chip scannen kann
+                            document.addEventListener("keydown", tastenkontrolle);
+                            eingabe = "";
+                        
+                        }
+                    }  
+                    
+                    return
+                
+                }    
+
+                // Überprüfen, ob das Produkt eine Mengeneingabe erfordert    
+                if (produkt.Menge == "true") {
+                    ProduktTemp = produkt;  // Speichert das Produkt in einer temporären Variable, um es später zu verwenden
+                    warenkorbüberschrift()
+                    document.getElementById("einheit").innerText = "l";
+                    //eingabestopp(); 
+                    //öffnet die Tastatur für die Mengeneingabe
+                    tastatur.style.display = 'block';
+                    statusfeld.innerHTML = "Bitte Menge für <b>&nbsp;" + produkt.Bezeichnung + "&nbsp;</b> in Litern eingeben";
+                    return  
+                }
+                
+                warenkorbüberschrift();
+                warenkorb.push(produkt);
+                warenkorbaddition(produkt);
+                eingabe = "";
             }
         }
 
@@ -985,6 +1108,7 @@ DATENÜBERTRAGUNG
         }
 
         function warenkorbaddition(produkt) {
+
             statusfeld.innerText = "Produkt dem Warenkorb hinzugefügt."
 
             summe = summe + parseFloat(produkt.Preis);
@@ -999,9 +1123,10 @@ DATENÜBERTRAGUNG
             zelle2.innerText = produkt.Preis + " €";
             zelle2.className = "rechts_groß";
             if (produkt.EAN != 9990000000000) {
-            let zelle3 = zeile.insertCell();
-            zelle3.innerHTML = "<button onclick='produktprüfung(`" + produkt.EAN + "`)' class='plus-button'>+</button>"; 
-            zelle3.className = "plus-button-zelle";}
+                let zelle3 = zeile.insertCell();
+                zelle3.innerHTML = "<button onclick='produktprüfung(`" + produkt.EAN + "`)' class='plus-button'>+</button>"; 
+                zelle3.className = "plus-button-zelle";
+            }
         }
 
         function manuell() {
@@ -1063,83 +1188,115 @@ DATENÜBERTRAGUNG
             let kunde = kunden.find(kunden => kunden.schlüssel === KundenNr); // schlüssel ist die Kundennummer
 
             if (kunde) {
-            if (!summe == 0) {
+                if (!summe == 0) {
 
-                let warenkorb2 = [];
-                let now = new Date();
-                // Manuelles Erstellen des Datums im Format YYYY-MM-DD
-                let year = now.getFullYear();
-                let month = String(now.getMonth() + 1).padStart(2, '0'); // Monat ist 0-basiert, daher +1
-                let day = String(now.getDate()).padStart(2, '0'); // Den Tag immer auf 2 Stellen auffüllen
-                let datum = `${year}-${month}-${day}`;
-                let zeit = now.toTimeString().split(" ")[0].slice(0, 5);
+                    let warenkorb2 = [];
+                    let now = new Date();
+                    // Manuelles Erstellen des Datums im Format YYYY-MM-DD
+                    let year = now.getFullYear();
+                    let month = String(now.getMonth() + 1).padStart(2, '0'); // Monat ist 0-basiert, daher +1
+                    let day = String(now.getDate()).padStart(2, '0'); // Den Tag immer auf 2 Stellen auffüllen
+                    let datum = `${year}-${month}-${day}`;
+                    let zeit = now.toTimeString().split(" ")[0].slice(0, 5);
 
-                if (!kunde.uid) {
-                kunde.uid = kunde.schlüssel; // Wenn keine Kundennummer vorhanden ist, setze den Schlüssel als Kundennummer
+                    if (!kunde.uid) {
+                    kunde.uid = kunde.schlüssel; // Wenn keine Kundennummer vorhanden ist, setze den Schlüssel als Kundennummer
+                    }
+
+                    for (ds of warenkorb) {
+                        let ds2 = {
+                            Datum: datum,
+                            Zeit: zeit,
+                            Terminal: terminal,
+                            Schlüssel: kunde.schlüssel,
+                            Kundennummer: kunde.uid,
+                            EAN: ds.EAN,
+                            Produkt: ds.Bezeichnung,
+                            Kategorie: ds.Kategorie,
+                            Preis: ds.Preis,
+                            MwSt: ds.MwSt
+                        };
+                        warenkorb2.push(ds2);
+                    }
+
+                    übertragung_umsatz(warenkorb2);
+
+                    //Zählerstand anpassen, falls es sich um einen Tankvorgang handelt
+                    if (tankvorgang) {
+
+                        let produktIndex = produkte.findIndex(p => p.EAN === ProduktTemp.EAN);
+                        if (produktIndex !== -1) {
+                            produkte[produktIndex].Zählerstand = ProduktTemp.Zählerstand; // Aktualisiert den Zählerstand des Produkts in der Hauptproduktliste
+                            // Speichere die aktualisierte Produktliste zurück auf den Server
+                            fetch('json-schreiben.php', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    data: produkte,
+                                    filename: '../daten/produkte.json'
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(result => {
+                                if (result.success) {
+                                    console.log('Produkt-JSON erfolgreich aktualisiert');
+                                } else {
+                                    console.error('Fehler beim Aktualisieren des Produkt-JSON:', result.error);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Fehler beim Aktualisieren des Produkt-JSON:', error);
+                            });
+                        }
+                    }
+
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="zentriert">
+                                <p class="warenkorb-uebertragung-text">Alle Produkte aus dem Warenkorb
+                                <br>wurden dem Kundenkonto von
+                                <br><b>` + kunde.firstname + ` ` + kunde.lastname + `</b>
+                                <br>übertragen.</p>
+                                <div id="checkmark-container">
+                                    <svg width="25cqw" height="25cqw" viewBox="0 0 100 100">
+                                    <path id="checkmark" d="M25 50 L45 70 L75 35"
+                                        stroke="#4CAF50" stroke-width="8"
+                                        fill="none"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-dasharray="100"
+                                        stroke-dashoffset="100" />
+                                    </svg>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+
+                    thead.innerHTML = "";
+
+                    eingabe = "";
+                    warenkorb = [];
+                    warenkorb2 = [];
+                    summe = 0;
+
+                    abbruch.innerText = "zurück";
+
+                    eingabestopp();
+
+                    zeigeHaken(); // Zeige Häkchenanimation an
+
+                    setTimeout(() => {
+                        window.location.reload(true); // Seite wird nach 3 Sekunden neu geladen
+                    }, 3000); 
+
+                } else {
+                    eingabe = "";
+                    statusfeld.innerText = "Kontoübersicht " + kunde.lastname + ", " + kunde.firstname;
+                    kundenkontoübersicht(KundenNr);
                 }
-
-                for (ds of warenkorb) {
-                let ds2 = {
-                    Datum: datum,
-                    Zeit: zeit,
-                    Terminal: terminal,
-                    Schlüssel: kunde.schlüssel,
-                    Kundennummer: kunde.uid,
-                    EAN: ds.EAN,
-                    Produkt: ds.Bezeichnung,
-                    Kategorie: ds.Kategorie,
-                    Preis: ds.Preis,
-                    MwSt: ds.MwSt
-                }
-                warenkorb2.push(ds2);
-                }
-
-                übertragung_umsatz(warenkorb2);
-
-                tbody.innerHTML = `
-    <tr>
-        <td colspan="3" class="zentriert">
-            <p class="warenkorb-uebertragung-text">Alle Produkte aus dem Warenkorb
-            <br>wurden dem Kundenkonto von
-            <br><b>` + kunde.firstname + ` ` + kunde.lastname + `</b>
-            <br>übertragen.</p>
-            <div id="checkmark-container">
-                <svg width="25cqw" height="25cqw" viewBox="0 0 100 100">
-                <path id="checkmark" d="M25 50 L45 70 L75 35"
-                    stroke="#4CAF50" stroke-width="8"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-dasharray="100"
-                    stroke-dashoffset="100" />
-                </svg>
-            </div>
-        </td>
-    </tr>
-`;
-
-                thead.innerHTML = "";
-
-                eingabe = "";
-                warenkorb = [];
-                warenkorb2 = [];
-                summe = 0;
-
-                abbruch.innerText = "zurück";
-
-                eingabestopp();
-
-                zeigeHaken(); // Zeige Häkchenanimation an
-
-                setTimeout(() => {
-                window.location.reload(true); // Seite wird nach 3 Sekunden neu geladen
-                }, 3000); 
-
-            } else {
-                eingabe = "";
-                statusfeld.innerText = "Kontoübersicht " + kunde.lastname + ", " + kunde.firstname;
-                kundenkontoübersicht(KundenNr);
-            }
             }
         }
 

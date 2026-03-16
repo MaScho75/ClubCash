@@ -277,6 +277,12 @@ if ($response !== false) {
         let config = <?php echo json_encode($jsonConfigDaten); ?>;
         const release = <?php echo json_encode($release); ?>;
 
+    // Definierte Spaltenreihenfolge für Produkttabellen
+        const produktKeys = ['EAN', 'Bezeichnung', 'Kategorie', 'Preis', 'MwSt', 'Bestand', 'Min', 'Zählerstand', 'Menge', 'Sortierung', 'Bemerkung'];
+    
+    // Definierte Spaltenreihenfolge für Wareneingang
+        const wareneingangKeys = ['Eingang', 'EAN', 'Menge'];
+
     // Mitglieder und externe Kunden zusammenführen    
         let käufer = MitgliederExterneZusammenführen();
     
@@ -1096,7 +1102,8 @@ if ($response !== false) {
             let editedRows = new Set();
             let newRows = new Set();
             let deletedRows = new Set();
-            let keys = Object.keys(data[0] || {});
+            // Verwende die zentral definierten Spalten für Wareneingang
+            let keys = wareneingangKeys;
 
             const tableHeader = document.getElementById("tableHeader");
             const tableBody = document.getElementById("tableBody");
@@ -1484,7 +1491,8 @@ if ($response !== false) {
             let editedRows = new Set();
             let newRows = new Set();
             let deletedRows = new Set();
-            let keys = Object.keys(data[0] || {});
+            // Verwende die zentral definierten Spalten
+            let keys = produktKeys;
             let sortColumn = '';
             let sortAscending = true;
 
@@ -1538,7 +1546,8 @@ if ($response !== false) {
                             }
                         });
                         renderTable();
-                        renderHeader();
+                        renderHeader(); 
+
                     };
                     if (key === sortColumn) {
                         th.innerText += sortAscending ? ' ▲' : ' ▼';
@@ -1553,6 +1562,7 @@ if ($response !== false) {
             function renderTable() {
                 tableBody.innerHTML = "";
                 data.forEach((item, index) => {
+                    
                     if (item.EAN == 1 || item.EAN == 9990000000000) {return;} // Essen und manuelle Buchung nicht anzeigen
 
                     const tr = document.createElement("tr");
@@ -1563,7 +1573,7 @@ if ($response !== false) {
                     keys.forEach(key => {
                         const td = document.createElement("td");
                         // Zahlenfelder rechts ausrichten
-                        if (['Bestand', 'Preis', 'Sortierung', 'MwSt', 'EAN', 'Min'].includes(key)) {
+                        if (['Bestand', 'Preis', 'Sortierung', 'MwSt', 'EAN', 'Min', "Zählerstand"].includes(key)) {
                             td.classList.add('rechts');
                         } else {
                             td.classList.add('links'); 
@@ -1590,7 +1600,8 @@ if ($response !== false) {
                             };
 
                         } else if (key === 'Bestand') {
-                            td.contentEditable = !deletedRows.has(index);
+                            // Bestand ist editierbar - Änderungen werden automatisch als Wareneingang gebucht
+                            td.contentEditable = !deletedRows.has(index); 
 
                             //Sollte kein "Min" Wert gesetzt sein, dann soll der Bestand leer sein
                             if (item.Min == 0) {
