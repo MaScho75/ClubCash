@@ -2582,6 +2582,7 @@ if ($response !== false) {
         } 
 
         let summe = 0;
+        let nettosumme = 0;
         let menu2 = "";
         let html = "";
         menu2 += `
@@ -2606,7 +2607,9 @@ if ($response !== false) {
                     <th>Zeit</th>
                     <th class="links">Kunde</th>
                     <th class="links">Produkt</th>
-                    <th class="rechts">Preis</th>
+                    <th class="rechts">Netto</th>
+                    <th class="rechts">MwSt</th>
+                    <th class="rechts">Brutto</th>
                     <th></th>
                 </tr>
 
@@ -2635,11 +2638,14 @@ if ($response !== false) {
                             <td>${verkauf.Zeit}</td>
                             <td class="links">${Kunde.lastname}, ${Kunde.firstname}</td>
                             <td class="links">${verkauf.Produkt}</td>
+                            <td class="rechts">${(verkauf.Preis/(1 + verkauf.MwSt/100)).toFixed(2)} €</td>
+                            <td class="rechts">${verkauf.MwSt} %</td>
                             <td class="rechts">${verkauf.Preis} €</td>
                             <td><a href="#" onclick="deleteVerkauf(${index})">🗑️</a></td>
                         </tr>`;
                         if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
                             summe += parseFloat(verkauf.Preis);
+                            nettosumme += parseFloat(verkauf.Preis/(1 + verkauf.MwSt/100));
                         }
                 }
             }); 
@@ -2647,7 +2653,12 @@ if ($response !== false) {
             html += `
                 <tr class="summenzeile">
                     <td colspan="5" class="rechts"><b>Summe</b></td>
+                    <td class="rechts"><b>${nettosumme.toFixed(2)} €</b></td>
+                    <td class="rechts"><b>${(summe - nettosumme).toFixed(2)} €</b></td>
                     <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
+                </tr>
+                <tr>
+                    <td colspan="9" style="text-align: left;">Die Mehrwehrsteuersätze richten sich nach den Angaben des Mehrwehrtsteuersatzes zum Zeitpunkt des Verkaufs. Abweichungen zu den Gesamtsumsätzen können daher auftreten, wenn sich die MwSt Sätze geändert haben oder falsch hinterlegt sind.</td>
                 </tr>
             </tbody></table>`;
 
@@ -2658,22 +2669,29 @@ if ($response !== false) {
                         <th>Anzahl</th>
                         <th class="links">Produkt</th>
                         <th class="links">Kategorie</th>
-                        <th class="rechts">Einzelpreis</th> 
-                        <th class="rechts">Gesamtpreis</th>
+                        <th class="rechts">Nettoeinzelpreis</th> 
+                        <th class="rechts">MwSt</th>
+                        <th class="rechts">Bruttoeinzelpreis</th>
+                        <th class="rechts">Nettosumme</th>
+                        <th class="rechts">Bruttosumme</th>
                     </tr>
                 <tbody>
             `;
 
             summe = 0;
+            bruttosumme = 0;
 
             produkte.forEach(produkt => {
                 produktsumme = 0;
                 produktanzahl = 0;
+                produktbruttosumme = 0;
+                
                 let html2 = ""; // HTML für die Produktübersicht
                 verkäufe.forEach(verkauf => {
                     if (verkauf.EAN === produkt.EAN && verkauf.Datum >= datum1.toISOString().split('T')[0] && verkauf.Datum <= datum2.toISOString().split('T')[0]) {
                         if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
                             produktsumme += parseFloat(verkauf.Preis);
+                            produktbruttosumme += parseFloat(verkauf.Preis/(1 + verkauf.MwSt/100));
                         }
                         produktanzahl++;
                     }
@@ -2686,17 +2704,30 @@ if ($response !== false) {
                         <td>${produktanzahl}</td>
                         <td class="links">${produkt.Bezeichnung}</td>
                         <td class="links">${produkt.Kategorie}</td>
+                        <td class="rechts">${(produkt.Preis/(1 + produkt.MwSt/100)).toFixed(2)} €</td>
+                        <td class="rechts">${produkt.MwSt} %</td>
                         <td class="rechts">${produkt.Preis} €</td>
+                        <td class="rechts">${(produktsumme/(1 + produkt.MwSt/100)).toFixed(2)} €</td>
                         <td class="rechts">${produktsumme.toFixed(2)} €</td>
                     </tr>`;
                 summe += produktsumme;
+                bruttosumme += produktbruttosumme;
             });
             html += `
                 <tr class="summenzeile">
-                    <td colspan="4" class="rechts"><b>Summe</b></td>
+                    <td colspan="3" class="rechts"><b>Summe</b></td>
+                    <td></td>
+                    <td class="rechts"><b>${(summe-bruttosumme).toFixed(2)} €</b></td>
+                    <td></td>
+                    <td class="rechts"><b>${bruttosumme.toFixed(2)} €</b></td>
+                      
                     <td class="rechts"><b>${summe.toFixed(2)} €</b></td>
                 </tr>
+                <tr>
+                    <td colspan="8" style="text-align: left;">Die Mehrwehrsteuersätze richten sich nach den aktuellen Angaben im Produktstamm. Abweichungen zu den Einzelumsätzen können daher auftreten, wenn sich die MwSt Sätze geändert haben oder falsch hinterlegt sind.</td>
+                </tr>
                 </table>
+                
                 `;
 
         //Tabelle3 - Übersicht nach Produktengruppen
