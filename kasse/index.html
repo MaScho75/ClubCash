@@ -338,6 +338,7 @@ DATENÜBERTRAGUNG
             let ProduktTemp = []; // Temporäre Variable für das Produkt, wenn es sich um ein Produkt mit Mengeneingabe handelt
             let isSyncing = false; // Verhindert gleichzeitige Synchronisationen
             let zaehlerstandAlt = 0; // Variable für den alten Zählerstand bei Sprit-Produkten
+            let zaehlerstandAltKorrigiert = 0; // Variable für den korrigierten alten Zählerstand bei Sprit-Produkten (nach manueller Eingabe)
             let zaehlerstandNeu = 0; // Variable für den neuen Zählerstand bei Sprit-Produkten
             let tankvorgang = false; // Variable, die anzeigt, ob gerade ein Tankvorgang stattfindet
 
@@ -862,8 +863,11 @@ DATENÜBERTRAGUNG
                     tankvorgang = true; // Setzt den Tankvorgang auf true, damit andere Funktionen wissen, dass gerade ein Tankvorgang stattfindet
                     eingabestopp(); // Stoppt die Eingabe, damit während des Tankvorgangs keine anderen Aktionen ausgeführt werden können
                     ProduktTemp = {...produkt};   // Speichert das Produkt in einer temporären Variable, um es später zu verwenden
-                    zaehlerstandAlt = parseFloat(produkt.Zählerstand); // Speichert den alten Zählerstand in einer Variable, um ihn später zu verwenden
-                    
+                    if (zaehlerstandAltKorrigiert > 0) {
+                        zaehlerstandAlt = zaehlerstandAltKorrigiert; // Wenn der alte Zählerstand bereits korrigiert wurde, verwende diesen
+                    } else {    
+                        zaehlerstandAlt = parseFloat(produkt.Zählerstand); // Speichert den alten Zählerstand in einer Variable, um ihn später zu verwenden
+                    }   
                     Bt_manuelleBuchung.style.display = 'none';
                     Bt_preisfenster.style.display = 'none';
                     
@@ -900,7 +904,7 @@ DATENÜBERTRAGUNG
                                 alert("Bitte einen gültigen Zählerstand eingeben.");
                                 return;
                             }
-                            ProduktTemp.Zählerstand = zaehlerstandAlt; // Aktualisiert den Zählerstand des Produkts
+                            zaehlerstandAltKorrigiert = zaehlerstandAlt; // Aktualisiert den Zählerstand des Produkts
                             tastatur.style.display = 'none';
                             zifferneingabefeld.firstChild.nodeValue = "0.00"; // Setzt die Eingabe zurück
                             eingabestring = ""; // Setzt die Eingabe-String zurück
