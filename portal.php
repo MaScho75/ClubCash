@@ -2666,6 +2666,7 @@ if ($response !== false) {
             html += `<hr><h2 style="display: inline;"><a id="TabellenLink2" style='text-decoration: none;' href='#' onclick='toggleTabelle("Tabelle2", "TabellenLink2")'>➡️</a> Übersicht nach Produkten</h2>
                 <table id="Tabelle2" class="portal-table" style="display: none; margin-top: 20px;">
                     <tr>
+                        <th></th>
                         <th>Anzahl</th>
                         <th class="links">Produkt</th>
                         <th class="links">Kategorie</th>
@@ -2701,6 +2702,7 @@ if ($response !== false) {
             
                 html += `
                     <tr>
+                        <td><a id="TabellenLink_${produkt.EAN}" style='text-decoration: none;' href='#' onclick='toggleTabelle2("zusatzspalte_${produkt.EAN}", "TabellenLink_${produkt.EAN}")'>➡️</a></td>
                         <td>${produktanzahl}</td>
                         <td class="links">${produkt.Bezeichnung}</td>
                         <td class="links">${produkt.Kategorie}</td>
@@ -2709,6 +2711,52 @@ if ($response !== false) {
                         <td class="rechts">${produkt.Preis} €</td>
                         <td class="rechts">${(produktsumme/(1 + produkt.MwSt/100)).toFixed(2)} €</td>
                         <td class="rechts">${produktsumme.toFixed(2)} €</td>
+                    </tr>
+                    <tr id="zusatzspalte_${produkt.EAN}" style="display: none;">
+                        <td colspan="9">
+                            <table class="portal-table" style="margin-top: 0">
+                                <tr>
+                                    <th>Datum</th>
+                                    <th>Zeit</th>
+                                    <th class="links">Kunde</th>
+                                    <th class="rechts">Netto</th>
+                                    <th class="rechts">MwSt</th>
+                                    <th class="rechts">Brutto</th>
+                                </tr>
+                            <tbody>`;
+
+                            verkäufe.forEach(verkauf => {
+                                if (verkauf.EAN === produkt.EAN && verkauf.Datum >= datum1.toISOString().split('T')[0] && verkauf.Datum <= datum2.toISOString().split('T')[0]) {
+    
+                                    Kunde = käufer.find(kunde => kunde.uid === verkauf.Kundennummer);
+    
+                                    let KNummer = String(verkauf.Kundennummer);
+    
+                                    if (!Kunde) {
+                                        console.warn(`Kunde mit UID ${verkauf.Kundennummer} nicht gefunden.`);
+                                        Kunde = {
+                                            lastname: "GELÖSCHT", // Fallback für unbekannte Kunden
+                                            firstname: KNummer  // Fallback für unbekannte Kunden
+                                        };
+                                    }
+    
+                                    html += `
+                                        <tr>
+                                            <td>${verkauf.Datum}</td>
+                                            <td>${verkauf.Zeit}</td>
+                                            <td class="links">${Kunde.lastname}, ${Kunde.firstname}</td>
+                                            <td class="rechts">${(verkauf.Preis/(1 + verkauf.MwSt/100)).toFixed(2)} €</td>
+                                            <td class="rechts">${verkauf.MwSt} %</td>
+                                            <td class="rechts">${verkauf.Preis} €</td>
+                                        </tr>`; 
+                                }
+                            }); 
+                            html += `
+                            </tbody>    
+                            </table>
+                            
+                        
+                        </td>    
                     </tr>`;
                 summe += produktsumme;
                 bruttosumme += produktbruttosumme;
@@ -2922,6 +2970,22 @@ if ($response !== false) {
         // Wenn die Tabelle ausgeblendet ist, zeige sie an und ändere das Symbol
         if (tabelle.style.display === 'none' || tabelle.style.display === '') {
             tabelle.style.display = 'table';
+            link.textContent = '⬇️';  // Symbol ändern (z.B. nach unten)
+        } 
+        // Wenn die Tabelle angezeigt wird, verstecke sie und ändere das Symbol
+        else {
+            tabelle.style.display = 'none';
+            link.textContent = '➡️';  // Symbol ändern (z.B. nach rechts)
+        }
+    }
+
+        function toggleTabelle2(tabelleId, linkId) {
+        var tabelle = document.getElementById(tabelleId);
+        var link = document.getElementById(linkId);
+        
+        // Wenn die Tabelle ausgeblendet ist, zeige sie an und ändere das Symbol
+        if (tabelle.style.display === 'none' || tabelle.style.display === '') {
+            tabelle.style.display = 'contents';
             link.textContent = '⬇️';  // Symbol ändern (z.B. nach unten)
         } 
         // Wenn die Tabelle angezeigt wird, verstecke sie und ändere das Symbol
