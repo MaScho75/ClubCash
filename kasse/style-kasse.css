@@ -73,6 +73,11 @@ p {
     font-size: 2cqw;
 }
 
+p.infortext {
+    font-size: 2.5cqw;
+    color: var(--text-color-dark);
+}
+
 a {
     text-decoration: none;
     cursor: pointer;

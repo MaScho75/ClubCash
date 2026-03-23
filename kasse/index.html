@@ -875,14 +875,14 @@ DATENÜBERTRAGUNG
 
                     datenfeld.innerHTML = `
                         <div>
-                            <h1>Zählerstand vor dem Tankvorgang</h1>
-                            <p class="zentriert" id="alter-zaehlerstand">` + zaehlerstandAlt.toFixed(2) + ` l</p>
-                            <p class="zentriert" >Ist der Zählerstand korrekt?</p>
-                            <p class="zentriert">
+                            <h2 class="zentriert">Zählerstand vor dem Tankvorgang</h2>
+                            <p id="alter-zaehlerstand">` + zaehlerstandAlt.toFixed(2) + ` l</p>
+                            <p class="zentriert infortext">Ist der Zählerstand korrekt?</p>
+                            <p class="zentriert infortext">
                                 <button id="bt-zaehlerstand-ja" style="background-color: var(--success-color);">Ja</button>
                                 <button id="bt-zaehlerstand-nein" style="background-color: var(--error-color);">Nein</button>
                             </p>
-                            <p class="zentriert">Der Zählerstand kann abweichen, wenn das System offline ist oder war oder wenn der Zählerstand bei der letzten Buchung fehlerhaft eingegeben wurde.</p>
+                            <p class="zentriert infortext">Der Zählerstand kann abweichen, wenn das System offline ist oder war oder wenn der Zählerstand bei der letzten Buchung fehlerhaft eingegeben wurde.</p>
                         </div>`;
                     
                     // Event-Listener für die Buttons programmatisch hinzufügen
@@ -893,7 +893,8 @@ DATENÜBERTRAGUNG
 
                         datenfeld.innerHTML = `
                         <div class="box_zentrieren">
-                            <h1>Bitte gebe den alten Zählerstand vor dem Tankvorgang ein.</h1>
+                            <h2 class="zentriert">Zählerstand <span style="color: var(--error-color);">ALT</span></h2>
+                            <p class="zentriert infortext">Bitte gebe den alten Zählerstand vor dem Tankvorgang ein.</p>
                         </div>`;
 
                         tastatur.style.display = 'block';
@@ -915,7 +916,8 @@ DATENÜBERTRAGUNG
                     function neuenZählerstandEingeben() {
                         datenfeld.innerHTML = `
                             <div class="box_zentrieren">
-                                <h1>Bitte gebe den neuen Zählerstand nach dem Tankvorgang ein.</h1>
+                                <h2 class="zentriert">Zählerstand <span style="color: var(--success-color);">NEU</span></h2>
+                                <p class="zentriert infortext">Bitte gebe den neuen Zählerstand nach dem Tankvorgang ein.</p>
                             </div>`;
 
                         tastatur.style.display = 'block';
@@ -930,48 +932,71 @@ DATENÜBERTRAGUNG
                             }
    
                             ProduktTemp.Zählerstand = zaehlerstandNeu; // Aktualisiert den Zählerstand des Produkts
-                            tastatur.style.display = 'none';
+                            //tastatur.style.display = 'none';
                             zifferneingabefeld.firstChild.nodeValue = "0.00"; // Setzt die Eingabe zurück
                             eingabestring = ""; // Setzt die Eingabe-String zurück
                             
-                            datenfeld.display = 'block';
                             datenfeld.innerHTML = `
-                            <div class="box_zentrieren">
-                                <h1>Abrechnung</h1>
+                                <div class="box_zentrieren">
+                                    <h2 class="zentriert">Leerlauf</h2>
+                                    <p class="zentriert infortext">Wenn es zu einem Leerlauf beim Trankprozeess kam, <br>
+                                        gebe die Mänge des Lehrlaufes ein. <br>
+                                        Andernfalls drücke erneut auf 
+                                    <p class="zentriert infortext"><b><span style="padding: 1cqw 2cqw; border-radius: 1cqw; background-color: var(--success-color);">E</span></b></p>
+                            `;
 
-                                <table class="abrechnungstabelle" >
-
-                                    <tr>
-                                        <td class="top">Zählerstand alt</td>
-                                        <td style="text-align: right">` + zaehlerstandAlt.toFixed(2) + ` l</td>
-                                    </tr>
-                                    <tr>    
-                                        <td>Zählerstand neu</td>
-                                        <td style="text-align: right">` + zaehlerstandNeu.toFixed(2) + ` l</td>
-                                    </tr>
-                                    <tr>    
-                                        <td>getankt</td>
-                                        <td style="text-align: right"><b>` + (zaehlerstandNeu - zaehlerstandAlt).toFixed(2) + ` l</b></td>
-                                        <td style="text-align: right"><b>` + parseFloat(ProduktTemp.Preis).toFixed(2) + ` €</b></td>
-                                        <td style="text-align: right"><b>` + ((zaehlerstandNeu - zaehlerstandAlt) * parseFloat(ProduktTemp.Preis)).toFixed(2) + ` €</b></td>
-                                    </tr>
-                                </table>
-                                <p class="zentriert">Ist die Abrechnung korrekt?</p>
-                                <p class="zentriert">Zum Abrechnen bitte jetzt den Chip auflegen!</p>
+                            document.getElementById('BT_EingabeBestätigt').onclick = function() {
+                                let leerlaufMenge = parseFloat(zifferneingabefeld.firstChild.nodeValue);
+                                if (isNaN(leerlaufMenge) || leerlaufMenge < 0 || leerlaufMenge > (zaehlerstandNeu - zaehlerstandAlt)) {
+                                    alert("Bitte eine gültige Leerlaufmenge eingeben. Sie muss zwischen 0 und der getankten Menge liegen.");
+                                    return;
+                                }
                                 
-                            </div>`;
-                            
-                            ProduktTemp.Preis = ((zaehlerstandNeu - zaehlerstandAlt) * parseFloat(ProduktTemp.Preis)).toFixed(2); // Aktualisiert den Preis des Produkts basierend auf der getankten Menge
-                            ProduktTemp.Bezeichnung = ProduktTemp.Bezeichnung + " (" + (zaehlerstandNeu - zaehlerstandAlt).toFixed(2) + " l - Zählerstand: " + zaehlerstandAlt.toFixed(2) + " l -> " + zaehlerstandNeu.toFixed(2) + " l)"; // Aktualisiert die Produktbezeichnung, damit in der Abrechnung die getankte Menge und die Zählerstände ersichtlich sind
-                            produkt.Zählerstand = zaehlerstandNeu; // Aktualisiert den Zählerstand des Produkts in der Produktliste, damit bei der nächsten Buchung der neue Zählerstand als alter Zählerstand verwendet wird
-                            warenkorb.push(ProduktTemp);
-                            warenkorbaddition(ProduktTemp);
-                            summenfeld.innerText = (parseFloat(ProduktTemp.Preis)).toFixed(2) ; 
-                            
-                            // EventListener wieder aktivieren, damit Kunde den Chip scannen kann
-                            document.addEventListener("keydown", tastenkontrolle);
-                            eingabe = "";
-                        
+                                tastatur.style.display = 'none';
+                                zifferneingabefeld.firstChild.nodeValue = "0.00"; // Setzt die Eingabe zurück
+                                eingabestring = ""; // Setzt die Eingabe-String zurück
+                                datenfeld.style.display = 'block';
+                                datenfeld.innerHTML = `
+                                <div class="box_zentrieren">
+                                    <h1>Abrechnung</h1>
+
+                                    <table class="abrechnungstabelle" >
+
+                                        <tr>
+                                            <td class="top">Zählerstand alt</td>
+                                            <td style="text-align: right">` + zaehlerstandAlt.toFixed(2) + ` l</td>
+                                        </tr>
+                                        <tr>    
+                                            <td>Zählerstand neu</td>
+                                            <td style="text-align: right">` + zaehlerstandNeu.toFixed(2) + ` l</td>
+                                        </tr>
+                                        <tr>    
+                                            <td>Leerlauf</td>
+                                            <td style="text-align: right">` + leerlaufMenge.toFixed(2) + ` l</td>
+                                        </tr>
+                                        <tr>    
+                                            <td>getankt</td>
+                                            <td style="text-align: right"><b>` + (zaehlerstandNeu - zaehlerstandAlt - leerlaufMenge).toFixed(2) + ` l</b></td>
+                                            <td style="text-align: right"><b>` + parseFloat(ProduktTemp.Preis).toFixed(2) + ` €</b></td>
+                                            <td style="text-align: right"><b>` + ((zaehlerstandNeu - zaehlerstandAlt - leerlaufMenge) * parseFloat(ProduktTemp.Preis)).toFixed(2) + ` €</b></td>
+                                        </tr>
+                                    </table>
+                                    <p class="zentriert infortext">Ist die Abrechnung korrekt?</p>
+                                    <p class="zentriert infortext">Zum Abrechnen bitte jetzt den Chip auflegen!</p>
+                                    
+                                </div>`;
+                                
+                                ProduktTemp.Preis = ((zaehlerstandNeu - zaehlerstandAlt - leerlaufMenge) * parseFloat(ProduktTemp.Preis)).toFixed(2); // Aktualisiert den Preis des Produkts basierend auf der getankten Menge
+                                ProduktTemp.Bezeichnung = ProduktTemp.Bezeichnung + " - " + (zaehlerstandNeu - zaehlerstandAlt - leerlaufMenge).toFixed(2) + " l <br>- Zählerstand_alt: #" + zaehlerstandAlt.toFixed(2) + " l<br>- Zählerstand_neu: #" + zaehlerstandNeu.toFixed(2) + " l<br>- Leerlauf: #" + leerlaufMenge.toFixed(2) + " l"; // Aktualisiert die Produktbezeichnung, damit in der Abrechnung die getankte Menge und die Zählerstände ersichtlich sind
+                                produkt.Zählerstand = zaehlerstandNeu; // Aktualisiert den Zählerstand des Produkts in der Produktliste, damit bei der nächsten Buchung der neue Zählerstand als alter Zählerstand verwendet wird
+                                warenkorb.push(ProduktTemp);
+                                warenkorbaddition(ProduktTemp);
+                                summenfeld.innerText = (parseFloat(ProduktTemp.Preis)).toFixed(2) ; 
+                                
+                                // EventListener wieder aktivieren, damit Kunde den Chip scannen kann
+                                document.addEventListener("keydown", tastenkontrolle);
+                                eingabe = "";
+                            }
                         }
                     }  
                     
