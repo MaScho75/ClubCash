@@ -2699,7 +2699,7 @@ if ($response !== false) {
                 });
                 
                 if (produktanzahl === 0) return; // Wenn keine Verkäufe für dieses Produkt, überspringen
-            
+         
                 html += `
                     <tr>
                         <td><a id="TabellenLink_${produkt.EAN}" style='text-decoration: none;' href='#' onclick='toggleTabelle2("zusatzspalte_${produkt.EAN}", "TabellenLink_${produkt.EAN}")'>➡️</a></td>
@@ -2712,10 +2712,125 @@ if ($response !== false) {
                         <td class="rechts">${(produktsumme/(1 + produkt.MwSt/100)).toFixed(2)} €</td>
                         <td class="rechts">${produktsumme.toFixed(2)} €</td>
                     </tr>
-                    <tr id="zusatzspalte_${produkt.EAN}" style="display: none;">
+                `;
+
+                //sollte es sich um Treibstoff handeln, wird eine besondereDetailansicht mit den Zählerständen und Verbräuchen angezeigt
+                if (produkt.Zählerstand>0) { 
+                    let Zählerstand_alt = 0;
+                    let Zählerstand_neu = 0;    
+                    let Leerlauf = 0;
+                    let Verbrauch = 0;
+                    let Leerlauf_summe = 0;
+                    let Verbrauch_summe = 0;
+                    let brutto_summe = 0;
+                    let netto_summe = 0;
+                    let Zählerstand_kontrolle = 0;
+
+                    html += `
+                        <tr id="zusatzspalte_${produkt.EAN}" style="display: none;">
+                            <td colspan="9">
+                                <table class="portal-table" style="margin-top: 0">
+                                    <tr>
+                                        <th>T</th>
+                                        <th>Datum</th>
+                                        <th>Zeit</th>
+                                        <th class="links">Kunde</th>
+                                        <th class="rechts">Zählerstand_alt</th>
+                                        <th class="rechts">Zählerstand_neu</th>
+                                        <th class="rechts">Leerlauf</th>
+                                        <th class="rechts">Verbrauch</th>
+                                        <th class="rechts">Netto</th>
+                                        <th class="rechts">MwSt</th>
+                                        <th class="rechts">Brutto</th>
+                                    </tr>
+                                    <tbody>`;
+                                    verkäufe.forEach(verkauf => {
+                                        if (verkauf.EAN === produkt.EAN && verkauf.Datum >= datum1.toISOString().split('T')[0] && verkauf.Datum <= datum2.toISOString().split('T')[0]) {
+                    
+                                            Kunde = käufer.find(kunde => kunde.uid === verkauf.Kundennummer);
+                    
+                                            let KNummer = String(verkauf.Kundennummer);
+                    
+                                            if (!Kunde) {
+                                                console.warn(`Kunde mit UID ${verkauf.Kundennummer} nicht gefunden.`);
+                                                Kunde = {
+                                                    lastname: "GELÖSCHT", // Fallback für unbekannte Kunden
+                                                    firstname: KNummer  // Fallback für unbekannte Kunden
+                                                };
+                                            }
+
+                                            // Zählerstände und Verbrauch auslesen und berechnen
+                                            Zählerstand_alt = verkauf.Produkt || 0;
+
+                                            //Lese verkauf.Produkt den ersten Wert hintet dem 1. # bis zur ersten Leerstelle als Zählerstand_alt enthält
+                                            if (verkauf.Produkt.includes("#")) { // Auftrag: prüfen, ob if überhaupt nötig ist!
+                                                Zählerstand_alt = verkauf.Produkt.split("#")[1].split(" ")[0] || 0;
+                                            }
+                                            //Lese verkauf.Produkt den ersten Wert hinter dem 2. # bis zur ersten Leerstelle als Zählerstand_neu enthält
+                                            Zählerstand_neu = verkauf.Produkt.split("#")[2]?.split(" ")[0] || 0;
+
+                                            //Lese verkauf.Produkt den ersten Wert hinter dem 3. # bis zur ersten Leerstelle als Leerlauf enthält
+                                            Leerlauf = verkauf.Produkt.split("#")[3]?.split(" ")[0] || 0;
+                                            Leerlauf_summe += parseFloat(Leerlauf);
+                                            
+                                            //Berechne Verbrauch als Differenz zwischen Zählerstand_neu und Zählerstand_alt minus Leerlauf
+                                            Verbrauch = Zählerstand_neu - Zählerstand_alt - Leerlauf || 0; 
+                                            Verbrauch_summe += parseFloat(Verbrauch);   
+                                            
+                                            netto_summe += parseFloat(verkauf.Preis/(1 + verkauf.MwSt/100));
+                                            brutto_summe += parseFloat(verkauf.Preis);
+                    
+                                            html += `
+                                                <tr>
+                                                    <td>${verkauf.Terminal}</td>
+                                                    <td>${verkauf.Datum}</td>
+                                                    <td>${verkauf.Zeit}</td>
+                                                    <td class="links">${Kunde.lastname}, ${Kunde.firstname}</td>
+                                                    <td class="rechts">`
+
+
+                                            console.log("Zählerstand_kontrolle: " + Zählerstand_kontrolle);        
+                                            if (Zählerstand_kontrolle == Zählerstand_alt||Zählerstand_kontrolle == 0) {
+                                                html += `${Zählerstand_alt} l</td>`;
+                                            } else {
+                                                html += `<mark>${Zählerstand_alt} l</mark></td>`;
+                                            }
+
+                                            Zählerstand_kontrolle = Zählerstand_neu;
+
+                                            html += `
+                                                    <td class="rechts">${Zählerstand_neu} l</td>
+                                                    <td class="rechts">${Leerlauf} l</td>
+                                                    <td class="rechts">${Verbrauch.toFixed(2)} l</td> 
+                                                    <td class="rechts">${(verkauf.Preis/(1 + verkauf.MwSt/100)).toFixed(2)} €</td>
+                                                    <td class="rechts">${verkauf.MwSt} %</td>
+                                                    <td class="rechts">${verkauf.Preis} €</td>
+                                                </tr>`; 
+                                        }
+                                    }); 
+
+                                    html += `
+                                        <tr class="summenzeile">
+                                            <td colspan="6" class="rechts"><b>Summe</b></td>
+                                            <td class="rechts"><b>${Leerlauf_summe.toFixed(2)} l</b></td>
+                                            <td class="rechts"><b>${Verbrauch_summe.toFixed(2)} l</b></td>
+                                            <td class="rechts"><b>${netto_summe.toFixed(2)} €</b></td>
+                                            <td></td>
+                                            <td class="rechts"><b>${brutto_summe.toFixed(2)} €</b></td>
+                                        </tr>
+                                    </tbody>
+                                    </table>
+                            </td>
+                        </tr>`;
+                }
+                
+                // Sollte es sich nicht um Treibstoff handeln, wird eine normale Detailansicht mit den Einzelumsätzen angezeigt
+                else  {
+                    html += `<tr id="zusatzspalte_${produkt.EAN}" style="display: none;">
                         <td colspan="9">
                             <table class="portal-table" style="margin-top: 0">
                                 <tr>
+                                    <th>T</th>
                                     <th>Datum</th>
                                     <th>Zeit</th>
                                     <th class="links">Kunde</th>
@@ -2742,6 +2857,7 @@ if ($response !== false) {
     
                                     html += `
                                         <tr>
+                                            <td>${verkauf.Terminal}</td>
                                             <td>${verkauf.Datum}</td>
                                             <td>${verkauf.Zeit}</td>
                                             <td class="links">${Kunde.lastname}, ${Kunde.firstname}</td>
@@ -2760,10 +2876,11 @@ if ($response !== false) {
                     </tr>`;
                 summe += produktsumme;
                 bruttosumme += produktbruttosumme;
+                }
             });
             html += `
                 <tr class="summenzeile">
-                    <td colspan="3" class="rechts"><b>Summe</b></td>
+                    <td colspan="4" class="rechts"><b>Summe</b></td>
                     <td></td>
                     <td class="rechts"><b>${(summe-bruttosumme).toFixed(2)} €</b></td>
                     <td></td>
@@ -2979,7 +3096,7 @@ if ($response !== false) {
         }
     }
 
-        function toggleTabelle2(tabelleId, linkId) {
+    function toggleTabelle2(tabelleId, linkId) {
         var tabelle = document.getElementById(tabelleId);
         var link = document.getElementById(linkId);
         
