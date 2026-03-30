@@ -1324,6 +1324,7 @@ DATENÜBERTRAGUNG
                 } else {
                     eingabe = "";
                     statusfeld.innerText = "Kontoübersicht " + kunde.lastname + ", " + kunde.firstname;
+                   
                     kundenkontoübersicht(KundenNr);
                 }
             }
@@ -1331,6 +1332,38 @@ DATENÜBERTRAGUNG
 
         async function kundenkontoübersicht(Schlüsselnummer) {
             document.getElementById('abbruch').innerText="zurück";
+
+            //es soll in dem Elemnt div#menubar ein weiterer button ercheinen mit der Aufschrift "Tankstelle" 
+            let menubar = document.getElementById('menubar');
+            if (menubar) {
+                let tankstelleButton = document.createElement('button');
+                tankstelleButton.innerText = "Tankstelle";
+                tankstelleButton.onclick = () => {
+                    //Bein Klick auf den Button soll mit "tanken_qr_code.php" in dem Element warenkorbdatellen ein QR-Code angezeigt werden, der mit der Tankstelle verbunden ist, damit der Kunde an der Tankstelle bezahlen kann.
+                    // vergleichbar mit der TankstellenQRCode(ID) Funktion aus dem Onlineportal, aber angepasst für die Kassenumgebung.
+                    datenfeld.innerHTML = `<div class="box_zentrieren"><h1>Mit folgendem QR-Code kannst du an der Tankstelle den Tankvorgang buchen.</h1><div id="tankstelle_qr_code" style="margin-top: 20px;"></div></div>`;
+                    fetch("../tanken_qr_code.php?ID=" + encodeURIComponent(Schlüsselnummer))
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error("HTTP " + response.status + " " + response.statusText);
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        document.getElementById("tankstelle_qr_code").innerHTML = html;
+                        let qrPrintButton = document.getElementById("QRprintButton");
+                        if (qrPrintButton) {
+                            qrPrintButton.style.display = "none";
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById("tankstelle_qr_code").innerHTML = `<p class="zentriert error">Fehler beim Laden des QR-Codes: ${error.message}</p>`;
+                    });
+                    
+                };
+                menubar.appendChild(tankstelleButton);
+            }
+
             eingabestopp();
 
             if (!isOnline) {    

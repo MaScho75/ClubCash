@@ -143,6 +143,7 @@ if ($response !== false) {
         <li><a href="" onclick="location.reload()">Programminfo</a></li>
         <li><a href="#" onclick="Kundenübersicht(angemeldetesMitglied.uid)">Übersicht</a></li>
         <li><a href="#" onclick="OnlineBuchung(angemeldetesMitglied.uid)">Buchung</a></li>
+        <li><a href="#" onclick="TankstellenQRCode()">Tankstelle</a></li>
         <li><a href="logout.php">Abmelden</a></li>
       </ul>
     </li>   
@@ -2237,11 +2238,12 @@ if ($response !== false) {
 
         html += `
 
-            <button class="kleinerBt" onclick="AbrechnungErstellen('${kunde.uid}', '${datum1}', '${datum2}')" style="margin-left: 10px;">Abrechnung</button>
+            <button class="kleinerBt" onclick="RechnungErstellen('${kunde.uid}', '${datum1}', '${datum2}')" style="margin-left: 10px;">Abrechnung</button>
             <button class="kleinerBt" onclick="Emailrechnung('${kunde.uid}', '${datum1}', '${datum2}'); alert('Email wurde gesendet.');" style="margin-left: 10px;">@ Abrechnung</button>
                 `;
         if (angemeldetesMitglied.cc_admin == true) {
             html += `<button class="kleinerBt" onclick="MitgliederAusweise('${kunde.schlüssel}')" style="margin-left: 10px;">Bezahlkarte</button>
+            <button class="kleinerBt" onclick="TankstellenQRCode('${kunde.schlüssel}')" style="margin-left: 10px;">QR-Code</button>
             <button class="kleinerBt" style="width: auto;" onclick="KontoAusgleichen('${kunde.uid}', ${kunde.Kontostand})" style="margin-left: 10px;">Konto ausgleichen</button>
             <button class="kleinerBt" style="width: auto;" onclick="OnlineBuchung('${kunde.uid}')" style="margin-left: 10px;">Buchung hinzufügen</button>`
             ;
@@ -4346,6 +4348,47 @@ if ($response !== false) {
 
         sendeNächsteEmail();
     }
+
+function TankstellenQRCode(ID) {
+    if (!ID) {
+        // aktuelle Schlüsselnummer des angemeldeten Benutzers verwenden
+        if (angemeldetesMitglied) {
+            const keyField = (config && typeof config.schlüssel === 'string') ? config.schlüssel : '';
+            ID = (keyField && angemeldetesMitglied[keyField])
+                ? angemeldetesMitglied[keyField]
+                : (angemeldetesMitglied.schlüssel || angemeldetesMitglied.Schlüssel || '');
+        }
+
+        if (!ID) {
+            alert("Fehler: Keine Schlüsselnummer für den aktuellen Benutzer gefunden.");
+            return;
+        } else {
+            ID = String(ID).trim();
+        }
+
+        if (!ID) {
+            alert("Fehler: Keine gültige Schlüsselnummer für den aktuellen Benutzer gefunden.");
+            return;
+        }
+
+        if (angemeldetesMitglied && !angemeldetesMitglied[config.schlüssel] && angemeldetesMitglied.schlüssel) {
+            console.warn(`Hinweis: config.schlüssel='${config.schlüssel}' nicht im Benutzerobjekt gefunden, Fallback 'schlüssel' verwendet.`);
+        }
+    }
+    portalmenu2.innerHTML = "<h2 style='display: inline;'>ClubCash Tankstelle</h2>";
+    portalInhalt.innerHTML = "<p>Bitte warten, der QR-Code wird generiert...</p>";
+
+    // AJAX request to get QR code
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "tanken_qr_code.php?ID=" + encodeURIComponent(ID), true);
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            portalInhalt.innerHTML = xhr.responseText;
+        }
+    };
+    xhr.send();
+}
+
 
 </script>
 </body>
