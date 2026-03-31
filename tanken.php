@@ -71,7 +71,7 @@ $selectedTank = $_POST['tank'] ?? '';
 
         <h1>ClubCash Tankstelle</h1>
         
-        <p>Kunde</p>
+        <p><b>Kunde</b></p>
         <input type="text" id="kundenid_input" name="kundenid" required>
         <p id="KundenName">unbekannt</p>
 
