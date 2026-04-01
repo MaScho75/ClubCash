@@ -2739,7 +2739,7 @@ if ($response !== false) {
                                         <th class="links">Kunde</th>
                                         <th class="rechts">Zählerstand_alt</th>
                                         <th class="rechts">Zählerstand_neu</th>
-                                        <th class="rechts">Leerlauf</th>
+                                        <th class="rechts">Umpumpen</th>
                                         <th class="rechts">Verbrauch</th>
                                         <th class="rechts">Netto</th>
                                         <th class="rechts">MwSt</th>
@@ -3605,6 +3605,11 @@ if ($response !== false) {
                         <input type="password" id="kassenpw2" value="" class="inputfeld">
                         <p class="beschreibung">Bitte des Passwort wiederholen.</p>  
 
+                        <!-- Strichcode Generator für Passwort -->
+                        <label></label>
+                        <button id="generatePw" class="kleinerBt" onclick="generateStrichcode()">Barcode</button>
+                        <p class="beschreibung">Aus dem vorhandenen Passwort wird ein Barcode generiert, der für die Authentifizierung im Kassenmodul verwendet wird.</p>
+
                 <!-- Vereinsinformationen -->
                     <p class="formularunterüberschrift">Vereinsinformationen</p>
 
@@ -3896,7 +3901,7 @@ if ($response !== false) {
                 const response = await fetch('generate_htpasswd.php', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
                     },
                     body: 'password=' + encodeURIComponent(password)
                 });
@@ -4387,6 +4392,196 @@ function TankstellenQRCode(ID) {
         }
     };
     xhr.send();
+}
+
+function generateStrichcode() { 
+    const pw1 = document.getElementById('kassenpw1').value;
+    const pw2 = document.getElementById('kassenpw2').value;
+
+    if (!pw1) {
+        alert("Bitte geben Sie zuerst ein Passwort ein, um den Strichcode zu generieren.");
+        return;
+    }
+
+    const minLength = 12;
+    const hasLowerCase = /[a-z]/.test(pw1);
+    const hasUpperCase = /[A-Z]/.test(pw1);
+    const hasNumber = /[0-9]/.test(pw1);
+    const isValidFormat = pw1.length >= minLength && hasLowerCase && hasUpperCase && hasNumber;
+
+    if (!pw2 || pw1 !== pw2) {
+        alert("Bitte geben Sie das Passwort identisch in beide Passwortfelder ein.");
+        return;
+    }
+
+    if (!isValidFormat) {
+        alert("Das Passwort muss mindestens 12 Zeichen lang sein sowie einen Großbuchstaben, einen Kleinbuchstaben und eine Ziffer enthalten.");
+        return;
+    }
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "generate_strichcode.php", true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState !== 4) {
+            return;
+        }
+
+        if (xhr.status === 200) {
+            try {
+                const response = JSON.parse(xhr.responseText);
+                if (response.strichcodeHtml) {
+                    portalmenu2.innerHTML = "<h2 style='display: inline;'>Passwort-Strichcode</h2>";
+                    portalInhalt.innerHTML = `
+                        <h3>Sicherheitscode Kassenmodul</h3>
+                        <p>Der Barcode kann ausgedruckt und mit dem Scanner im Kassenmodul verwendet werden.</p>
+                        ${response.strichcodeHtml}
+                        <br>
+                        <button class="kleinerBt no-print" onclick="BarCodePrint()">Drucken</button>
+                    `;
+                } else if (response.error) {
+                    alert("Fehler: " + response.error);
+                } else {
+                    alert("Unbekannter Fehler bei der Barcode-Generierung.");
+                }
+            } catch (error) {
+                console.error("Fehler beim Verarbeiten der Antwort:", error);
+                alert("Die Antwort des Barcode-Generators konnte nicht verarbeitet werden.");
+            }
+        } else {
+            console.error("Fehler bei der Barcode-Generierung:", xhr.status, xhr.responseText);
+            alert("Der Barcode konnte nicht erzeugt werden. Bitte versuchen Sie es erneut.");
+        }
+    };
+    xhr.send("password=" + encodeURIComponent(pw1));
+}
+
+async function BarCodePrint() {
+    const barcodeContainer = document.getElementById('strichcodeContainer');
+
+    if (!barcodeContainer) {
+        alert("Es ist kein Barcode zum Drucken vorhanden.");
+        return;
+    }
+
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+
+    if (!printWindow) {
+        alert("Das Druckfenster konnte nicht geoeffnet werden. Bitte Pop-up-Blocker pruefen.");
+        return;
+    }
+
+    const barcodeFontUrl = new URL('grafik/LibreBarcode39-Regular.ttf', window.location.href).href;
+    let embeddedBarcodeFont = '';
+
+    try {
+        const fontResponse = await fetch(barcodeFontUrl, { cache: 'force-cache' });
+        if (!fontResponse.ok) {
+            throw new Error(`HTTP ${fontResponse.status}`);
+        }
+
+        const fontBlob = await fontResponse.blob();
+        embeddedBarcodeFont = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(fontBlob);
+        });
+    } catch (error) {
+        console.error("Barcode-Schrift konnte nicht eingebettet werden:", error);
+        printWindow.close();
+        alert("Die Barcode-Schrift konnte nicht geladen werden. Der Druck wurde abgebrochen, damit der Strichcode nicht als Text ausgegeben wird.");
+        return;
+    }
+
+    const printHtml = `
+        <!DOCTYPE html>
+        <html lang="de">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>ClubCash Barcode Druck</title>
+            <style>
+                @font-face {
+                    font-family: '3-of-9';
+                    src: url('${embeddedBarcodeFont}') format('truetype');
+                    font-display: swap;
+                }
+
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 0;
+                    padding: 24px;
+                    background: #ffffff;
+                    color: #000000;
+                }
+
+                .print-wrapper {
+                    display: flex;
+                    justify-content: center;
+                    align-items: flex-start;
+                }
+
+                .print-actions {
+                    margin-bottom: 20px;
+                    text-align: center;
+                }
+
+                .print-button {
+                    padding: 10px 18px;
+                    border: 1px solid #999999;
+                    border-radius: 8px;
+                    background: #f5f5f5;
+                    color: #000000;
+                    cursor: pointer;
+                    font-size: 16px;
+                }
+
+                .barcode {
+                    font-family: '3-of-9', 'Courier New', monospace;
+                    font-size: 4em;
+                    line-height: 1.1;
+                    white-space: nowrap;
+                }
+
+                #strichcodeContainer {
+                    background: #ffffff;
+                    color: #000000;
+                    padding: 24px;
+                    border: 1px solid #d7d7d7;
+                    border-radius: 12px;
+                    display: inline-block;
+                }
+
+                @media print {
+                    .print-actions {
+                        display: none;
+                    }
+
+                    body {
+                        padding: 0;
+                    }
+
+                    .print-wrapper {
+                        justify-content: flex-start;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="print-actions">
+                <button class="print-button" onclick="window.print()">Drucken</button>
+            </div>
+            <div class="print-wrapper">
+                ${barcodeContainer.outerHTML}
+            </div>
+        </body>
+        </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(printHtml);
+    printWindow.document.close();
 }
 
 

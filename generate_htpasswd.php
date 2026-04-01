@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 /*
  * This file is part of ClubCash.
@@ -17,7 +18,9 @@
  * along with ClubCash. If not, see <https://www.gnu.org/licenses/>.
  */
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
+
+require_once __DIR__ . '/kasse/auth.php';
 
 // Passwort empfangen
 if (!isset($_POST['password']) || empty($_POST['password'])) {
@@ -25,68 +28,21 @@ if (!isset($_POST['password']) || empty($_POST['password'])) {
     exit;
 }
 
-$password = $_POST['password'];
+$password = (string)$_POST['password'];
 
-// Hash erzeugen mit Apache-kompatibler MD5-Implementierung
-$hash = apache_md5($password);
+// Hash erzeugen mit identischer APR1-Logik wie im Kassen-Login
+$hash = apacheApr1Hash($password, randomApr1Salt());
 
 // Rückgabe als JSON
 echo json_encode(['htpasswd' => $hash]);
 exit;
 
-// -----------------------------------
-// Eigene Apache MD5 (APR1) Funktion
-function apache_md5($plainTextPassword, $salt = null) {
-    $salt = $salt ?: substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"), 0, 8);
-
-    $magic = '$apr1$';
-    $salt = substr($salt, 0, 8);
-
-    $len = strlen($plainTextPassword);
-    $text = $plainTextPassword . $magic . $salt;
-
-    $bin = pack('H32', md5($plainTextPassword . $salt . $plainTextPassword));
-    for ($i = $len; $i > 0; $i -= 16) {
-        $text .= substr($bin, 0, min(16, $i));
+function randomApr1Salt(): string
+{
+    $chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    $salt = '';
+    for ($i = 0; $i < 8; $i++) {
+        $salt .= $chars[random_int(0, strlen($chars) - 1)];
     }
-
-    for ($i = $len; $i > 0; $i >>= 1) {
-        $text .= ($i & 1) ? "\0" : $plainTextPassword[0];
-    }
-
-    $bin = md5_bin($text);
-
-    for ($i = 0; $i < 1000; $i++) {
-        $new = ($i & 1) ? $plainTextPassword : $bin;
-        if ($i % 3) $new .= $salt;
-        if ($i % 7) $new .= $plainTextPassword;
-        $new .= ($i & 1) ? $bin : $plainTextPassword;
-        $bin = md5_bin($new);
-    }
-
-    $final = $bin;
-
-    $passwd = '';
-    $passwd .= to64((ord($final[0]) << 16) | (ord($final[6]) << 8) | ord($final[12]), 4);
-    $passwd .= to64((ord($final[1]) << 16) | (ord($final[7]) << 8) | ord($final[13]), 4);
-    $passwd .= to64((ord($final[2]) << 16) | (ord($final[8]) << 8) | ord($final[14]), 4);
-    $passwd .= to64((ord($final[3]) << 16) | (ord($final[9]) << 8) | ord($final[15]), 4);
-    $passwd .= to64((ord($final[4]) << 16) | (ord($final[10]) << 8) | ord($final[5]), 4);
-    $passwd .= to64(ord($final[11]), 2);
-
-    return $magic . $salt . '$' . $passwd;
-}
-
-function to64($v, $n) {
-    $itoa64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-    $ret = '';
-    while (--$n >= 0) {
-        $ret .= $itoa64[$v & 0x3f];
-        $v >>= 6;
-    }
-    return $ret;
-}
-
-function md5_bin($str) {
-    return pack('H32', md5($str));
+    return $salt;
 }

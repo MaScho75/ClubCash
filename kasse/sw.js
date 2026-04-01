@@ -1,4 +1,4 @@
-/*
+﻿/*
  * This file is part of ClubCash.
  *
  * ClubCash is free software: you can redistribute it and/or modify
@@ -15,13 +15,14 @@
  * along with ClubCash. If not, see <https://www.gnu.org/licenses/>.
  */
 
-const CACHE_NAME = 'clubcash-v1.3.3';
+const CACHE_NAME = 'clubcash-v1.3.7';
 const ASSETS = [
   './',
   './index.html',
+  './login.php',
+  './config-public.php',
   './style-kasse.css',
   '../farben.css',
-  '../daten/config.json',
   '../daten/produkte.json',
   '../daten/kunden.json',
   '../daten/externe.json',
@@ -31,17 +32,31 @@ const ASSETS = [
   '../grafik/ClubCashLogo-gelbblauweiss.svg'
 ];
 
-// Installation: Cache alle benötigten Dateien
+// Installation: Cache needed files (fault tolerant)
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(ASSETS);
+    caches.open(CACHE_NAME).then(async cache => {
+      const absoluteAssets = ASSETS.map(asset => new URL(asset, self.registration.scope).href);
+      await Promise.allSettled(
+        absoluteAssets.map(async assetUrl => {
+          try {
+            const request = new Request(assetUrl, { cache: 'reload' });
+            const response = await fetch(request);
+            if (!response || !response.ok) {
+              throw new Error(`HTTP ${response ? response.status : 'no-response'}`);
+            }
+            await cache.put(request, response.clone());
+          } catch (error) {
+            console.warn('[SW] Precache failed for asset:', assetUrl, error);
+          }
+        })
+      );
     })
   );
 });
 
-// Aktivierung: Lösche alte Caches
+// Activation: delete old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => {
@@ -52,25 +67,61 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch: Network First, dann Cache
+// Fetch: Network First, then Cache
 self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        // Bei erfolgreicher Antwort: Cache aktualisieren
-        if (response && response.ok && event.request.method === 'GET') {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseClone);
+    (async () => {
+      // Navigations-Requests: Offline-Reload robust machen
+      if (event.request.mode === 'navigate') {
+        try {
+          const networkResponse = await fetch(event.request);
+          if (networkResponse && networkResponse.ok && !networkResponse.redirected) {
+            const cache = await caches.open(CACHE_NAME);
+            await cache.put(event.request, networkResponse.clone());
+          }
+          return networkResponse;
+        } catch {
+          const indexHtmlUrl = new URL('./index.html', self.registration.scope).href;
+          const cachedIndexHtml = await caches.match(indexHtmlUrl);
+          if (cachedIndexHtml) return cachedIndexHtml;
+
+          const cachedNavigation = await caches.match(event.request);
+          if (cachedNavigation) return cachedNavigation;
+
+          const rootUrl = new URL('./', self.registration.scope).href;
+          const cachedRoot = await caches.match(rootUrl);
+          if (cachedRoot) return cachedRoot;
+
+          return new Response('Offline and no cached page available.', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: { 'Content-Type': 'text/plain; charset=UTF-8' }
           });
         }
+      }
+
+      // Sonstige GET-Requests
+      try {
+        const response = await fetch(event.request);
+        if (response && response.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(event.request, response.clone());
+        }
         return response;
-      })
-      .catch(() => {
-        // Bei Fehler: Aus Cache laden
-        return caches.match(event.request).then(cached => {
-          return cached || caches.match('./index.html');
+      } catch {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+
+        return new Response('Offline and no cached resource available.', {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: { 'Content-Type': 'text/plain; charset=UTF-8' }
         });
-      })
+      }
+    })()
   );
 });

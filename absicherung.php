@@ -43,77 +43,19 @@ if (is_dir($path)) {
     echo "<p>❌ Verzeichnis existiert nicht: $path</p>";
 }
 
-//***kasse mit .htaccess absichern.
+//***daten auf 700 setzten:
+$path = __DIR__ . '/daten';
 
-$kasseDir = __DIR__ . '/kasse';
+if (is_dir($path)) {
+    if (chmod($path, 0700)) {
+        echo "<p>✅ Berechtigung erfolgreich auf 0700 gesetzt für: $path</p>"; 
+    } else {
+        echo "<p>❌ Konnte Berechtigung nicht ändern für: $path</p>";
+    }
+} else {
+    echo "<p>❌ Verzeichnis existiert nicht: $path</p>";
+}
 
-// .htaccess schreiben - mit Service Worker Unterstützung
-$htaccess = <<<HT
-# Ensure JavaScript files are served with correct MIME type
-<IfModule mod_mime.c>
-    AddType text/javascript .js
-    AddType application/json .json
-</IfModule>
-
-# Enable necessary headers
-<IfModule mod_headers.c>
-    # Service Worker specific headers
-    <FilesMatch "\.(js)$">
-        Header set Service-Worker-Allowed "/"
-        Header set Cache-Control "no-cache, no-store, must-revalidate"
-        Header set Pragma "no-cache"
-        Header set Expires "0"
-    </FilesMatch>
-</IfModule>
-
-# Disable caching for service worker files
-<FilesMatch "^sw.*\.js$">
-    <IfModule mod_headers.c>
-        Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
-        Header set Pragma "no-cache"
-        Header set Expires "0"
-    </IfModule>
-</FilesMatch>
-
-# Passwortschutz
-AuthType Basic
-AuthName "Geschützter Bereich"
-AuthUserFile {$kasseDir}/.htpasswd
-Require valid-user
-HT;
-
-file_put_contents($kasseDir . '/.htaccess', $htaccess);
-
-// Benutzer und Passwort
-$user = 'kasse';
-
-// .htpasswd schreiben
-
-file_put_contents($kasseDir . '/.htpasswd', $user . ':' . $jsonConfigDaten['kassenpw'] . "\n");
-
-echo "<p>✅ Verzeichnis /kasse wurde durch .htaccess gesichert (inkl. Service Worker Konfiguration).</p>";
-
-//***daten mit .htaccess absichern.
-
-$datenDir = __DIR__ . '/daten';
-
-// .htaccess schreiben
-$htaccess = <<<HT
-AuthType Basic
-AuthName "Geschützter Bereich"
-AuthUserFile {$datenDir}/.htpasswd
-Require valid-user
-HT;
-
-file_put_contents($datenDir . '/.htaccess', $htaccess);
-
-// Benutzer und Passwort
-$user = 'kasse';
-
-// .htpasswd schreiben
-file_put_contents($datenDir . '/.htpasswd', $user . ':' . $jsonConfigDaten['kassenpw'] . "\n");
-
-echo "<p>✅ Verzeichnis /daten wurde durch .htaccess gesichert.</p>";
 
 ?>
 

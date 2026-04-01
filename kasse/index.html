@@ -413,6 +413,12 @@ DATENÜBERTRAGUNG
             localStorage.setItem('terminalNummer', terminal); // Speichert die Terminalnummer im lokalen Speicher
             document.getElementById("terminal").innerText = terminal;
 
+            // Workaround: Query-Parameter aus der URL entfernen (stabilerer Offline-Start in Chromium)
+            if (urlParams.has("terminal")) {
+                const cleanUrl = window.location.origin + window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+            }
+
 
         // Eingabekontrolle - Eventhandler
             let tastenkontrolle = function(event) {
@@ -453,7 +459,7 @@ DATENÜBERTRAGUNG
             Promise.all([
                     loadJSON("../daten/produkte.json"), 
                     loadJSON("../daten/kunden.json"),
-                    loadJSON("../daten/config.json"),
+                    loadJSON("config-public.php"),
                     loadJSON("../daten/externe.json"),
                     initializeServiceWorker()
                 ])
@@ -488,6 +494,8 @@ DATENÜBERTRAGUNG
                 })
                 .catch(error => {
                 console.error("Error loading data:", error);
+                preloader.style.display = "none";
+                statusfeld.innerText = "Offline-Start fehlgeschlagen: lokale Daten unvollstaendig.";
                 });    
 
 
@@ -547,16 +555,35 @@ DATENÜBERTRAGUNG
             preloader.style.display = "flex";
             window.location.reload(true);
         }
-
-        function initializeServiceWorker() {        
+        function initializeServiceWorker() {
         // Service Worker registrieren
-            if ('serviceWorker' in navigator) {
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const isSecure = window.isSecureContext || isLocalhost;
+            const hasServiceWorkerApi = 'serviceWorker' in navigator;
+
+            if (!isSecure) {
+                console.error('Service Worker braucht HTTPS oder localhost. Aktuelle URL:', window.location.href);
+                statusfeld.innerText = 'Offline-Modus braucht HTTPS oder localhost (aktuell: ' + window.location.protocol + '//' + window.location.hostname + ').';
+                return;
+            }
+
+            if (!hasServiceWorkerApi) {
+                console.error('Service Worker API wird von diesem Browser nicht bereitgestellt.');
+                statusfeld.innerText = 'Offline-Modus nicht verfuegbar: Service Worker API fehlt.';
+                return;
+            }
+
+            if (hasServiceWorkerApi) {
+                const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                const swUrl = basePath + 'sw.js';
+
                 console.log('Service Worker wird registriert...');
                 console.log('Current URL:', window.location.href);
-                console.log('Base URL:', window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1));
-                
-                // Erst prüfen ob sw.js erreichbar ist
-                fetch('sw.js')
+                console.log('Base Path:', basePath);
+                console.log('SW URL:', swUrl);
+
+                // Erst pruefen ob sw.js erreichbar ist
+                fetch(swUrl, { cache: 'no-store' })
                     .then(response => {
                         console.log('sw.js fetch status:', response.status, response.statusText);
                         console.log('sw.js content-type:', response.headers.get('content-type'));
@@ -566,17 +593,17 @@ DATENÜBERTRAGUNG
                         return response.text();
                     })
                     .then(swCode => {
-                        console.log('sw.js geladen, Länge:', swCode.length);
+                        console.log('sw.js geladen, Laenge:', swCode.length);
                         // Jetzt versuchen zu registrieren
-                        return navigator.serviceWorker.register('sw.js', { 
-                            scope: './',
+                        return navigator.serviceWorker.register(swUrl, {
+                            scope: basePath,
                             type: 'classic'
                         });
                     })
                     .then(async registration => {
                         console.log('ServiceWorker erfolgreich registriert:', registration.scope);
                         console.log('ServiceWorker Status:', registration.active ? 'aktiv' : 'nicht aktiv');
-                        
+
                         // Warte auf Aktivierung
                         if (registration.installing) {
                             console.log('ServiceWorker wird installiert...');
@@ -584,17 +611,26 @@ DATENÜBERTRAGUNG
                                 console.log('ServiceWorker State:', e.target.state);
                             });
                         }
-                        
+
                         if (navigator.onLine) {
                             // Bei Online-Betrieb ServiceWorker updaten
-                            console.log('Prüfe auf ServiceWorker Updates...');
-                            await registration.update();
+                            console.log('Pruefe auf ServiceWorker Updates...');
+                            try {
+                                await registration.update();
+                            } catch (updateErr) {
+                                console.warn('ServiceWorker Update fehlgeschlagen, registriere neu:', updateErr);
+                                await registration.unregister();
+                                await navigator.serviceWorker.register(swUrl, {
+                                    scope: basePath,
+                                    type: 'classic'
+                                });
+                            }
                         }
-                        
-                        // Cache-Status überprüfen
+
+                        // Cache-Status pruefen
                         if ('caches' in window) {
                             const cacheNames = await caches.keys();
-                            console.log('Verfügbare Caches:', cacheNames);
+                            console.log('Verfuegbare Caches:', cacheNames);
                         }
                     })
                     .catch(err => {
@@ -604,15 +640,10 @@ DATENÜBERTRAGUNG
                             message: err.message,
                             stack: err.stack
                         });
-                        statusfeld.innerText = 'Offline-Modus nicht verfügbar: ' + err.message;
+                        statusfeld.innerText = 'Offline-Modus nicht verfuegbar: ' + err.message;
                     });
-            } else {
-                console.error('Service Worker nicht unterstützt in diesem Browser');
-                statusfeld.innerText = 'Offline-Modus nicht unterstützt';
             }
-        }    
-
-
+        }
         function configuration() {
             // Konfigutarionen - Ansicht anpassen je nach Benutzergruppe
             if (config.wartungsmodus == "true") document.getElementById("Wartungsfenster").style = "display: flex"; // Wartungsmodus
@@ -633,6 +664,7 @@ DATENÜBERTRAGUNG
         }
 
         async function loadJSON(url) {
+            const localStorageKey = `clubcash_json_cache_${url}`;
             try {
             // Immer vom Netzwerk laden, nie aus dem Browser-Cache
             const response = await fetch(url, {
@@ -646,7 +678,13 @@ DATENÜBERTRAGUNG
                 throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
             }
             console.log(`${url} erfolgreich vom Netzwerk geladen`);
-            return await response.json();
+            const data = await response.json();
+            try {
+                localStorage.setItem(localStorageKey, JSON.stringify(data));
+            } catch (storageError) {
+                console.warn(`Konnte ${url} nicht im localStorage sichern:`, storageError);
+            }
+            return data;
             } catch (error) {
             // Bei Netzwerkfehler: Versuche aus dem Service Worker Cache zu laden
             console.warn(`Netzwerkfehler bei ${url}, versuche aus Cache zu laden:`, error);
@@ -667,6 +705,19 @@ DATENÜBERTRAGUNG
                 console.error(`Cache-Fehler bei ${url}:`, cacheError);
                 }
             }
+
+            // Letzter Fallback: lokale JSON-Kopie aus localStorage
+            const localBackup = localStorage.getItem(localStorageKey);
+            if (localBackup) {
+                try {
+                    const parsedBackup = JSON.parse(localBackup);
+                    console.log(`${url} aus localStorage-Fallback geladen`);
+                    return parsedBackup;
+                } catch (storageParseError) {
+                    console.error(`localStorage-Fallback für ${url} ungültig:`, storageParseError);
+                }
+            }
+
             throw new Error(`Datei ${url} konnte weder vom Netzwerk noch aus dem Cache geladen werden: ${error.message}`);
             }
         }

@@ -120,6 +120,9 @@ if ($result === true) {
 echo "<p>Überprüfung von <b>/backup</b>:<br>";
 echo checkPermissions('backup');
 echo "</p>";
+echo "<p>Überprüfung von <b>/daten</b>:<br>";
+echo checkPermissions('daten');
+echo "</p>";
 echo "<button class='kleinerBt' onclick=\"absicherungStarten()\">ABSICHERN</button></p>";
 
 // prüfen, ob die datei install.php existiert

@@ -120,6 +120,49 @@ th {
    LAYOUT
    ============================================ */
 
+#Anmeldungsfenster {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 30;
+    background-color: var(--background-dark);
+}
+#Anmeldungsfenster img {
+    width: 25cqw;
+    padding: 1cqw;
+}
+
+#Anmeldungsfenster input {
+    font-size: 2cqw;
+    margin: 1cqw 1cqw 1cqw 1cqw;
+    width: 30cqw;
+    text-align: center;
+}
+
+#Anmeldungsfenster button {
+    width: 30cqw;
+    height: 6cqw;
+    font-size: 2.5cqw;
+}
+
+#Anmeldungsfenster h2 {
+    font-size: 4cqw;
+    text-align: center;
+    margin: 1cqw 1cqw 1cqw 1cqw;
+    color: var(--background-light);
+}
+
+#Anmeldungsfenster #statusfeld {
+    color: var(--error-color);
+    font-size: 3cqw;
+}
+
 #display {
     background-color: var(--background-light);
     margin: 0;
