@@ -251,6 +251,7 @@ DATENÜBERTRAGUNG
                 <p class="zentriert" id="terminal-info-text"><b>Terminal <span id="terminal"></span></b></p>
                     <div id="offlineFenster">
                         <p class="zentriert" id="offline-status-text"><b>System offline!</b> (<span id="offlineDS">0</span>)</p>
+                        <p class="zentriert" id="last-online-text"></p>
                     </div>
                 <button id="Bt_preisfenster" onclick="preisfenster_öffnen()">Produkte</button>
                 <button id="Bt_manuelleBuchung" onclick="manuell();">manuelle Buchung</button>
@@ -460,7 +461,31 @@ DATENÜBERTRAGUNG
         // Daten laden
             // Lade die JSON-Dateien mit den Produkten und Kunden
             // und aktualisiere die Preisliste und die Direktwahl
-            Promise.all([
+            const offlineAuthKey = 'clubcash_offline_auth';
+            const offlineAuthMaxAgeMs = 30 * 24 * 60 * 60 * 1000; // 30 Tage
+            function hasOfflineAuth() {
+                try {
+                    const raw = localStorage.getItem(offlineAuthKey);
+                    if (!raw) return false;
+                    const parsed = JSON.parse(raw);
+                    const ts = Number(parsed && parsed.ts);
+                    return Number.isFinite(ts) && (Date.now() - ts) <= offlineAuthMaxAgeMs;
+                } catch {
+                    return false;
+                }
+            }
+
+            if (!navigator.onLine && !hasOfflineAuth()) {
+                preloader.style.display = "none";
+                if (datenfeld) {
+                    datenfeld.innerHTML = `
+                        <div class="box_zentrieren" style="flex-direction: column; text-align: center; padding: 2cqw;">
+                            <h1 style="margin-bottom: 0.6em;">Offline-Start gesperrt</h1>
+                            <p class="zentriert infortext">Bitte einmal online mit Sicherheitscode anmelden, damit die Kasse offline starten darf.</p>
+                        </div>
+                    `;
+                }
+            } else Promise.all([
                     loadJSON("daten.php?file=produkte.json"),
                     loadJSON("daten.php?file=kunden.json"),
                     loadJSON("config-public.php"),
@@ -486,6 +511,9 @@ DATENÜBERTRAGUNG
                     direktwahl();
                     
                     preloader.style.display = "none"; // Preloader ausblenden
+                    if (navigator.onLine) {
+                        setLastOnlineNow();
+                    }
                     
                     // Offline-Prüfung nach dem Laden der Config
                     if (!navigator.onLine && config.OfflineErlaubt == 'false') {
@@ -515,13 +543,49 @@ DATENÜBERTRAGUNG
                         </div>
                     `;
                 }
-                });    
+                });
 
 
         // Offline-Funktionalität
             let isOnline = navigator.onLine;
             let offlineFenster = document.getElementById('offlineFenster');
             let OfflineBildschirm = document.getElementById('OfflineBildschirm');
+            let lastOnlineEl = document.getElementById('last-online-text');
+            const lastOnlineKey = 'clubcash_last_online';
+
+            function formatLastOnline(isoString) {
+                try {
+                    const date = new Date(isoString);
+                    if (Number.isNaN(date.getTime())) return null;
+                    return date.toLocaleString('de-DE', {
+                        dateStyle: 'medium',
+                        timeStyle: 'short'
+                    });
+                } catch {
+                    return null;
+                }
+            }
+
+            function updateLastOnlineDisplay(isoString) {
+                if (!lastOnlineEl) return;
+                const formatted = isoString ? formatLastOnline(isoString) : null;
+                lastOnlineEl.textContent = formatted
+                    ? `Letzter Online-Zeitpunkt: ${formatted}`
+                    : 'Letzter Online-Zeitpunkt: unbekannt';
+            }
+
+            function setLastOnlineNow() {
+                const iso = new Date().toISOString();
+                try {
+                    localStorage.setItem(lastOnlineKey, iso);
+                } catch {
+                    // localStorage kann blockiert sein; Anzeige klappt trotzdem.
+                }
+                updateLastOnlineDisplay(iso);
+            }
+
+            const storedLastOnline = localStorage.getItem(lastOnlineKey);
+            updateLastOnlineDisplay(storedLastOnline);
 
             // Initiale Offline-Prüfung
             if (!navigator.onLine) {
@@ -535,6 +599,7 @@ DATENÜBERTRAGUNG
                 isOnline = true;
                 offlineFenster.style.visibility = 'hidden';
                 OfflineBildschirm.style.display = 'none';
+                setLastOnlineNow();
                 updateOfflineCounter();
                 syncOfflineData();
             });

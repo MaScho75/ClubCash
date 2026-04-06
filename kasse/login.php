@@ -68,6 +68,13 @@ try {
                     return;
                 }
 
+                try {
+                    const payload = { ts: Date.now() };
+                    localStorage.setItem('clubcash_offline_auth', JSON.stringify(payload));
+                } catch (storageError) {
+                    // localStorage kann voll sein oder blockiert sein; Login soll trotzdem funktionieren.
+                }
+
                 statusEl.textContent = 'Anmeldung erfolgreich.';
                 window.location.href = redirectTarget;
             } catch (error) {
