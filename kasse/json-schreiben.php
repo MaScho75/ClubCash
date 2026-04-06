@@ -18,6 +18,8 @@
  */
 
 
+require_once __DIR__ . '/auth.php';
+
 // Fehlerbehandlung
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
@@ -27,6 +29,14 @@ header('Content-Type: application/json');
 header('Cache-Control: no-cache, must-revalidate');
 
 try {
+    $config = loadKasseConfig();
+    $token = (string)($_COOKIE[authCookieName()] ?? '');
+    if (!validateAuthToken($token, $config)) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'error' => 'Nicht autorisiert.']);
+        exit;
+    }
+
     // JSON-Daten aus dem POST-Request lesen
     $jsonInput = file_get_contents('php://input');
     if ($jsonInput === false) {
@@ -54,8 +64,18 @@ try {
         throw new Exception('JSON Encodierung fehlgeschlagen: ' . json_last_error_msg());
     }
 
+    $allowed = [
+        'produkte.json',
+    ];
+    $file = basename((string)$input['filename']);
+    if (!in_array($file, $allowed, true)) {
+        throw new Exception('Ungueltiger Dateiname');
+    }
+
+    $target = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'daten' . DIRECTORY_SEPARATOR . $file;
+
     // In Datei schreiben
-    if (file_put_contents($input['filename'], $jsonData) === false) {
+    if (file_put_contents($target, $jsonData) === false) {
         throw new Exception('Fehler beim Schreiben der Datei');
     }
 

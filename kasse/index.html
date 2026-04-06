@@ -461,10 +461,10 @@ DATENÜBERTRAGUNG
             // Lade die JSON-Dateien mit den Produkten und Kunden
             // und aktualisiere die Preisliste und die Direktwahl
             Promise.all([
-                    loadJSON("../daten/produkte.json"), 
-                    loadJSON("../daten/kunden.json"),
+                    loadJSON("daten.php?file=produkte.json"),
+                    loadJSON("daten.php?file=kunden.json"),
                     loadJSON("config-public.php"),
-                    loadJSON("../daten/externe.json"),
+                    loadJSON("daten.php?file=externe.json"),
                     initializeServiceWorker()
                 ])
                 .then(([geladeneProdukte, geladeneKunden, geladeneConfig, geladeneExterne]) => {
@@ -500,6 +500,21 @@ DATENÜBERTRAGUNG
                 console.error("Error loading data:", error);
                 preloader.style.display = "none";
                 statusfeld.innerText = "Offline-Start fehlgeschlagen: lokale Daten unvollstaendig.";
+                if (datenfeld) {
+                    const safeMessage = (error && error.message) ? error.message : String(error);
+                    datenfeld.innerHTML = `
+                        <div class="box_zentrieren" style="flex-direction: column; text-align: center; padding: 2cqw;">
+                            <h1 style="margin-bottom: 0.6em;">Start fehlgeschlagen</h1>
+                            <p class="zentriert infortext">Die lokalen Daten konnten nicht geladen werden.</p>
+                            <p class="zentriert infortext">Bitte pruefe die Serverrechte fuer den Ordner <b>daten</b> und die Verbindung.</p>
+                            <p class="zentriert infortext" style="max-width: 40em; word-break: break-word;">
+                                Technische Details: ${safeMessage}
+                            </p>
+                            <p class="zentriert infortext">Tipp: Falls die Ordner auf <b>700</b> stehen, muessen die Daten ueber das PHP-Modul ausgeliefert werden.</p>
+                            <button style="margin-top: 1em;" onclick="window.location.reload();">Neu laden</button>
+                        </div>
+                    `;
+                }
                 });    
 
 
@@ -1167,7 +1182,7 @@ DATENÜBERTRAGUNG
             },
             body: JSON.stringify({
                 data: produkte,
-                filename: '../daten/produkte.json'
+                filename: 'produkte.json'
             })
             })
             .then(response => response.json())
@@ -1344,7 +1359,7 @@ DATENÜBERTRAGUNG
                                 },
                                 body: JSON.stringify({
                                     data: produkte,
-                                    filename: '../daten/produkte.json'
+                                    filename: 'produkte.json'
                                 })
                             })
                             .then(response => response.json())
