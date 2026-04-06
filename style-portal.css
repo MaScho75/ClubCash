@@ -40,6 +40,7 @@ body {
     color: var(--text-color-dark);
     font-size: 20px;
     margin: 0;
+    min-height: 100dvh;
 }
 
 h1 {
@@ -652,31 +653,31 @@ p.formularunterüberschrift {
    Tanken-Seite
    ============================================ */
 
-
-
     .tanken-form {
         display: flex;
         flex-direction: column;
         align-items: center;
-        font-size: 15px
+        font-size: 1.6cqh;
     }
 
     .tanken-form label {
         font-size: 2em;
         font-weight: bold;
-        margin-top: 0.5cm;
+        margin-top: 2cqh;
     }
 
     .tanken-form input {
         font-size: 2em;
         text-align: center;
+        width: 20cqh;
     }
 
     .tanken-form button {
-        width: 90%;
+        width: 20cqh;
         height: 2.2em;
         font-size: 2em;
-        margin: 0.2cm
+        margin-top: 1cqh;
+
     }
 
     .tanken-form h1 {
@@ -700,11 +701,11 @@ p.formularunterüberschrift {
     border: none;
     background-color: var(--background-light);
     color: var(--text-color-dark);
-    border-radius: 5px;
+    border-radius: 1cqh;
+    width: 20cqh;
     }
 
     .tanken-form .tankkosten {
         font-size: 2.4em;
         font-weight: bold;
     }
-

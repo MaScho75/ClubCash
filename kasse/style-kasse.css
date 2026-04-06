@@ -31,6 +31,7 @@
     width: 100%;
     border-spacing: 0.5cqw;
     font-size: 2.5cqw;
+    margin-top: 2cqw;
 }   
 
 
@@ -263,6 +264,19 @@ th {
 
 .menubuttondown {
     font-size: 2cqw;
+}
+
+#Tankstelle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.6cqw;
+}
+
+#Tankstelle img {
+    display: block;
+    height: 7cqw;
+    padding-top: 2cqw;
 }
 
 #menubar {

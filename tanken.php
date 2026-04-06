@@ -66,13 +66,12 @@ $selectedTank = $_POST['tank'] ?? '';
 </head>
 
 <body>
-
     <form id="tanken-form" class="tanken-form">
 
         <h1>ClubCash Tankstelle</h1>
         
         <p><b>Kunde</b></p>
-        <input type="text" id="kundenid_input" name="kundenid" required>
+        <input type="text" id="kundenid_input" name="kundenid" placeholder="ChipNr"  required>
         <p id="KundenName">unbekannt</p>
 
         <label for="tank">Tank</label>
@@ -92,11 +91,12 @@ $selectedTank = $_POST['tank'] ?? '';
         <input type="number" id="zählerstand_neu" name="zählerstand_neu" step="0" required>
                     
         <button type="button" style="background-color: var(--primary-color); color: var(--text-color-dark);" id="berechnen">berechnen</button>
-       
-        <button type="button" style="background-color: var(--error-color); color: var(--text-color-light);" id="abbrechen" onclick="window.location.reload();">abbrechen</button>
+    
+        <button type="button" style="background-color: var(--error-color); color: var(--text-color-light);" id="abbrechen" onclick="Abbrechen();">abbrechen</button>
 
     </form>
     <div class="tanken-form" id="ergebnis"></div>
+    
 
 </body>
 </html>
@@ -114,6 +114,10 @@ $selectedTank = $_POST['tank'] ?? '';
     const urlParams = new URLSearchParams(window.location.search);
     // Holt den Wert von "kundenid" aus der URL
     const KundenID = urlParams.get('kundenid');
+    const kasse = urlParams.get('kasse');
+
+    console.log('KundenID aus URL:', KundenID);
+    console.log('Kasse aus URL:', kasse);
 
     function Kundenprüfung(chipId) {
         const kunde = kunden.find(k => k.schlüssel === chipId);
@@ -235,7 +239,7 @@ $selectedTank = $_POST['tank'] ?? '';
 
             <button id="bezahlenButton" type="button" style="background-color: var(--primary-color); color: var(--text-color-dark);" >bezahlen</button>
        
-            <button id="abbrechenButton" type="button" style="background-color: var(--error-color); color: var(--text-color-light);" onclick="window.location.reload();">abbrechen</button>
+            <button id="abbrechenButton" type="button" style="background-color: var(--error-color); color: var(--text-color-light);" onclick="Abbrechen();">abbrechen</button>
             `;
 
             ErbenisDiv.innerHTML = Berechnung;
@@ -279,5 +283,14 @@ $selectedTank = $_POST['tank'] ?? '';
         }
 
     });
+
+    //Abrechen Funktion
+    function Abbrechen() {
+        if (kasse) {
+            window.location.href = './kasse';
+        } else {
+            window.location.reload();
+        }
+    }
 
 </script>

@@ -254,6 +254,9 @@ DATENÜBERTRAGUNG
                     </div>
                 <button id="Bt_preisfenster" onclick="preisfenster_öffnen()">Produkte</button>
                 <button id="Bt_manuelleBuchung" onclick="manuell();">manuelle Buchung</button>
+                <button style="display: none" id="Tankstelle" type="button" aria-label="Tankstelle" title="Tankstelle">
+                    <img src="./fonts/tankstelle.svg" alt="Tankstelle">
+                </button>
                 <button id="abbruch" onclick="NeuLaden();">Abbruch</button>                
             </div>
 
@@ -341,6 +344,8 @@ DATENÜBERTRAGUNG
             let zaehlerstandAltKorrigiert = 0; // Variable für den korrigierten alten Zählerstand bei Sprit-Produkten (nach manueller Eingabe)
             let zaehlerstandNeu = 0; // Variable für den neuen Zählerstand bei Sprit-Produkten
             let tankvorgang = false; // Variable, die anzeigt, ob gerade ein Tankvorgang stattfindet
+            let leerlaufZ\u00E4hlerstand = 0; // Zählerstand nach Umpumpen/Leerlauf
+            let leerlaufMenge = 0; // Differenz zwischen altem Zählerstand und Umpumpen-Zählerstand
 
             const display_fenster = document.getElementById("display");
             const datenfeld = document.getElementById("datenfeld");
@@ -359,6 +364,7 @@ DATENÜBERTRAGUNG
             const statusbar = document.getElementById("statusfeld");
             const zifferneingabefeld = document.getElementById("zifferneingabefeld");
             const preloader = document.getElementById("preloader");
+            const tankstelleButton = document.getElementById('Tankstelle');
 
         // Logs
             const logs = {
@@ -430,7 +436,6 @@ DATENÜBERTRAGUNG
                     document.activeElement.blur(); // ist notwendig, damit nicht ein Button fokussiert bleibt und nach dem Enter eine Aktion auslöst
 
                     if (!tankvorgang) {
-                        console.log("kein Tankvorgang, daher normale Prüfung");
                         produktprüfung(eingabe);
                         sonderfunktionen(eingabe);
                     }
@@ -446,7 +451,6 @@ DATENÜBERTRAGUNG
 
                 if (event.key.length === 1) {
                     eingabe += event.key;
-                    console.log("Eingabe hat den Wert: " + eingabe);
                     preisfenster.style.display = 'none';
                 }
             }
@@ -927,7 +931,7 @@ DATENÜBERTRAGUNG
                     datenfeld.innerHTML = `
                         <div>
                             <h2 class="zentriert">Zählerstand vor dem Tankvorgang</h2>
-                            <p id="alter-zaehlerstand">` + zaehlerstandAlt.toFixed(2) + ` l</p>
+                            <p id="alter-zaehlerstand">` + zaehlerstandAlt + ` l</p>
                             <p class="zentriert infortext">Ist der Zählerstand korrekt?</p>
                             <p class="zentriert infortext">
                                 <button id="bt-zaehlerstand-ja" style="background-color: var(--success-color);">Ja</button>
@@ -938,8 +942,8 @@ DATENÜBERTRAGUNG
                     
                     // Event-Listener für die Buttons programmatisch hinzufügen
                     document.getElementById('bt-zaehlerstand-nein').addEventListener('click', altenZäherstandEingeben);
-                    document.getElementById('bt-zaehlerstand-ja').addEventListener('click', neuenZählerstandEingeben);
-                   
+                    document.getElementById('bt-zaehlerstand-ja').addEventListener('click', umpumpenZählerstandEingeben);
+             
                     function altenZäherstandEingeben() {
 
                         datenfeld.innerHTML = `
@@ -949,6 +953,7 @@ DATENÜBERTRAGUNG
                         </div>`;
 
                         tastatur.style.display = 'block';
+                        zifferneingabefeld.firstChild.nodeValue = "0";
                         einheit.innerText = "l";
                         document.getElementById('BT_EingabeBestätigt').onclick = function() {
                             zaehlerstandAlt = parseFloat(zifferneingabefeld.firstChild.nodeValue);
@@ -958,87 +963,104 @@ DATENÜBERTRAGUNG
                             }
                             zaehlerstandAltKorrigiert = zaehlerstandAlt; // Aktualisiert den Zählerstand des Produkts
                             tastatur.style.display = 'none';
-                            zifferneingabefeld.firstChild.nodeValue = "0.00"; // Setzt die Eingabe zurück
+                            zifferneingabefeld.firstChild.nodeValue = "0"; // Setzt die Eingabe zurück
                             eingabestring = ""; // Setzt die Eingabe-String zurück
                             produktprüfung(EANr); // Ruft die Produktprüfung erneut auf, um mit dem neuen Zählerstand fortzufahren
                         };
                     }
 
-                    function neuenZählerstandEingeben() {
+                    function umpumpenZählerstandEingeben() {
+
+                        let leerlaufZählerstand = zaehlerstandAlt;
                         datenfeld.innerHTML = `
                             <div class="box_zentrieren">
-                                <h2 class="zentriert">Zählerstand <span style="color: var(--success-color);">NEU</span></h2>
-                                <p class="zentriert infortext">Bitte gebe den neuen Zählerstand nach dem Tankvorgang ein.</p>
+                                <h2 class="zentriert">Zählerstand <span style="color: var(--warning-color);">UMPUMPEN</span></h2>
+                                <p id="alter-zaehlerstand">` + zaehlerstandAlt + ` l</p>
+                                <p class="zentriert infortext">Wenn es zu einem Umpumpen/Leerlauf beim Trankprozeess kam, <br>
+                                    passe den Zählerstand nach dem Umpumpen an. <br>
+                                    Andernfalls drücke erneut auf <br>
+                                    <button id="Zählerstand-weiter" style="background-color: var(--success-color);" >Weiter</button>
                             </div>`;
 
                         tastatur.style.display = 'block';
+                        zifferneingabefeld.firstChild.nodeValue = "0";
                         einheit.innerText = "l";
                         document.getElementById('BT_EingabeBestätigt').onclick = function() {
-                            zaehlerstandNeu = parseFloat(zifferneingabefeld.firstChild.nodeValue)
-                            if (zaehlerstandNeu < zaehlerstandAlt || isNaN(zaehlerstandNeu)) {
-                                alert("Der neue Zählerstand muss größer als der alte Zählerstand sein. Bitte einen gültigen Zählerstand eingeben.");
-                                zifferneingabefeld.firstChild.nodeValue = "0.00"; // Setzt die Eingabe zurück
-                                eingabestring = ""; // Setzt die Eingabe-String zurück
+                            leerlaufZählerstand = parseFloat(zifferneingabefeld.firstChild.nodeValue);
+                            if (isNaN(leerlaufZählerstand) || leerlaufZählerstand < zaehlerstandAlt) {
+                                alert("Bitte eine gültige Umpumpenmenge eingeben. Sie muss größer oder gleich dem alten Zählerstand sein und kleiner oder gleich der neuen Zählerstand sein.");
                                 return;
                             }
-   
-                            ProduktTemp.Zählerstand = zaehlerstandNeu; // Aktualisiert den Zählerstand des Produkts
-                            //tastatur.style.display = 'none';
-                            zifferneingabefeld.firstChild.nodeValue = "0.00"; // Setzt die Eingabe zurück
-                            eingabestring = ""; // Setzt die Eingabe-String zurück
                             
+                            tastatur.style.display = 'none';
+                            zifferneingabefeld.firstChild.nodeValue = "0";   // Setzt die Eingabe zurück
+                            eingabestring = ""; // Setzt die Eingabe-String zurück
+                            neuenZählerstandEingeben(); // Ruft die Funktion auf, um den neuen Zählerstand einzugeben
+                        };
+                        // Event-Listener für den Weiter-Button hinzufügen
+                        document.getElementById('Zählerstand-weiter').addEventListener('click', neuenZählerstandEingeben);
+                    
+
+                        function neuenZählerstandEingeben() {
                             datenfeld.innerHTML = `
                                 <div class="box_zentrieren">
-                                    <h2 class="zentriert">Leerlauf</h2>
-                                    <p class="zentriert infortext">Wenn es zu einem Leerlauf beim Trankprozeess kam, <br>
-                                        gebe die Mänge des Lehrlaufes ein. <br>
-                                        Andernfalls drücke erneut auf 
-                                    <p class="zentriert infortext"><b><span style="padding: 1cqw 2cqw; border-radius: 1cqw; background-color: var(--success-color);">E</span></b></p>
-                            `;
+                                    <h2 class="zentriert">Zählerstand <span style="color: var(--success-color);">NEU</span></h2>
+                                    <p id="alter-zaehlerstand">` + leerlaufZählerstand + ` l</p>
+                                    <p class="zentriert infortext">Bitte gebe den neuen Zählerstand nach dem Tankvorgang ein.</p>
+                                </div>`;
 
+                            tastatur.style.display = 'block';
+                            einheit.innerText = "l";
                             document.getElementById('BT_EingabeBestätigt').onclick = function() {
-                                let leerlaufMenge = parseFloat(zifferneingabefeld.firstChild.nodeValue);
-                                if (isNaN(leerlaufMenge) || leerlaufMenge < 0 || leerlaufMenge > (zaehlerstandNeu - zaehlerstandAlt)) {
-                                    alert("Bitte eine gültige Leerlaufmenge eingeben. Sie muss zwischen 0 und der getankten Menge liegen.");
+                                zaehlerstandNeu = parseFloat(zifferneingabefeld.firstChild.nodeValue)
+                                if (zaehlerstandNeu < leerlaufZählerstand || isNaN(zaehlerstandNeu)) {
+                                    alert("Der neue Zählerstand muss größer als der alte Zählerstand und dem Zählerstand nach dem Umpumpen sein. Bitte einen gültigen Zählerstand eingeben.");
+                                    zifferneingabefeld.firstChild.nodeValue = "0"; // Setzt die Eingabe zurück
+                                    eingabestring = ""; // Setzt die Eingabe-String zurück
                                     return;
                                 }
-                                
+                                leerlaufMenge = leerlaufZ\u00E4hlerstand - zaehlerstandAlt;
                                 tastatur.style.display = 'none';
-                                zifferneingabefeld.firstChild.nodeValue = "0.00"; // Setzt die Eingabe zurück
-                                eingabestring = ""; // Setzt die Eingabe-String zurück
+                                TankvorgangAbschließen(); // Ruft die Funktion auf, um den Tankvorgang abzuschließen und die Abrechnung durchzuführen
+                            }
+
+                            function TankvorgangAbschließen() {
+        
                                 datenfeld.style.display = 'block';
                                 datenfeld.innerHTML = `
                                 <div class="box_zentrieren">
-                                    <h1>Abrechnung</h1>
+                                    <h2>Abrechnung</h2>
 
                                     <table class="abrechnungstabelle" >
-
-                                        <tr>
-                                            <td class="top">Zählerstand alt</td>
-                                            <td style="text-align: right">` + zaehlerstandAlt.toFixed(2) + ` l</td>
-                                        </tr>
                                         <tr>    
                                             <td>Zählerstand neu</td>
-                                            <td style="text-align: right">` + zaehlerstandNeu.toFixed(2) + ` l</td>
+                                            <td style="text-align: right">` + zaehlerstandNeu + ` l</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="top">- Zählerstand alt</td>
+                                            <td style="text-align: right">` + zaehlerstandAlt + ` l</td>
                                         </tr>
                                         <tr>    
-                                            <td>Leerlauf</td>
-                                            <td style="text-align: right">` + leerlaufMenge.toFixed(2) + ` l</td>
+                                            <td>- Umpumpen</td>
+                                            <td style="text-align: right">` + leerlaufMenge + ` l</td>
                                         </tr>
+                                        <tr><td colspan="2"><hr></td></tr>
                                         <tr>    
-                                            <td>getankt</td>
-                                            <td style="text-align: right"><b>` + (zaehlerstandNeu - zaehlerstandAlt - leerlaufMenge).toFixed(2) + ` l</b></td>
+                                            <td>= getankt</td>
+                                            <td style="text-align: right"><b>` + (zaehlerstandNeu - zaehlerstandAlt - leerlaufMenge) + ` l</b></td>
+                                            <td style="text-align: center; width: 10%;">x</td>
                                             <td style="text-align: right"><b>` + parseFloat(ProduktTemp.Preis).toFixed(2) + ` €</b></td>
+                                            <td style="text-align: center; width: 10%;">=</td>
                                             <td style="text-align: right"><b>` + ((zaehlerstandNeu - zaehlerstandAlt - leerlaufMenge) * parseFloat(ProduktTemp.Preis)).toFixed(2) + ` €</b></td>
                                         </tr>
                                     </table>
                                     <p class="zentriert infortext">Ist die Abrechnung korrekt?</p>
-                                    <p class="zentriert infortext">Zum Abrechnen bitte jetzt den Chip auflegen!</p>
+                                    <p class="zentriert infortext" style="color: var(--error-color);"><b>Zum Abrechnen bitte jetzt den Chip auflegen!</b></p>
                                     
                                 </div>`;
                                 
                                 ProduktTemp.Preis = ((zaehlerstandNeu - zaehlerstandAlt - leerlaufMenge) * parseFloat(ProduktTemp.Preis)).toFixed(2); // Aktualisiert den Preis des Produkts basierend auf der getankten Menge
-                                ProduktTemp.Bezeichnung = ProduktTemp.Bezeichnung + " - " + (zaehlerstandNeu - zaehlerstandAlt - leerlaufMenge).toFixed(2) + " l <br>- Zählerstand_alt: #" + zaehlerstandAlt.toFixed(2) + " l<br>- Zählerstand_neu: #" + zaehlerstandNeu.toFixed(2) + " l<br>- Leerlauf: #" + leerlaufMenge.toFixed(2) + " l"; // Aktualisiert die Produktbezeichnung, damit in der Abrechnung die getankte Menge und die Zählerstände ersichtlich sind
+                                ProduktTemp.Bezeichnung = ProduktTemp.Bezeichnung + " - " + (zaehlerstandNeu - zaehlerstandAlt - leerlaufMenge) + " l <br>- Zählerstand_alt: #" + zaehlerstandAlt + " l<br>- Zählerstand_neu: #" + zaehlerstandNeu + " l<br>- Leerlauf: #" + leerlaufMenge + " l"; // Aktualisiert die Produktbezeichnung, damit in der Abrechnung die getankte Menge und die Zählerstände ersichtlich sind
                                 produkt.Zählerstand = zaehlerstandNeu; // Aktualisiert den Zählerstand des Produkts in der Produktliste, damit bei der nächsten Buchung der neue Zählerstand als alter Zählerstand verwendet wird
                                 warenkorb.push(ProduktTemp);
                                 warenkorbaddition(ProduktTemp);
@@ -1047,9 +1069,9 @@ DATENÜBERTRAGUNG
                                 // EventListener wieder aktivieren, damit Kunde den Chip scannen kann
                                 document.addEventListener("keydown", tastenkontrolle);
                                 eingabe = "";
-                            }
+                            }  
                         }
-                    }  
+                    }
                     
                     return
                 
@@ -1215,6 +1237,7 @@ DATENÜBERTRAGUNG
             summenfeld.innerText = "0.00";
             document.querySelector(".menu").classList.remove("active");
             eingabestring = "";
+            warenkorbüberschrift();
         }
 
         function meingabe(x) {
@@ -1222,42 +1245,47 @@ DATENÜBERTRAGUNG
             let manuelles_Produkt = [];
 
             if (x == "E") {
-            if (eingabestring == "") {
-                statusfeld.innerText = "Keine Eingabe erfolgt.";
+                if (eingabestring == "") {
+                    statusfeld.innerText = "Keine Eingabe erfolgt.";
+                    tastatur.style.display = "none";
+                    return;
+                }
+                if (spritt) {
+                    eingabestring = (eingabestring / 100).toFixed(2);
+                    eingabestring = parseFloat(eingabestring).toFixed(2);
+                    let sprittpreis = parseFloat(eingabestring);
+                    spritt = false; // Zurücksetzen der Spritt-Variable
+                    let Produkttext = ProduktTemp.Bezeichnung + " (" + ProduktTemp.Preis + "€/l * " + eingabestring + "l)";
+                    manuelles_Produkt = {
+                    EAN: ProduktTemp.EAN,
+                    Bezeichnung: Produkttext,
+                    Preis: (sprittpreis * ProduktTemp.Preis).toFixed(2),
+                    MwSt: 19,
+                    Kategorie: "Fuel"
+                    };
+                } else { 
+                    manuelles_Produkt = {
+                    EAN: 9990000000000,
+                    Bezeichnung: "manuelle Buchung",
+                    Preis: (eingabestring / 100).toFixed(2),
+                    MwSt: 19,
+                    Kategorie: "manuelle Buchung"
+                    };
+                }
+
                 tastatur.style.display = "none";
+                warenkorbüberschrift();
+                warenkorb.push(manuelles_Produkt);
+                warenkorbaddition(manuelles_Produkt);
                 return;
             }
-            if (spritt) {
-                eingabestring = (eingabestring / 100).toFixed(2);
-                eingabestring = parseFloat(eingabestring).toFixed(2);
-                let sprittpreis = parseFloat(eingabestring);
-                spritt = false; // Zurücksetzen der Spritt-Variable
-                let Produkttext = ProduktTemp.Bezeichnung + " (" + ProduktTemp.Preis + "€/l * " + eingabestring + "l)";
-                manuelles_Produkt = {
-                EAN: ProduktTemp.EAN,
-                Bezeichnung: Produkttext,
-                Preis: (sprittpreis * ProduktTemp.Preis).toFixed(2),
-                MwSt: 19,
-                Kategorie: "Fuel"
-                };
-            } else { 
-                manuelles_Produkt = {
-                EAN: 9990000000000,
-                Bezeichnung: "manuelle Buchung",
-                Preis: (eingabestring / 100).toFixed(2),
-                MwSt: 19,
-                Kategorie: "manuelle Buchung"
-                };
-            }
-
-            tastatur.style.display = "none";
-            warenkorbüberschrift();
-            warenkorb.push(manuelles_Produkt);
-            warenkorbaddition(manuelles_Produkt);
-            return;
-            }
             eingabestring += x;
-            zifferneingabefeld.innerText = (eingabestring / 100).toFixed(2);
+            if (tankvorgang) {
+                zifferneingabefeld.innerText = eingabestring
+            }
+            else {
+                zifferneingabefeld.innerText = (eingabestring / 100).toFixed(2);
+            }
         }
 
         // ========================================
@@ -1383,12 +1411,9 @@ DATENÜBERTRAGUNG
 
         async function kundenkontoübersicht(Schlüsselnummer) {
             document.getElementById('abbruch').innerText="zurück";
+            
+                tankstelleButton.style.display = 'flex';
 
-            //es soll in dem Elemnt div#menubar ein weiterer button ercheinen mit der Aufschrift "Tankstelle" 
-            let menubar = document.getElementById('menubar');
-            if (menubar) {
-                let tankstelleButton = document.createElement('button');
-                tankstelleButton.innerText = "Tankstelle";
                 tankstelleButton.onclick = () => {
                     //Bein Klick auf den Button soll mit "tanken_qr_code.php" in dem Element warenkorbdatellen ein QR-Code angezeigt werden, der mit der Tankstelle verbunden ist, damit der Kunde an der Tankstelle bezahlen kann.
                     // vergleichbar mit der TankstellenQRCode(ID) Funktion aus dem Onlineportal, aber angepasst für die Kassenumgebung.
@@ -1412,8 +1437,6 @@ DATENÜBERTRAGUNG
                     });
                     
                 };
-                menubar.appendChild(tankstelleButton);
-            }
 
             eingabestopp();
 
