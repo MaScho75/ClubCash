@@ -23,6 +23,7 @@
 
 // frage die datei "kunden.json" ab und speichere nur "uid" und "firstname" und "lastname" und "schlüssel" als php code 
 $kunden = json_decode(file_get_contents('daten/kunden.json'), true);
+$externe = json_decode(file_get_contents('daten/externe.json'), true);
 $kundenListe = array_map(function($kunde) {
     return [
         'uid' => $kunde['uid'],
@@ -31,6 +32,14 @@ $kundenListe = array_map(function($kunde) {
         'schlüssel' => $kunde['schlüssel']
     ];
 }, $kunden);
+$kundenListe = array_merge($kundenListe, is_array($externe) ? array_map(function($kunde) {
+    return [
+        'uid' => $kunde['schlüssel'], // Externe haben keine uid, daher verwenden wir die Schlüsselnummer als uid
+        'firstname' => $kunde['firstname'],
+        'lastname' => $kunde['lastname'],
+        'schlüssel' => $kunde['schlüssel']
+    ];
+}, $externe) : []);
 
 // frage die Datei "produkte.json" und speiche alle Produkte ohne filter 
 
@@ -192,7 +201,7 @@ $selectedTank = $_POST['tank'] ?? '';
 
             form_berechnung.style.display = 'none';
 
-            const Datensatz = `${new Date().toISOString().split('T')[0]};${new Date().toISOString().split('T')[1].split(':').slice(0, 2).join(':')};T;${aktuelleKundenID};${kunden.find(k => k.schlüssel === aktuelleKundenID)?.uid};${EAN};"${selectedTank.Bezeichnung} - ${verbrauch_tanken} l <br>- Zählerstand_alt: #${zählerstand_alt} l<br>- Zählerstand_neu: #${zählerstand_neu} l<br>- Umpumpen: #${verbrauch_umpumpen} l";${selectedTank.Kategorie};${kosten_tanken.toFixed(2)};${selectedTank.MwSt}`;
+            const Datensatz = `${new Date().toISOString().split('T')[0]};${new Date().toISOString().split('T')[1].split(':').slice(0, 2).join(':')};T;${aktuelleKundenID};${kunden.find(k => k.schlüssel === aktuelleKundenID)?.uid};${EAN};"${selectedTank.Bezeichnung} - ${verbrauch_tanken} l x ${literpreis.toFixed(2)} €<br>- Zählerstand_alt: #${zählerstand_alt} l<br>- Zählerstand_neu: #${zählerstand_neu} l<br>- Umpumpen: #${verbrauch_umpumpen} l";${selectedTank.Kategorie};${kosten_tanken.toFixed(2)};${selectedTank.MwSt}`;
 
             const Berechnung = `
             <h1>ClubCash Tankstelle</h1>
