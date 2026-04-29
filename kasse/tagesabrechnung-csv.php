@@ -30,7 +30,7 @@ $file = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'daten' . DIRECTORY_SEPARATOR .
 date_default_timezone_set('Europe/Berlin');
 $today = date('Y-m-d');
 
-$fallbackHeaders = ['Datum', 'Zeit', 'Terminal', 'SchlÃ¼ssel', 'Kundennummer', 'EAN', 'Produkt', 'Kategorie', 'Preis', 'MwSt'];
+$fallbackHeaders = ['Datum', 'Zeit', 'Terminal', 'Schlüssel', 'Kundennummer', 'EAN', 'Produkt', 'Kategorie', 'Preis', 'MwSt'];
 $requiredHeaderIndexes = [
     0 => 'Datum',
     1 => 'Zeit',
@@ -69,7 +69,7 @@ try {
         }
     }
 
-    $headers = $isHeaderRow ? $fallbackHeaders : $fallbackHeaders;
+    $headers = $fallbackHeaders;
     $headerCount = count($headers);
     $todayData = [];
 
@@ -116,4 +116,3 @@ try {
         'message' => $e->getMessage()
     ]);
 }
-?>

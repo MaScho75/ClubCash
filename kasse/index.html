@@ -345,7 +345,7 @@ DATENÜBERTRAGUNG
             let zaehlerstandAltKorrigiert = 0; // Variable für den korrigierten alten Zählerstand bei Sprit-Produkten (nach manueller Eingabe)
             let zaehlerstandNeu = 0; // Variable für den neuen Zählerstand bei Sprit-Produkten
             let tankvorgang = false; // Variable, die anzeigt, ob gerade ein Tankvorgang stattfindet
-            let leerlaufZ\u00E4hlerstand = 0; // Zählerstand nach Umpumpen/Leerlauf
+            let leerlaufZählerstand = 0; // Zählerstand nach Umpumpen/Leerlauf
             let leerlaufMenge = 0; // Differenz zwischen altem Zählerstand und Umpumpen-Zählerstand
 
             const display_fenster = document.getElementById("display");
@@ -1056,7 +1056,7 @@ DATENÜBERTRAGUNG
                             <div class="box_zentrieren">
                                 <h2 class="zentriert">Zählerstand <span style="color: var(--warning-color);">UMPUMPEN</span></h2>
                                 <p id="alter-zaehlerstand">` + zaehlerstandAlt + ` l</p>
-                                <p class="zentriert infortext">Wenn es zu einem Umpumpen/Leerlauf beim Trankprozeess kam, <br>
+                                <p class="zentriert infortext">Wenn es zu einem Umpumpen beim Trankprozeess kam, <br>
                                     passe den Zählerstand nach dem Umpumpen an. <br>
                                     Andernfalls drücke erneut auf <br>
                                     <button id="Zählerstand-weiter" style="background-color: var(--success-color);" >Weiter</button>
@@ -1099,7 +1099,7 @@ DATENÜBERTRAGUNG
                                     eingabestring = ""; // Setzt die Eingabe-String zurück
                                     return;
                                 }
-                                leerlaufMenge = leerlaufZ\u00E4hlerstand - zaehlerstandAlt;
+                                leerlaufMenge = leerlaufZählerstand - zaehlerstandAlt;
                                 tastatur.style.display = 'none';
                                 TankvorgangAbschließen(); // Ruft die Funktion auf, um den Tankvorgang abzuschließen und die Abrechnung durchzuführen
                             }
@@ -1140,7 +1140,7 @@ DATENÜBERTRAGUNG
                                 </div>`;
                                 
                                 ProduktTemp.Preis = ((zaehlerstandNeu - zaehlerstandAlt - leerlaufMenge) * parseFloat(ProduktTemp.Preis)).toFixed(2); // Aktualisiert den Preis des Produkts basierend auf der getankten Menge
-                                ProduktTemp.Bezeichnung = ProduktTemp.Bezeichnung + " - " + (zaehlerstandNeu - zaehlerstandAlt - leerlaufMenge) + " l x " + parseFloat(ProduktTemp.Preis).toFixed(2) + " €<br>- Zählerstand_alt: #" + zaehlerstandAlt + " l<br>- Zählerstand_neu: #" + zaehlerstandNeu + " l<br>- Leerlauf: #" + leerlaufMenge + " l"; // Aktualisiert die Produktbezeichnung, damit in der Abrechnung die getankte Menge und die Zählerstände ersichtlich sind
+                                ProduktTemp.Bezeichnung = ProduktTemp.Bezeichnung + " - " + (zaehlerstandNeu - zaehlerstandAlt - leerlaufMenge) + " l x " + parseFloat(ProduktTemp.Preis).toFixed(2) + " €<br>- Zählerstand_alt: #" + zaehlerstandAlt + " l<br>- Zählerstand_neu: #" + zaehlerstandNeu + " l<br>- Umpumpen: #" + leerlaufMenge + " l"; // Aktualisiert die Produktbezeichnung, damit in der Abrechnung die getankte Menge und die Zählerstände ersichtlich sind
                                 produkt.Zählerstand = zaehlerstandNeu; // Aktualisiert den Zählerstand des Produkts in der Produktliste, damit bei der nächsten Buchung der neue Zählerstand als alter Zählerstand verwendet wird
                                 warenkorb.push(ProduktTemp);
                                 warenkorbaddition(ProduktTemp);
