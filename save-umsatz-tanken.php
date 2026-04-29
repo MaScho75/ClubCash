@@ -170,7 +170,6 @@ if (!is_array($produkte)) {
     exit;
 }
 
-$zaehlerstandKeys = ['Zählerstand', 'ZÃ¤hlerstand'];
 $produktGefunden = false;
 
 foreach ($produkte as &$produkt) {
@@ -183,14 +182,6 @@ foreach ($produkte as &$produkt) {
 
     if (!$eanMatch && !$bezeichnungMatch) {
         continue;
-    }
-
-    foreach ($zaehlerstandKeys as $zaehlerstandKey) {
-        if (array_key_exists($zaehlerstandKey, $produkt)) {
-            $produkt[$zaehlerstandKey] = $zaehlerstandNeu;
-            $produktGefunden = true;
-            break 2;
-        }
     }
 
     $produkt['Zählerstand'] = $zaehlerstandNeu;
