@@ -103,9 +103,44 @@ if (!is_dir($dataDir) && !mkdir($dataDir, 0775, true) && !is_dir($dataDir)) {
 }
 
 $csvFile = $dataDir . DIRECTORY_SEPARATOR . 'umsatz.csv';
-$line = PHP_EOL . $datensatz;
+$fileHandle = fopen($csvFile, 'c+');
 
-if (file_put_contents($csvFile, $line, FILE_APPEND | LOCK_EX) === false) {
+if ($fileHandle === false) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Datensatz konnte nicht gespeichert werden.'
+    ]);
+    exit;
+}
+
+if (!flock($fileHandle, LOCK_EX)) {
+    fclose($fileHandle);
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Datensatz konnte nicht gesperrt werden.'
+    ]);
+    exit;
+}
+
+$fileSize = filesize($csvFile);
+if ($fileSize > 0) {
+    fseek($fileHandle, -1, SEEK_END);
+    $lastByte = fgetc($fileHandle);
+
+    if ($lastByte !== "\n" && $lastByte !== "\r") {
+        fseek($fileHandle, 0, SEEK_END);
+        fwrite($fileHandle, PHP_EOL);
+    }
+}
+
+fseek($fileHandle, 0, SEEK_END);
+$bytesWritten = fwrite($fileHandle, $datensatz . PHP_EOL);
+flock($fileHandle, LOCK_UN);
+fclose($fileHandle);
+
+if ($bytesWritten === false) {
     http_response_code(500);
     echo json_encode([
         'success' => false,
