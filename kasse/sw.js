@@ -15,7 +15,7 @@
  * along with ClubCash. If not, see <https://www.gnu.org/licenses/>.
  */
 
-const CACHE_NAME = 'clubcash-v1.4.0';
+const CACHE_NAME = 'clubcash-v1.4.1';
 const ASSETS = [
   './',
   './index.html',

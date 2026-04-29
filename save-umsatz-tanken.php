@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode([
         'success' => false,
-        'error' => 'Nur POST ist erlaubt.'
+        'error' => 'Nur POST ist erlaubt.',
     ]);
     exit;
 }
@@ -60,25 +60,24 @@ if (is_array($input) && isset($input['zaehlerstandNeu'])) {
 }
 
 $datensatz = str_replace(["\r", "\n"], ' ', trim($datensatz));
+$produktBezeichnung = trim($produktBezeichnung);
+$produktEAN = trim($produktEAN);
+$zaehlerstandNeu = is_numeric($zaehlerstandNeuRaw) ? (float) $zaehlerstandNeuRaw : null;
 
 if ($datensatz === '') {
     http_response_code(422);
     echo json_encode([
         'success' => false,
-        'error' => 'Kein Datensatz übergeben.'
+        'error' => 'Kein Datensatz übergeben.',
     ]);
     exit;
 }
-
-$produktBezeichnung = trim($produktBezeichnung);
-$produktEAN = trim($produktEAN);
-$zaehlerstandNeu = is_numeric($zaehlerstandNeuRaw) ? (float) $zaehlerstandNeuRaw : null;
 
 if ($zaehlerstandNeu === null) {
     http_response_code(422);
     echo json_encode([
         'success' => false,
-        'error' => 'Ungültiger Zählerstand übergeben.'
+        'error' => 'Ungültiger Zählerstand übergeben.',
     ]);
     exit;
 }
@@ -87,7 +86,7 @@ if ($produktBezeichnung === '' && $produktEAN === '') {
     http_response_code(422);
     echo json_encode([
         'success' => false,
-        'error' => 'Kein Produkt zur Zählerstand-Aktualisierung übergeben.'
+        'error' => 'Kein Produkt zur Zählerstand-Aktualisierung übergeben.',
     ]);
     exit;
 }
@@ -97,7 +96,7 @@ if (!is_dir($dataDir) && !mkdir($dataDir, 0775, true) && !is_dir($dataDir)) {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'Verzeichnis daten konnte nicht erstellt werden.'
+        'error' => 'Verzeichnis daten konnte nicht erstellt werden.',
     ]);
     exit;
 }
@@ -109,7 +108,7 @@ if ($fileHandle === false) {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'Datensatz konnte nicht gespeichert werden.'
+        'error' => 'Datensatz konnte nicht gespeichert werden.',
     ]);
     exit;
 }
@@ -119,7 +118,7 @@ if (!flock($fileHandle, LOCK_EX)) {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'Datensatz konnte nicht gesperrt werden.'
+        'error' => 'Datensatz konnte nicht gesperrt werden.',
     ]);
     exit;
 }
@@ -144,7 +143,7 @@ if ($bytesWritten === false) {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'Datensatz konnte nicht gespeichert werden.'
+        'error' => 'Datensatz konnte nicht gespeichert werden.',
     ]);
     exit;
 }
@@ -154,7 +153,7 @@ if (!is_file($produkteFile)) {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'Datei produkte.json nicht gefunden.'
+        'error' => 'Datei produkte.json nicht gefunden.',
     ]);
     exit;
 }
@@ -166,12 +165,14 @@ if (!is_array($produkte)) {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'produkte.json enthält kein gültiges Array.'
+        'error' => 'produkte.json enthält kein gültiges Array.',
     ]);
     exit;
 }
 
+$zaehlerstandKeys = ['Zählerstand', 'ZÃ¤hlerstand'];
 $produktGefunden = false;
+
 foreach ($produkte as &$produkt) {
     if (!is_array($produkt)) {
         continue;
@@ -180,11 +181,21 @@ foreach ($produkte as &$produkt) {
     $eanMatch = ($produktEAN !== '' && isset($produkt['EAN']) && (string) $produkt['EAN'] === $produktEAN);
     $bezeichnungMatch = ($produktBezeichnung !== '' && isset($produkt['Bezeichnung']) && (string) $produkt['Bezeichnung'] === $produktBezeichnung);
 
-    if ($eanMatch || $bezeichnungMatch) {
-        $produkt['Zählerstand'] = $zaehlerstandNeu;
-        $produktGefunden = true;
-        break;
+    if (!$eanMatch && !$bezeichnungMatch) {
+        continue;
     }
+
+    foreach ($zaehlerstandKeys as $zaehlerstandKey) {
+        if (array_key_exists($zaehlerstandKey, $produkt)) {
+            $produkt[$zaehlerstandKey] = $zaehlerstandNeu;
+            $produktGefunden = true;
+            break 2;
+        }
+    }
+
+    $produkt['Zählerstand'] = $zaehlerstandNeu;
+    $produktGefunden = true;
+    break;
 }
 unset($produkt);
 
@@ -192,7 +203,7 @@ if (!$produktGefunden) {
     http_response_code(404);
     echo json_encode([
         'success' => false,
-        'error' => 'Passendes Produkt für Zählerstand-Aktualisierung nicht gefunden.'
+        'error' => 'Passendes Produkt für Zählerstand-Aktualisierung nicht gefunden.',
     ]);
     exit;
 }
@@ -202,12 +213,12 @@ if ($produkteJson === false || file_put_contents($produkteFile, $produkteJson, L
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'produkte.json konnte nicht aktualisiert werden.'
+        'error' => 'produkte.json konnte nicht aktualisiert werden.',
     ]);
     exit;
 }
 
 echo json_encode([
     'success' => true,
-    'message' => 'Datensatz gespeichert und Zählerstand aktualisiert.'
+    'message' => 'Datensatz gespeichert und Zählerstand aktualisiert.',
 ]);

@@ -1142,6 +1142,7 @@ DATENÜBERTRAGUNG
                                 ProduktTemp.Preis = ((zaehlerstandNeu - zaehlerstandAlt - leerlaufMenge) * parseFloat(ProduktTemp.Preis)).toFixed(2); // Aktualisiert den Preis des Produkts basierend auf der getankten Menge
                                 ProduktTemp.Bezeichnung = ProduktTemp.Bezeichnung + " - " + (zaehlerstandNeu - zaehlerstandAlt - leerlaufMenge) + " l x " + parseFloat(ProduktTemp.Preis).toFixed(2) + " €<br>- Zählerstand_alt: #" + zaehlerstandAlt + " l<br>- Zählerstand_neu: #" + zaehlerstandNeu + " l<br>- Umpumpen: #" + leerlaufMenge + " l"; // Aktualisiert die Produktbezeichnung, damit in der Abrechnung die getankte Menge und die Zählerstände ersichtlich sind
                                 produkt.Zählerstand = zaehlerstandNeu; // Aktualisiert den Zählerstand des Produkts in der Produktliste, damit bei der nächsten Buchung der neue Zählerstand als alter Zählerstand verwendet wird
+                                ProduktTemp.Zählerstand = zaehlerstandNeu; // Hält den neuen Zählerstand auch im später gespeicherten Warenkorb-Datensatz synchron
                                 warenkorb.push(ProduktTemp);
                                 warenkorbaddition(ProduktTemp);
                                 summenfeld.innerText = (parseFloat(ProduktTemp.Preis)).toFixed(2) ; 
@@ -1414,7 +1415,7 @@ DATENÜBERTRAGUNG
 
                         let produktIndex = produkte.findIndex(p => p.EAN === ProduktTemp.EAN);
                         if (produktIndex !== -1) {
-                            produkte[produktIndex].Zählerstand = ProduktTemp.Zählerstand; // Aktualisiert den Zählerstand des Produkts in der Hauptproduktliste
+                            produkte[produktIndex].Zählerstand = ProduktTemp.Zählerstand ?? produkte[produktIndex].Zählerstand; // Aktualisiert den Zählerstand des Produkts in der Hauptproduktliste
                             // Speichere die aktualisierte Produktliste zurück auf den Server
                             fetch('json-schreiben.php', {
                                 method: 'POST',

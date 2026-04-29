@@ -46,7 +46,8 @@ $kundenListe = array_merge($kundenListe, is_array($externe) ? array_map(function
 $produkte = json_decode(file_get_contents('daten/produkte.json'), true);
 // speichere alle dAtensätze in einem Array ist einen positiven Zählerstand haben und nicht "undefined" sind, also nur die Produkte, die tatsächlich getankt werden können. Alle anderen Produkte werden ignoriert.
 $produkteListe = is_array($produkte) ? array_values(array_filter($produkte, function($produkt) {
-    return isset($produkt['Zählerstand']) && $produkt['Zählerstand'] > 0 && $produkt['Zählerstand'] !== "undefined";
+    $zaehlerstand = $produkt['Zählerstand'] ?? $produkt['ZÃ¤hlerstand'] ?? null;
+    return $zaehlerstand !== null && $zaehlerstand !== "undefined" && $zaehlerstand > 0;
 })) : [];
 $selectedTank = $_POST['tank'] ?? '';
  
@@ -162,9 +163,10 @@ $selectedTank = $_POST['tank'] ?? '';
             const preis = Number.parseFloat(String(rawPreis).replace(',', '.'));
             if (Number.isFinite(preis)) {
                 document.getElementById('Literpreis').textContent = preis.toFixed(2);
-                document.getElementById('zählerstand_alt').value = selectedProdukt.Zählerstand;
-                document.getElementById('zählerstand_umpumpen').value = selectedProdukt.Zählerstand;
-                document.getElementById('zählerstand_neu').value = selectedProdukt.Zählerstand;
+                const zaehlerstand = selectedProdukt.Zählerstand ?? selectedProdukt["ZÃ¤hlerstand"] ?? '';
+                document.getElementById('zählerstand_alt').value = zaehlerstand;
+                document.getElementById('zählerstand_umpumpen').value = zaehlerstand;
+                document.getElementById('zählerstand_neu').value = zaehlerstand;
             } else {
                 document.getElementById('Literpreis').textContent = '';
                 document.getElementById('zählerstand_alt').value = '';
