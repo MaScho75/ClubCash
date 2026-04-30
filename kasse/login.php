@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/auth.php';
 
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 $redirect = (string)($_GET['redirect'] ?? 'index.php');
 if ($redirect === '' || str_contains($redirect, '://') || str_starts_with($redirect, '/')) {
     $redirect = 'index.php';

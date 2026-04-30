@@ -486,13 +486,17 @@ DATENÜBERTRAGUNG
                     `;
                 }
             } else Promise.all([
+                    ensureAuthenticatedSession(),
                     loadJSON("daten.php?file=produkte.json"),
                     loadJSON("daten.php?file=kunden.json"),
                     loadJSON("config-public.php"),
-                    loadJSON("daten.php?file=externe.json"),
+                    loadJSON("daten.php?file=externe.json").catch(error => {
+                        console.warn("Externe Kunden konnten nicht geladen werden, starte ohne diese Daten:", error);
+                        return [];
+                    }),
                     initializeServiceWorker()
                 ])
-                .then(([geladeneProdukte, geladeneKunden, geladeneConfig, geladeneExterne]) => {
+                .then(([, geladeneProdukte, geladeneKunden, geladeneConfig, geladeneExterne]) => {
                     produkte = geladeneProdukte;
                     kunden = geladeneKunden;
                     config = geladeneConfig;
@@ -530,15 +534,22 @@ DATENÜBERTRAGUNG
                 statusfeld.innerText = "Offline-Start fehlgeschlagen: lokale Daten unvollstaendig.";
                 if (datenfeld) {
                     const safeMessage = (error && error.message) ? error.message : String(error);
+                    const isAuthError = safeMessage.includes("Nicht autorisiert");
+                    const hinweisText = isAuthError
+                        ? "Die Anmeldung ist abgelaufen oder es fehlt eine gueltige Kassenfreigabe."
+                        : "Bitte pruefe die Serverrechte fuer den Ordner <b>daten</b> und die Verbindung.";
+                    const tippText = isAuthError
+                        ? "Tipp: Bitte erneut mit dem Sicherheitscode anmelden."
+                        : "Tipp: Falls die Ordner auf <b>700</b> stehen, muessen die Daten ueber das PHP-Modul ausgeliefert werden.";
                     datenfeld.innerHTML = `
                         <div class="box_zentrieren" style="flex-direction: column; text-align: center; padding: 2cqw;">
                             <h1 style="margin-bottom: 0.6em;">Start fehlgeschlagen</h1>
                             <p class="zentriert infortext">Die lokalen Daten konnten nicht geladen werden.</p>
-                            <p class="zentriert infortext">Bitte pruefe die Serverrechte fuer den Ordner <b>daten</b> und die Verbindung.</p>
+                            <p class="zentriert infortext">${hinweisText}</p>
                             <p class="zentriert infortext" style="max-width: 40em; word-break: break-word;">
                                 Technische Details: ${safeMessage}
                             </p>
-                            <p class="zentriert infortext">Tipp: Falls die Ordner auf <b>700</b> stehen, muessen die Daten ueber das PHP-Modul ausgeliefert werden.</p>
+                            <p class="zentriert infortext">${tippText}</p>
                             <button style="margin-top: 1em;" onclick="window.location.reload();">Neu laden</button>
                         </div>
                     `;
@@ -747,19 +758,74 @@ DATENÜBERTRAGUNG
             document.getElementById("version").innerText = config.Version;
         }
 
+        async function ensureAuthenticatedSession() {
+            const response = await fetch('auth-status.php', {
+                cache: 'no-cache',
+                credentials: 'same-origin',
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache'
+                }
+            });
+
+            if (response.ok) {
+                return true;
+            }
+
+            let detail = '';
+            try {
+                const payload = await response.json();
+                detail = payload.error || '';
+            } catch (error) {
+                detail = '';
+            }
+
+            if (response.status === 401) {
+                window.location.replace('login.php?redirect=' + encodeURIComponent('index.php'));
+                throw new Error(`Nicht autorisiert (${response.status}). Weiterleitung zur Anmeldung...`);
+            }
+
+            const statusLabel = response.statusText || 'HTTP-Fehler';
+            const detailSuffix = detail ? ` - ${detail}` : '';
+            throw new Error(`Authentifizierungspruefung fehlgeschlagen: ${response.status} ${statusLabel}${detailSuffix}`);
+        }
+
         async function loadJSON(url) {
             const localStorageKey = `clubcash_json_cache_${url}`;
             try {
             // Immer vom Netzwerk laden, nie aus dem Browser-Cache
             const response = await fetch(url, {
                 cache: 'no-cache',
+                credentials: 'same-origin',
                 headers: {
                 'Cache-Control': 'no-cache, no-store, must-revalidate',
                 'Pragma': 'no-cache'
                 }
             });
             if (!response.ok) {
-                throw new Error("Netzwerkantwort war nicht ok: " + response.statusText);
+                let detail = '';
+                try {
+                    const clone = response.clone();
+                    const contentType = clone.headers.get('content-type') || '';
+                    if (contentType.includes('application/json')) {
+                        const errorData = await clone.json();
+                        detail = errorData.error || errorData.message || '';
+                    } else {
+                        detail = (await clone.text()).trim();
+                    }
+                } catch (parseError) {
+                    detail = '';
+                }
+
+                if (response.status === 401) {
+                    const loginUrl = 'login.php?redirect=' + encodeURIComponent('index.php');
+                    window.location.href = loginUrl;
+                    throw new Error(`Nicht autorisiert (${response.status}). Weiterleitung zur Anmeldung...`);
+                }
+
+                const statusLabel = response.statusText || 'HTTP-Fehler';
+                const detailSuffix = detail ? ` - ${detail}` : '';
+                throw new Error(`Netzwerkantwort war nicht ok: ${response.status} ${statusLabel}${detailSuffix}`);
             }
             console.log(`${url} erfolgreich vom Netzwerk geladen`);
             const data = await response.json();

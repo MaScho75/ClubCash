@@ -15,17 +15,12 @@
  * along with ClubCash. If not, see <https://www.gnu.org/licenses/>.
  */
 
-const CACHE_NAME = 'clubcash-v1.4.1';
+const CACHE_NAME = 'clubcash-v1.4.2';
 const ASSETS = [
-  './',
-  './index.html',
   './login.php',
   './config-public.php',
   './style-kasse.css',
   '../farben.css',
-  './daten.php?file=produkte.json',
-  './daten.php?file=kunden.json',
-  './daten.php?file=externe.json',
   '../grafik/carlito-v3-latin-regular.woff2',
   './lib/jquery-3.6.0.min.js',
   '../grafik/ClubCashLogo-gelbblauschwarz.svg',
@@ -41,7 +36,10 @@ self.addEventListener('install', event => {
       await Promise.allSettled(
         absoluteAssets.map(async assetUrl => {
           try {
-            const request = new Request(assetUrl, { cache: 'reload' });
+            const request = new Request(assetUrl, {
+              cache: 'reload',
+              credentials: 'same-origin'
+            });
             const response = await fetch(request);
             if (!response || !response.ok) {
               throw new Error(`HTTP ${response ? response.status : 'no-response'}`);
@@ -85,16 +83,16 @@ self.addEventListener('fetch', event => {
           }
           return networkResponse;
         } catch {
-          const indexHtmlUrl = new URL('./index.html', self.registration.scope).href;
-          const cachedIndexHtml = await caches.match(indexHtmlUrl);
-          if (cachedIndexHtml) return cachedIndexHtml;
-
           const cachedNavigation = await caches.match(event.request);
           if (cachedNavigation) return cachedNavigation;
 
           const rootUrl = new URL('./', self.registration.scope).href;
           const cachedRoot = await caches.match(rootUrl);
           if (cachedRoot) return cachedRoot;
+
+          const loginUrl = new URL('./login.php', self.registration.scope).href;
+          const cachedLogin = await caches.match(loginUrl);
+          if (cachedLogin) return cachedLogin;
 
           return new Response('Offline and no cached page available.', {
             status: 503,
