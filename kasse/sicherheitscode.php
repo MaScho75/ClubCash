@@ -35,7 +35,7 @@ if (stripos($contentType, 'application/json') !== false) {
 if (!verifyKassenPw($inputCode, $config)) {
     usleep(200000);
     http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Falscher Sicherheitscode!']);
+    echo json_encode(['success' => false, 'message' => 'Falscher Sicherheitscode oder falsches Passwort!']);
     exit;
 }
 

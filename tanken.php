@@ -61,11 +61,16 @@ $selectedTank = $_POST['tank'] ?? '';
 
     <!-- Skalierbarkeit für mobile Geräte sicherstellen -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
     <title>ClubCash Tankstelle</title>
 
     <!-- Anweisung an Suchmaschinen, die Seite NICHT zu indexieren -->
     <meta name="robots" content="noindex, nofollow">
+    <link rel="manifest" href="tanken-manifest.json">
+    <link rel="apple-touch-icon" href="grafik/tanken-app-icon.svg">
 	
 	<link rel="stylesheet" href="style-portal.css?v=<?php echo time(); ?>">
 	
@@ -76,7 +81,22 @@ $selectedTank = $_POST['tank'] ?? '';
 </head>
 
 <body>
-    <form id="tanken-form" class="tanken-form">
+    <section id="tankenStartbildschirm" class="tanken-startbildschirm">
+        <div class="tanken-logozeile">
+            <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" alt="ClubCash" class="tanken-clubcash-logo">
+            <img src="grafik/tanken-app-icon.svg" alt="Tankstelle" class="tanken-tank-logo">
+        </div>
+
+        <h1>ClubCash Tankstelle</h1>
+
+        <div class="tanken-buttonzeile">
+            <button type="button" id="installButton" class="tanken-install-button" style="background-color: var(--primary-color); color: var(--text-color-dark);">WebApp installieren</button>
+            <button type="button" id="saveLinkButton" class="tanken-install-button" style="background-color: var(--primary-color); color: var(--text-color-dark);">Link speichern</button>
+            <button type="button" id="startTankButton" class="tanken-start-button" style="background-color: var(--primary-color); color: var(--text-color-dark);">Tankvorgang starten</button>
+        </div>
+    </section>
+
+    <form id="tanken-form" class="tanken-form" style="display: none;">
 
         <h1>ClubCash Tankstelle</h1>
         
@@ -119,15 +139,101 @@ $selectedTank = $_POST['tank'] ?? '';
     let selectedTank;
     
     let kundenname = 'unbekannt';
+    let deferredInstallPrompt = null;
 
     // KundenID ermitteln aus der URL https://host/index.html?zahl=42
     const urlParams = new URLSearchParams(window.location.search);
     // Holt den Wert von "kundenid" aus der URL
     const KundenID = urlParams.get('kundenid');
     const kasse = urlParams.get('kasse');
+    const gespeicherteKundenID = localStorage.getItem('clubcash_tanken_kundenid');
+    const aktiveKundenID = KundenID || gespeicherteKundenID || '';
+    const startbildschirm = document.getElementById('tankenStartbildschirm');
+    const installButton = document.getElementById('installButton');
+    const saveLinkButton = document.getElementById('saveLinkButton');
+    const startTankButton = document.getElementById('startTankButton');
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isAppleMobile = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
     console.log('KundenID aus URL:', KundenID);
     console.log('Kasse aus URL:', kasse);
+
+    if (KundenID) {
+        localStorage.setItem('clubcash_tanken_kundenid', KundenID);
+    }
+
+    window.addEventListener('beforeinstallprompt', function(event) {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+    });
+
+    installButton.addEventListener('click', async function() {
+        if (!deferredInstallPrompt) {
+            if (isAppleMobile) {
+                alert('Zum Installieren bitte das Teilen-Menue oeffnen und "Zum Home-Bildschirm" auswaehlen.');
+            } else if (!window.isSecureContext) {
+                alert('Die WebApp kann nur ueber HTTPS oder localhost installiert werden. Bitte die Tankseite ueber eine sichere HTTPS-Adresse oeffnen.');
+            } else {
+                alert('Der Browser bietet die Installation aktuell nicht direkt an. Bitte im Browsermenue "App installieren" oder "Zum Startbildschirm hinzufuegen" waehlen.');
+            }
+            return;
+        }
+
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        installButton.style.display = 'none';
+    });
+
+    window.addEventListener('appinstalled', function() {
+        installButton.style.display = 'none';
+    });
+
+    saveLinkButton.addEventListener('click', async function() {
+        const tankLink = window.location.href;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'ClubCash Tankstelle',
+                    text: 'ClubCash Tankstelle',
+                    url: tankLink
+                });
+                return;
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    return;
+                }
+            }
+        }
+
+        if (navigator.clipboard && window.isSecureContext) {
+            try {
+                await navigator.clipboard.writeText(tankLink);
+                alert('Link wurde in die Zwischenablage kopiert.');
+                return;
+            } catch (error) {
+            }
+        }
+
+        prompt('Link speichern:', tankLink);
+    });
+
+    startTankButton.addEventListener('click', function() {
+        startbildschirm.style.display = 'none';
+        document.getElementById('tanken-form').style.display = 'flex';
+        document.getElementById('kundenid_input').focus();
+    });
+
+    if ('serviceWorker' in navigator) {
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const isSecure = window.isSecureContext || isLocalhost;
+        if (isSecure) {
+            navigator.serviceWorker.register('./tanken-sw.js').catch(function(error) {
+                console.error('ServiceWorker fuer Tankseite konnte nicht registriert werden:', error);
+            });
+        }
+    }
 
     function Kundenprüfung(chipId) {
         const kunde = kunden.find(k => k.schlüssel === chipId);
@@ -147,6 +253,12 @@ $selectedTank = $_POST['tank'] ?? '';
     }
     
     //Sorte auswählen und Literpreis anzeigen
+    if (!KundenID && aktiveKundenID) {
+        const kundenInput = document.getElementById('kundenid_input');
+        kundenInput.value = aktiveKundenID;
+        Kundenprüfung(aktiveKundenID);
+    }
+
     const tankSelect = document.getElementById('tank');
     produkte.forEach(produkt => {
         const option = document.createElement('option');

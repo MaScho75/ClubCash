@@ -660,6 +660,73 @@ p.formularunterüberschrift {
         font-size: 1.6cqh;
     }
 
+    .tanken-startbildschirm {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 90vh;
+        padding: 4cqh 2cqh;
+        box-sizing: border-box;
+    }
+
+    .tanken-startbildschirm h1 {
+        font-size: 4cqh;
+        margin: 2cqh 0;
+        text-align: center;
+    }
+
+    .tanken-logozeile {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2cqh;
+        margin-top: 2cqh;
+    }
+
+    .tanken-clubcash-logo {
+        width: min(10cqh, 18vw);
+        height: auto;
+    }
+
+    .tanken-tank-logo {
+        width: min(10cqh, 18vw);
+        height: auto;
+    }
+
+    .tanken-buttonzeile {
+        display: flex;
+        justify-content: center;
+        gap: 1cqh;
+        flex-wrap: wrap;
+        margin-bottom: 1cqh;
+        max-width: calc(100vw - 4cqh);
+        padding: 0 2cqh;
+    }
+
+    .tanken-install-button {
+        width: auto;
+        min-width: min(16cqh, 40vw);
+        height: 2.8em;
+        padding: 0.35em 1.4em;
+        border: none;
+        border-radius: 1cqh;
+        font-family: 'Carlito', sans-serif;
+        font-size: 1em;
+        font-weight: bold;
+    }
+
+    .tanken-start-button {
+        width: auto;
+        min-width: min(28cqh, 82vw);
+        height: 2.8em;
+        padding: 0.35em 1.4em;
+        border: none;
+        border-radius: 1cqh;
+        font-family: 'Carlito', sans-serif;
+        font-size: 1.3em;
+        font-weight: bold;
+    }
+
     .tanken-form label {
         font-size: 2em;
         font-weight: bold;

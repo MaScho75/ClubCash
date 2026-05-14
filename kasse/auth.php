@@ -108,6 +108,21 @@ function verifyKassenPw(string $inputCode, array $config): bool
 function buildPasswordCandidates(string $input): array
 {
     $candidates = [$input];
+    $trimmedInput = trim($input);
+    $barcodePayload = trim($trimmedInput, '*');
+
+    if ($trimmedInput !== $input && $trimmedInput !== '') {
+        $candidates[] = $trimmedInput;
+    }
+
+    if ($barcodePayload !== '' && $barcodePayload !== $trimmedInput) {
+        $candidates[] = $barcodePayload;
+    }
+
+    $decodedBarcodePayload = decodeCode39Extended($barcodePayload);
+    if ($decodedBarcodePayload !== null && $decodedBarcodePayload !== '') {
+        $candidates[] = $decodedBarcodePayload;
+    }
 
     // Haeufige Mojibake-Variante: "Â§" statt "§"
     if (str_contains($input, 'Â§')) {
@@ -139,6 +154,104 @@ function buildPasswordCandidates(string $input): array
     }
 
     return array_keys($unique);
+}
+
+function decodeCode39Extended(string $input): ?string
+{
+    if ($input === '') {
+        return null;
+    }
+
+    static $reverseMap = null;
+    if ($reverseMap === null) {
+        $reverseMap = array_flip(getCode39ExtendedMap());
+    }
+
+    $decoded = '';
+    $length = strlen($input);
+
+    for ($i = 0; $i < $length; $i++) {
+        $twoCharToken = $i + 1 < $length ? $input[$i] . $input[$i + 1] : null;
+        if ($twoCharToken !== null && isset($reverseMap[$twoCharToken])) {
+            $decoded .= $reverseMap[$twoCharToken];
+            $i++;
+            continue;
+        }
+
+        $oneCharToken = $input[$i];
+        if (!isset($reverseMap[$oneCharToken])) {
+            return null;
+        }
+
+        $decoded .= $reverseMap[$oneCharToken];
+    }
+
+    return $decoded;
+}
+
+function getCode39ExtendedMap(): array
+{
+    static $map = null;
+
+    if ($map !== null) {
+        return $map;
+    }
+
+    $map = [
+        ' ' => ' ',
+        '!' => '/A',
+        '"' => '/B',
+        '#' => '/C',
+        '$' => '/D',
+        '%' => '/E',
+        '&' => '/F',
+        "'" => '/G',
+        '(' => '/H',
+        ')' => '/I',
+        '*' => '/J',
+        '+' => '/K',
+        ',' => '/L',
+        '-' => '-',
+        '.' => '.',
+        '/' => '/O',
+        '0' => '0',
+        '1' => '1',
+        '2' => '2',
+        '3' => '3',
+        '4' => '4',
+        '5' => '5',
+        '6' => '6',
+        '7' => '7',
+        '8' => '8',
+        '9' => '9',
+        ':' => '/Z',
+        ';' => '%F',
+        '<' => '%G',
+        '=' => '%H',
+        '>' => '%I',
+        '?' => '%J',
+        '@' => '%V',
+        '[' => '%K',
+        '\\' => '%L',
+        ']' => '%M',
+        '^' => '%N',
+        '_' => '%O',
+        '`' => '%W',
+        '{' => '%P',
+        '|' => '%Q',
+        '}' => '%R',
+        '~' => '%S',
+    ];
+
+    foreach (range('A', 'Z') as $character) {
+        $map[$character] = $character;
+    }
+
+    foreach (range('a', 'z') as $character) {
+        $map[$character] = '+' . strtoupper($character);
+    }
+
+    return $map;
 }
 
 function apacheApr1Hash(string $plainTextPassword, string $salt): string

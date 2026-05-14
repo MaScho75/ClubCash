@@ -78,5 +78,6 @@ echo '<img src="' . htmlspecialchars($qrCodeUrl, ENT_QUOTES, 'UTF-8') . '" alt="
 echo '<p style="margin:0; text-align:center; word-break:break-all;">';
 echo '<a href="' . htmlspecialchars($tankUrl, ENT_QUOTES, 'UTF-8') . '" target="_blank" rel="noopener noreferrer">' . htmlspecialchars($tankUrl, ENT_QUOTES, 'UTF-8') . '</a>';
 echo '</p>';
+echo '<p style="margin:0; text-align:center;">Nach dem Oeffnen kann die Tankseite als WebApp installiert werden.</p>';
 echo '<button id="QRprintButton" type="button" style="background-color: var(--primary-color); color: var(--text-color-dark);" onclick="window.open(\'' . htmlspecialchars($printUrl, ENT_QUOTES, 'UTF-8') . '\',\'_blank\',\'width=420,height=520\');">drucken</button>'; // es soll nur der QR-Code gedruckt werden, nicht die ganze Seite 
 echo '</div>';

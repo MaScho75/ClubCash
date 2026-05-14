@@ -3592,7 +3592,7 @@ if ($response !== false) {
 
                         <!-- Passwort für das Kassenmodul -->
                         <label>Passwort Kassenmodul</label>
-                        <input type="password" id="kassenpw1" value="" class="inputfeld">
+                        <input type="password" id="kassenpw1" value="${config.kassenpw ? 'PasswortBereitsGesetzt1' : ''}" class="inputfeld" data-existing-password="${config.kassenpw ? 'true' : 'false'}">
                         <p class="beschreibung">Für den Zugriff auf das Kassenmodul muss ein Passwort festgelegt werden.
                         Bei Aufruf des Kassenmoduls wird als Benutzername: kasse und als Passwort, dass hier ausgewählte
                         verwendet. Das Passwort muss indestens 12 Zeichen lang sein, und mindestens einen Großbuchstaben, 
@@ -3602,7 +3602,7 @@ if ($response !== false) {
 
                         <!-- Passwort für das Kassenmodul -->
                         <label>Pw Wiederholung</label>
-                        <input type="password" id="kassenpw2" value="" class="inputfeld">
+                        <input type="password" id="kassenpw2" value="${config.kassenpw ? 'PasswortBereitsGesetzt1' : ''}" class="inputfeld" data-existing-password="${config.kassenpw ? 'true' : 'false'}">
                         <p class="beschreibung">Bitte des Passwort wiederholen.</p>  
 
                         <!-- Strichcode Generator für Passwort -->
@@ -3872,10 +3872,25 @@ if ($response !== false) {
         const pw1Field = document.getElementById('kassenpw1');
         const pw2Field = document.getElementById('kassenpw2');
         const saveButton = document.getElementById('saveButtonConfig');
+        const existingPasswordPlaceholder = 'PasswortBereitsGesetzt1';
 
         // Event Listener für beide Passwortfelder
         pw1Field.addEventListener('input', validatePasswords);
         pw2Field.addEventListener('input', validatePasswords);
+        [pw1Field, pw2Field].forEach(field => {
+            field.addEventListener('focus', () => {
+                if (field.dataset.existingPassword === 'true' && field.value === existingPasswordPlaceholder) {
+                    field.value = '';
+                    field.dataset.existingPassword = 'false';
+                    const otherField = field === pw1Field ? pw2Field : pw1Field;
+                    if (otherField.dataset.existingPassword === 'true' && otherField.value === existingPasswordPlaceholder) {
+                        otherField.value = '';
+                        otherField.dataset.existingPassword = 'false';
+                    }
+                    validatePasswords();
+                }
+            });
+        });
 
         // Event Listener für alle andere Felder, die nicht leer bleiben dürfen
         ['appkey', 'gast', 'mitglied', 'verkäufer', 'admin', 'artikelnummerVF', 'schlüssel'].forEach(fieldId => {
@@ -3926,7 +3941,7 @@ if ($response !== false) {
             const pw1 = document.getElementById('kassenpw1').value;
             let hashedPw;
 
-            if (pw1 === "") {
+            if (pw1 === "" || (pw1 === existingPasswordPlaceholder && pw2Field.value === existingPasswordPlaceholder)) {
                 hashedPw = config.kassenpw; // Altes Passwort beibehalten
             } else {
                 try {
@@ -4038,8 +4053,21 @@ if ($response !== false) {
 
             const pw1 = pw1Field.value;
             const pw2 = pw2Field.value;
+            const isExistingPlaceholder = pw1 === existingPasswordPlaceholder &&
+                                          pw2 === existingPasswordPlaceholder &&
+                                          pw1Field.dataset.existingPassword === 'true' &&
+                                          pw2Field.dataset.existingPassword === 'true';
 
             if (!pw1 && !pw2) {
+                pw1Field.style.backgroundColor = '';
+                pw2Field.style.backgroundColor = '';
+                return;
+            }
+
+            if (isExistingPlaceholder) {
+                pw1Field.style.backgroundColor = '';
+                pw2Field.style.backgroundColor = '';
+                saveButton.disabled = false;
                 return;
             }
             
@@ -4395,8 +4423,15 @@ function TankstellenQRCode(ID) {
 }
 
 function generateStrichcode() { 
-    const pw1 = document.getElementById('kassenpw1').value;
-    const pw2 = document.getElementById('kassenpw2').value;
+    const pw1Field = document.getElementById('kassenpw1');
+    const pw2Field = document.getElementById('kassenpw2');
+    const pw1 = pw1Field.value;
+    const pw2 = pw2Field.value;
+
+    if (pw1Field.dataset.existingPassword === 'true' && pw2Field.dataset.existingPassword === 'true') {
+        alert("Das vorhandene Passwort ist bereits gesetzt. Für einen neuen Barcode bitte das Passwort neu eingeben.");
+        return;
+    }
 
     if (!pw1) {
         alert("Bitte geben Sie zuerst ein Passwort ein, um den Strichcode zu generieren.");

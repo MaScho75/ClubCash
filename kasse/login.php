@@ -34,8 +34,8 @@ try {
 <body>
     <div id="Anmeldungsfenster">
         <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" id="anmelde-logo">
-        <h2>Sicherheitscode</h2>
-        <input type="password" id="sicherheitscode" placeholder="Code scannen" autocomplete="off">
+        <h2>Sicherheitscode oder Passwort</h2>
+        <input type="password" id="sicherheitscode" placeholder="Code scannen oder Passwort eingeben" autocomplete="off">
         <button id="anmeldebutton">Anmelden</button>
         <p id="statusfeld"></p>
     </div>
@@ -48,10 +48,10 @@ try {
 
         async function login() {
             const code = codeEl.value.trim();
-            console.log('Eingegebener Sicherheitscode:', code);
+            console.log('Eingegebener Sicherheitscode oder Passwort:', code);
 
             if (!code) {
-                statusEl.textContent = 'Bitte einen Sicherheitscode eingeben.';
+                statusEl.textContent = 'Bitte Sicherheitscode oder Passwort eingeben.';
                 return;
             }
 
