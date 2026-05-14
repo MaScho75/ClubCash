@@ -70,7 +70,7 @@ $selectedTank = $_POST['tank'] ?? '';
     <!-- Anweisung an Suchmaschinen, die Seite NICHT zu indexieren -->
     <meta name="robots" content="noindex, nofollow">
     <link rel="manifest" href="tanken-manifest.json">
-    <link rel="apple-touch-icon" href="grafik/tanken-app-icon.svg">
+    <link rel="apple-touch-icon" href="grafik/tanken-app-icon-192.png">
 	
 	<link rel="stylesheet" href="style-portal.css?v=<?php echo time(); ?>">
 	
@@ -84,7 +84,7 @@ $selectedTank = $_POST['tank'] ?? '';
     <section id="tankenStartbildschirm" class="tanken-startbildschirm">
         <div class="tanken-logozeile">
             <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" alt="ClubCash" class="tanken-clubcash-logo">
-            <img src="grafik/tanken-app-icon.svg" alt="Tankstelle" class="tanken-tank-logo">
+            <img src="grafik/tanken-app-icon-192.png" alt="Tankstelle" class="tanken-tank-logo">
         </div>
 
         <h1>ClubCash Tankstelle</h1>
@@ -360,7 +360,9 @@ $selectedTank = $_POST['tank'] ?? '';
 
             </table>
 
-            <button id="bezahlenButton" type="button" style="background-color: var(--primary-color); color: var(--text-color-dark);" >bezahlen</button>
+            <button id="zurueckButton" type="button" style="background-color: var(--primary-color); color: var(--text-color-dark);" >zurueck</button>
+
+            <button id="bezahlenButton" type="button" style="background-color: var(--success-color); color: var(--text-color-light);" >bezahlen</button>
        
             <button id="abbrechenButton" type="button" style="background-color: var(--error-color); color: var(--text-color-light);" onclick="Abbrechen();">abbrechen</button>
             `;
@@ -368,6 +370,12 @@ $selectedTank = $_POST['tank'] ?? '';
             ErbenisDiv.innerHTML = Berechnung;
 
             // Bezahlen durchführen
+            const zurueckButton = document.getElementById('zurueckButton');
+            zurueckButton.addEventListener('click', function() {
+                ErbenisDiv.innerHTML = '';
+                form_berechnung.style.display = 'flex';
+            });
+
             const bezahlenButton = document.getElementById('bezahlenButton');
             bezahlenButton.addEventListener('click', function() {
                 fetch('save-umsatz-tanken.php', {

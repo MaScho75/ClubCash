@@ -16,11 +16,6 @@
       "src": "grafik/tanken-app-icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
-    },
-    {
-      "src": "grafik/tanken-app-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
     }
   ]
 }

@@ -6,8 +6,7 @@ const ASSETS = [
   './tanken-manifest.json',
   './grafik/ClubCashLogo-gelbblauschwarz.svg',
   './grafik/tanken-app-icon-192.png',
-  './grafik/tanken-app-icon-512.png',
-  './grafik/tanken-app-icon.svg'
+  './grafik/tanken-app-icon-512.png'
 ];
 
 self.addEventListener('install', event => {

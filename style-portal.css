@@ -691,6 +691,7 @@ p.formularunterüberschrift {
     .tanken-tank-logo {
         width: min(10cqh, 18vw);
         height: auto;
+        border-radius: 1.6cqh;
     }
 
     .tanken-buttonzeile {
