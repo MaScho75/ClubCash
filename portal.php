@@ -1590,6 +1590,16 @@ if ($response !== false) {
                         productImage.classList.add("produktbild-deaktiviert");
                     }
                     imageTd.appendChild(productImage);
+                    const imageButtonGroup = document.createElement("span");
+                    imageButtonGroup.className = "produktbild-buttongruppe";
+                    const cameraImageButton = document.createElement("button");
+                    cameraImageButton.type = "button";
+                    cameraImageButton.className = "produktbild-kamera";
+                    cameraImageButton.innerText = "📷";
+                    cameraImageButton.title = "Foto mit Kamera aufnehmen";
+                    cameraImageButton.onclick = () => selectProductImage(index, true);
+                    cameraImageButton.disabled = deletedRows.has(index);
+                    imageButtonGroup.appendChild(cameraImageButton);
                     const deleteImageButton = document.createElement("button");
                     deleteImageButton.type = "button";
                     deleteImageButton.className = "produktbild-loeschen";
@@ -1597,7 +1607,8 @@ if ($response !== false) {
                     deleteImageButton.title = "Produktfoto löschen";
                     deleteImageButton.onclick = () => deleteProductImage(index);
                     deleteImageButton.disabled = deletedRows.has(index);
-                    imageTd.appendChild(deleteImageButton);
+                    imageButtonGroup.appendChild(deleteImageButton);
+                    imageTd.appendChild(imageButtonGroup);
                     tr.appendChild(imageTd);
 
                     keys.forEach(key => {
@@ -1761,7 +1772,7 @@ if ($response !== false) {
                 renderTable();
             }
 
-            function selectProductImage(index) {
+            function selectProductImage(index, useCamera = false) {
                 const ean = String(data[index].EAN || "").trim();
                 if (!ean || !/^\d+$/.test(ean)) {
                     alert("Bitte zuerst eine gueltige EAN speichern oder eintragen.");
@@ -1774,6 +1785,9 @@ if ($response !== false) {
                 const input = document.createElement("input");
                 input.type = "file";
                 input.accept = "image/*";
+                if (useCamera) {
+                    input.capture = "environment";
+                }
                 input.onchange = () => {
                     const file = input.files && input.files[0];
                     if (!file) {

@@ -320,12 +320,18 @@ th {
     opacity: 0.45;
 }
 
+.produktbild-buttongruppe {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-left: 4px;
+    vertical-align: top;
+}
+
 .produktbild-loeschen {
     width: 22px;
     height: 22px;
-    margin-left: 4px;
     padding: 0;
-    vertical-align: top;
     border: 1px solid var(--border-color);
     background: var(--error-color);
     color: #ffffff;
@@ -334,6 +340,19 @@ th {
     line-height: 18px;
 }
 
+.produktbild-kamera {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 18px;
+}
+
+.produktbild-kamera:disabled,
 .produktbild-loeschen:disabled {
     cursor: default;
     opacity: 0.45;
