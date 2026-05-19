@@ -1492,6 +1492,7 @@ if ($response !== false) {
             let editedRows = new Set();
             let newRows = new Set();
             let deletedRows = new Set();
+            let productImageVersions = {};
             // Verwende die zentral definierten Spalten
             let keys = produktKeys;
             let sortColumn = '';
@@ -1515,6 +1516,9 @@ if ($response !== false) {
             
             function renderHeader() {
                 tableHeader.innerHTML = "";
+                const imageTh = document.createElement("th");
+                imageTh.innerText = "Foto";
+                tableHeader.appendChild(imageTh);
                 keys.forEach(key => {
                     const th = document.createElement("th");
                     th.innerText = key;
@@ -1570,6 +1574,31 @@ if ($response !== false) {
                     tr.classList.toggle("edited", editedRows.has(index));
                     tr.classList.toggle("new", newRows.has(index));
                     tr.classList.toggle("deleted", deletedRows.has(index));
+
+                    const imageTd = document.createElement("td");
+                    imageTd.className = "produktbild-zelle";
+                    const productImage = document.createElement("img");
+                    productImage.className = "produktbild-editor";
+                    productImage.src = `Produktbilder/${item.EAN}.png?v=${productImageVersions[item.EAN] || 0}`;
+                    productImage.alt = "";
+                    productImage.onerror = () => {
+                        productImage.onerror = null;
+                        productImage.src = "grafik/produktbild-platzhalter.svg";
+                    };
+                    productImage.onclick = () => selectProductImage(index);
+                    if (deletedRows.has(index)) {
+                        productImage.classList.add("produktbild-deaktiviert");
+                    }
+                    imageTd.appendChild(productImage);
+                    const deleteImageButton = document.createElement("button");
+                    deleteImageButton.type = "button";
+                    deleteImageButton.className = "produktbild-loeschen";
+                    deleteImageButton.innerText = "X";
+                    deleteImageButton.title = "Produktfoto löschen";
+                    deleteImageButton.onclick = () => deleteProductImage(index);
+                    deleteImageButton.disabled = deletedRows.has(index);
+                    imageTd.appendChild(deleteImageButton);
+                    tr.appendChild(imageTd);
 
                     keys.forEach(key => {
                         const td = document.createElement("td");
@@ -1730,6 +1759,115 @@ if ($response !== false) {
                     deletedRows.add(index);
                 }
                 renderTable();
+            }
+
+            function selectProductImage(index) {
+                const ean = String(data[index].EAN || "").trim();
+                if (!ean || !/^\d+$/.test(ean)) {
+                    alert("Bitte zuerst eine gueltige EAN speichern oder eintragen.");
+                    return;
+                }
+                if (deletedRows.has(index)) {
+                    return;
+                }
+
+                const input = document.createElement("input");
+                input.type = "file";
+                input.accept = "image/*";
+                input.onchange = () => {
+                    const file = input.files && input.files[0];
+                    if (!file) {
+                        return;
+                    }
+                    uploadProductImage(ean, file, index);
+                };
+                input.click();
+            }
+
+            function uploadProductImage(ean, file, index) {
+                resizeProductImage(file)
+                    .then(blob => {
+                        const formData = new FormData();
+                        formData.append("ean", ean);
+                        formData.append("produktbild", blob, `${ean}.png`);
+                        return fetch("produktbild-upload.php", {
+                            method: "POST",
+                            body: formData
+                        });
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (!result.success) {
+                            throw new Error(result.error || "Upload fehlgeschlagen.");
+                        }
+                        productImageVersions[ean] = Date.now();
+                        renderTable();
+                    })
+                    .catch(error => {
+                        alert("Produktfoto konnte nicht gespeichert werden: " + error.message);
+                    });
+            }
+
+            function deleteProductImage(index) {
+                const ean = String(data[index].EAN || "").trim();
+                if (!ean || !/^\d+$/.test(ean)) {
+                    alert("Bitte zuerst eine gueltige EAN speichern oder eintragen.");
+                    return;
+                }
+                if (deletedRows.has(index)) {
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append("ean", ean);
+                formData.append("action", "delete");
+                fetch("produktbild-upload.php", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (!result.success) {
+                        throw new Error(result.error || "Löschen fehlgeschlagen.");
+                    }
+                    productImageVersions[ean] = Date.now();
+                    renderTable();
+                })
+                .catch(error => {
+                    alert("Produktfoto konnte nicht gelöscht werden: " + error.message);
+                });
+            }
+
+            function resizeProductImage(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const image = new Image();
+                        image.onload = () => {
+                            const canvas = document.createElement("canvas");
+                            canvas.width = 200;
+                            canvas.height = 200;
+                            const context = canvas.getContext("2d");
+                            const scale = Math.max(200 / image.width, 200 / image.height);
+                            const width = image.width * scale;
+                            const height = image.height * scale;
+                            const x = (200 - width) / 2;
+                            const y = (200 - height) / 2;
+                            context.drawImage(image, x, y, width, height);
+                            canvas.toBlob(blob => {
+                                if (blob) {
+                                    resolve(blob);
+                                } else {
+                                    reject(new Error("Bild konnte nicht konvertiert werden."));
+                                }
+                            }, "image/png");
+                        };
+                        image.onerror = () => reject(new Error("Bild konnte nicht gelesen werden."));
+                        image.src = reader.result;
+                    };
+                    reader.onerror = () => reject(new Error("Datei konnte nicht gelesen werden."));
+                    reader.readAsDataURL(file);
+                });
             }
 
             function undoChange(index) {

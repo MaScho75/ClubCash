@@ -299,6 +299,46 @@ th {
     border: 1px solid var(--border-color);
 }
 
+.produktbild-zelle {
+    width: 82px;
+    min-width: 82px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.produktbild-editor {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+}
+
+.produktbild-deaktiviert {
+    cursor: default;
+    opacity: 0.45;
+}
+
+.produktbild-loeschen {
+    width: 22px;
+    height: 22px;
+    margin-left: 4px;
+    padding: 0;
+    vertical-align: top;
+    border: 1px solid var(--border-color);
+    background: var(--error-color);
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 18px;
+}
+
+.produktbild-loeschen:disabled {
+    cursor: default;
+    opacity: 0.45;
+}
+
 .preisliste-table {
     width: 100%;
     max-width: 900px;
