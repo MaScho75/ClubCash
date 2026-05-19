@@ -187,6 +187,9 @@ DATENÜBERTRAGUNG
 
         <div class="scrollbalken" id="preisfenster_inhalt">
             <h1 id="preisliste_überschrift">Produktliste</h1>
+            <div id="preislisten_container">
+                <p>Container!</p>
+            </div>
             <button id="preisliste_schließen" onclick="preisfenster_schliessen()">X</button>
             <table id="preislistentabelle" border="0">
                 <thead>
@@ -366,6 +369,7 @@ DATENÜBERTRAGUNG
             const zifferneingabefeld = document.getElementById("zifferneingabefeld");
             const preloader = document.getElementById("preloader");
             const tankstelleButton = document.getElementById('Tankstelle');
+            const preislistenContainer = document.getElementById("preislisten_container");
 
         // Logs
             const logs = {
@@ -1246,10 +1250,26 @@ DATENÜBERTRAGUNG
         function preisliste() {
             produkte.sort((a, b) => a.Sortierung - b.Sortierung);
             preislisten_tbody.innerHTML = "";
+            preislistenContainer.innerHTML = "";
             produkte.forEach(produkt => {
             if (produkt.EAN == "") { // Leere Zeilen überspringen
                 return;
             }
+
+            // neuer Code
+            // der folgende Button soll im Container "preislisten_container" erstellt werden, damit die Preisliste auch im Bildschirmschoner angezeigt werden kann
+            const produktButton = document.createElement("div");
+            produktButton.className = "Produkt_button";
+            produktButton.innerHTML = `
+                <button onclick='aus_preisliste_buchen("${produkt.EAN}")' class="produkt_button_preisliste">
+                <span class="Produkt_bezeichnung">${produkt.Bezeichnung}</span><br>
+                <span class="Produkt_preis">${produkt.Preis} €</span>
+                </button>
+            `;
+            preislistenContainer.appendChild(produktButton);
+            
+            // alter Code
+            
             let zeile = preislisten_tbody.insertRow();
             let zelle1 = zeile.insertCell();
             zelle1.innerText = produkt.Bezeichnung;
@@ -1324,7 +1344,7 @@ DATENÜBERTRAGUNG
                 datenfeld.innerHTML = `
                 <p><p class="zentriert preis-geaendert-erfolg"><b>Der Preis wurde geändert!<b></p>
                 <p class="zentriert preis-geaendert-info">Der neue Preis für das heutige Essen beträgt jetzt: </p>
-                <h1 class="zentriert preis-geaendert-wert">` + zifferneingabefeld.firstChild.nodeValue + ` €</h1>
+                <h1 class="zentriert preis-geaendert-wert">${zifferneingabefeld.firstChild.nodeValue} €</h1>
                 `;
                 tastatur.style.display = 'none';
             } else {

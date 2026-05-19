@@ -563,6 +563,24 @@ th {
     z-index: 1;
 }
 
+.produkt_button_preisliste {
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5cqw;
+    border-bottom: solid 1px var(--border-color);
+    height: 25cqw;
+    width: 25cqw;
+    margin: 2cqw;
+}
+
+#preislisten_container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    flex-wrap: wrap;
+}
+
 .plus-button {
     width: 5cqw;
     height: 5cqw;
