@@ -564,13 +564,26 @@ th {
 }
 
 .produkt_button_preisliste {
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    gap: 0.4cqw;
     padding: 0.5cqw;
     border-bottom: solid 1px var(--border-color);
     height: 25cqw;
     width: 25cqw;
     margin: 2cqw;
+}
+
+.produktfoto_preisliste {
+    display: block;
+    width: 15cqw;
+    height: 12cqw;
+    object-fit: contain;
+    background: var(--background-color);
+    border: solid 1px var(--border-color);
+    border-radius: 0.5cqw;
 }
 
 #preislisten_container {

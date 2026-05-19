@@ -1262,24 +1262,12 @@ DATENÜBERTRAGUNG
             produktButton.className = "Produkt_button";
             produktButton.innerHTML = `
                 <button onclick='aus_preisliste_buchen("${produkt.EAN}")' class="produkt_button_preisliste">
+                <img class="produktfoto_preisliste" alt="" src="../Produktbilder/${produkt.EAN}.png">
                 <span class="Produkt_bezeichnung">${produkt.Bezeichnung}</span><br>
                 <span class="Produkt_preis">${produkt.Preis} €</span>
                 </button>
             `;
             preislistenContainer.appendChild(produktButton);
-            
-            // alter Code
-            
-            let zeile = preislisten_tbody.insertRow();
-            let zelle1 = zeile.insertCell();
-            zelle1.innerText = produkt.Bezeichnung;
-            zelle1.className = "preisliste_rechts_groß";
-            let zelle2 = zeile.insertCell();
-            zelle2.innerText = produkt.Preis + " €";
-            zelle2.className = "preisliste_rechts_groß";
-            let zelle3 = zeile.insertCell();
-            zelle3.className = "plus-button-zelle";
-            zelle3.innerHTML = "<button onclick='aus_preisliste_buchen(\"" + produkt.EAN + "\")' class='plus-button'>+</button>";
             
             });
         }
