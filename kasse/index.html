@@ -191,16 +191,6 @@ DATENÜBERTRAGUNG
                 <p>Container!</p>
             </div>
             <button id="preisliste_schließen" onclick="preisfenster_schliessen()">X</button>
-            <table id="preislistentabelle" border="0">
-                <thead>
-                    <tr>
-                        <th class="produktspalte2">Produkt</th>
-                        <th class="preisspalte2">Preis</th>
-                        <th class="leerspalte"></th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
         </div>
     </div>
     
@@ -364,7 +354,6 @@ DATENÜBERTRAGUNG
             const navbar = document.getElementById("navbar");
             const div_Bildschirmschoner = document.getElementById("bildschirmschoner");
             const Bt_manuelleBuchung = document.getElementById("Bt_manuelleBuchung");
-            const preislisten_tbody = document.querySelector("#preislistentabelle tbody");
             const statusbar = document.getElementById("statusfeld");
             const zifferneingabefeld = document.getElementById("zifferneingabefeld");
             const preloader = document.getElementById("preloader");
@@ -1249,7 +1238,6 @@ DATENÜBERTRAGUNG
 
         function preisliste() {
             produkte.sort((a, b) => a.Sortierung - b.Sortierung);
-            preislisten_tbody.innerHTML = "";
             preislistenContainer.innerHTML = "";
             produkte.forEach(produkt => {
             if (produkt.EAN == "") { // Leere Zeilen überspringen
@@ -1262,8 +1250,8 @@ DATENÜBERTRAGUNG
             produktButton.className = "Produkt_button";
             produktButton.innerHTML = `
                 <button onclick='aus_preisliste_buchen("${produkt.EAN}")' class="produkt_button_preisliste">
-                <img class="produktfoto_preisliste" alt="" src="../Produktbilder/${produkt.EAN}.png">
-                <span class="Produkt_bezeichnung">${produkt.Bezeichnung}</span><br>
+                <img class="produktfoto_preisliste" alt="" src="../Produktbilder/${produkt.EAN}.png" onerror="this.onerror=null; this.src='../grafik/produktbild-platzhalter.svg';">
+                <span class="Produkt_bezeichnung">${produkt.Bezeichnung}</span>
                 <span class="Produkt_preis">${produkt.Preis} €</span>
                 </button>
             `;

@@ -567,7 +567,7 @@ th {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: space-around;
     gap: 0.4cqw;
     padding: 0.5cqw;
     border-bottom: solid 1px var(--border-color);
@@ -578,12 +578,15 @@ th {
 
 .produktfoto_preisliste {
     display: block;
-    width: 15cqw;
     height: 12cqw;
     object-fit: contain;
     background: var(--background-color);
-    border: solid 1px var(--border-color);
-    border-radius: 0.5cqw;
+    border-radius: 1cqw;
+}
+
+.Produkt_preis {
+    color: var(--success-color);
+    font-size: 4cqw;
 }
 
 #preislisten_container {
