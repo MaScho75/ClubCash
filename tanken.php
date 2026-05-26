@@ -113,9 +113,11 @@ $selectedTank = $_POST['tank'] ?? '';
             <p>Version <?php echo htmlspecialchars($version, ENT_QUOTES, 'UTF-8'); ?></p>
         <?php endif; ?>
         
-        <p><b>Kunde</b></p>
-        <input type="text" id="kundenid_input" name="kundenid" placeholder="ChipNr"  required>
-        <p id="KundenName">unbekannt</p>
+        <div class="tanken-eingabeblock" id="kundenBereich">
+            <p><b>Kunde</b></p>
+            <input type="text" id="kundenid_input" name="kundenid" placeholder="ChipNr"  required>
+            <p id="KundenName">unbekannt</p>
+        </div>
 
         <div id="treibstoffBereich" class="tanken-eingabeblock" style="display: none;">
             <label for="tank">Treibstoffart</label>

@@ -1067,6 +1067,54 @@ p.formularunterüberschrift {
         align-items: center;
     }
 
+    @media screen and (min-width: 769px) {
+        .tanken-form {
+            font-size: 1.25rem;
+            gap: 1.25rem;
+        }
+
+        .tanken-buttonzeile,
+        .tanken-eingabeblock,
+        .tanken-unterblock,
+        .tanken-aktionsblock {
+            width: min(35rem, 92vw);
+        }
+
+        .tanken-eingabeblock,
+        .tanken-unterblock {
+            gap: 0.9rem;
+            padding: 1.4rem;
+        }
+
+        .tanken-form h1 {
+            font-size: 2.4rem;
+        }
+
+        .tanken-form p {
+            font-size: 1.25rem;
+        }
+
+        .tanken-form label {
+            font-size: 1.25rem;
+        }
+
+        .tanken-form input,
+        .tanken-form select,
+        .tanken-form button {
+            width: 100%;
+            font-size: 1.25rem;
+        }
+
+        .tanken-form input,
+        .tanken-form select {
+            min-height: 3rem;
+        }
+
+        .tanken-form button {
+            height: 3.2rem;
+        }
+    }
+
     @media screen and (max-width: 768px) {
         .tanken-form {
             font-size: 1rem;
