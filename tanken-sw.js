@@ -1,4 +1,4 @@
-const CACHE_NAME = 'clubcash-tanken-v1';
+const CACHE_NAME = 'clubcash-tanken-v2';
 const ASSETS = [
   './tanken.php',
   './style-portal.css',
@@ -14,6 +14,12 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
+});
+
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('activate', event => {
@@ -33,17 +39,33 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then(cachedResponse => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin) {
+    return;
+  }
 
-      return fetch(event.request).then(networkResponse => {
+  const networkRequest = new Request(event.request, { cache: 'no-store' });
+
+  event.respondWith(
+    fetch(networkRequest).then(networkResponse => {
+      if (networkResponse && networkResponse.ok) {
         const responseClone = networkResponse.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
-        return networkResponse;
-      });
-    })
+      }
+
+      return networkResponse;
+    }).catch(() =>
+      caches.match(event.request).then(cachedResponse => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        if (event.request.mode === 'navigate') {
+          return caches.match('./tanken.php');
+        }
+
+        throw new Error('Netzwerk und Cache nicht verfügbar.');
+      })
+    )
   );
 });

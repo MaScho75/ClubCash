@@ -49,6 +49,8 @@ $produkteListe = is_array($produkte) ? array_values(array_filter($produkte, func
     $zaehlerstand = $produkt['Zählerstand'] ?? null;
     return $zaehlerstand !== null && $zaehlerstand !== "undefined" && $zaehlerstand > 0;
 })) : [];
+$config = json_decode(file_get_contents('daten/config.json'), true);
+$version = is_array($config) && isset($config['Version']) ? (string) $config['Version'] : '';
 $selectedTank = $_POST['tank'] ?? '';
  
 ?>
@@ -88,6 +90,9 @@ $selectedTank = $_POST['tank'] ?? '';
         </div>
 
         <h1>ClubCash Tankstelle</h1>
+        <?php if ($version !== ''): ?>
+            <p>Version <?php echo htmlspecialchars($version, ENT_QUOTES, 'UTF-8'); ?></p>
+        <?php endif; ?>
 
         <div class="tanken-buttonzeile">
             <button type="button" id="installButton" class="tanken-install-button" style="background-color: var(--primary-color); color: var(--text-color-dark);">WebApp installieren</button>
@@ -98,31 +103,46 @@ $selectedTank = $_POST['tank'] ?? '';
 
     <form id="tanken-form" class="tanken-form" style="display: none;">
 
+        <div class="tanken-logozeile">
+            <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" alt="ClubCash" class="tanken-clubcash-logo">
+            <img src="grafik/tanken-app-icon-192.png" alt="Tankstelle" class="tanken-tank-logo">
+        </div>
+
         <h1>ClubCash Tankstelle</h1>
+        <?php if ($version !== ''): ?>
+            <p>Version <?php echo htmlspecialchars($version, ENT_QUOTES, 'UTF-8'); ?></p>
+        <?php endif; ?>
         
         <p><b>Kunde</b></p>
         <input type="text" id="kundenid_input" name="kundenid" placeholder="ChipNr"  required>
         <p id="KundenName">unbekannt</p>
 
-        <label for="tank">Tank</label>
-        <select id="tank" name="tank" required>
-            <option id="sorte" value=""></option>
-        </select>
+        <div id="treibstoffBereich" class="tanken-eingabeblock" style="display: none;">
+            <label for="tank">Treibstoffart</label>
+            <select id="tank" name="tank" required>
+                <option id="sorte" value=""></option>
+            </select>
+            <p><span id="Literpreis">0.00</span> €/Liter</p>
+        </div>
 
-        <p> <span id="Literpreis">0.00</span> €/Liter</p>
-    
-        <label for="zählerstand_alt">Zählerstand alt</label>
-        <input type="number" id="zählerstand_alt" name="zählerstand_alt" step="0" required>
-        
-        <label for="zählerstand_umpumpen">Zählerstand nach Umpumpen</label>
-        <input type="number" id="zählerstand_umpumpen" name="zählerstand_umpumpen" step="0" required>
-        
-        <label for="zählerstand_neu">Zählerstand nach Tanken</label>
-        <input type="number" id="zählerstand_neu" name="zählerstand_neu" step="0" required>
-                    
-        <button type="button" style="background-color: var(--primary-color); color: var(--text-color-dark);" id="berechnen">berechnen</button>
-    
-        <button type="button" style="background-color: var(--error-color); color: var(--text-color-light);" id="abbrechen" onclick="Abbrechen();">abbrechen</button>
+        <div id="tankdatenBereich" class="tanken-eingabeblock" style="display: none;">
+            <label for="zählerstand_alt">Zählerstand vor Tankvorgang</label>
+            <input type="number" id="zählerstand_alt" name="zählerstand_alt" step="0" required>
+
+            <div id="umpumpenFeld" class="tanken-unterblock" style="display: none;">
+                <label for="zählerstand_umpumpen">Zählerstand nach Umpumpen</label>
+                <input type="number" id="zählerstand_umpumpen" name="zählerstand_umpumpen" step="0">
+            </div>
+
+            <label for="zählerstand_neu">Zählerstand nach Tankvorgang</label>
+            <input type="number" id="zählerstand_neu" name="zählerstand_neu" step="0" required>
+        </div>
+
+        <div id="aktionenBereich" class="tanken-aktionsblock" style="display: none;">
+            <button type="button" style="background-color: var(--primary-color); color: var(--text-color-dark);" id="berechnen">berechnen</button>
+
+            <button type="button" style="background-color: var(--error-color); color: var(--text-color-light);" id="abbrechen" onclick="Abbrechen();">abbrechen</button>
+        </div>
 
     </form>
     <div class="tanken-form" id="ergebnis"></div>
@@ -170,11 +190,11 @@ $selectedTank = $_POST['tank'] ?? '';
     installButton.addEventListener('click', async function() {
         if (!deferredInstallPrompt) {
             if (isAppleMobile) {
-                alert('Zum Installieren bitte das Teilen-Menue oeffnen und "Zum Home-Bildschirm" auswaehlen.');
+                alert('Zum Installieren bitte das Teilen-Menü öffnen und "Zum Home-Bildschirm" auswählen.');
             } else if (!window.isSecureContext) {
-                alert('Die WebApp kann nur ueber HTTPS oder localhost installiert werden. Bitte die Tankseite ueber eine sichere HTTPS-Adresse oeffnen.');
+                alert('Die WebApp kann nur über HTTPS oder localhost installiert werden. Bitte die Tankseite über eine sichere HTTPS-Adresse öffnen.');
             } else {
-                alert('Der Browser bietet die Installation aktuell nicht direkt an. Bitte im Browsermenue "App installieren" oder "Zum Startbildschirm hinzufuegen" waehlen.');
+                alert('Der Browser bietet die Installation aktuell nicht direkt an. Bitte im Browsermenü "App installieren" oder "Zum Startbildschirm hinzufügen" wählen.');
             }
             return;
         }
@@ -229,9 +249,80 @@ $selectedTank = $_POST['tank'] ?? '';
         const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const isSecure = window.isSecureContext || isLocalhost;
         if (isSecure) {
-            navigator.serviceWorker.register('./tanken-sw.js').catch(function(error) {
+            let reloadingAfterUpdate = false;
+
+            navigator.serviceWorker.addEventListener('controllerchange', function() {
+                if (reloadingAfterUpdate) {
+                    return;
+                }
+
+                reloadingAfterUpdate = true;
+                window.location.reload();
+            });
+
+            navigator.serviceWorker.register('./tanken-sw.js', { updateViaCache: 'none' }).then(function(registration) {
+                registration.update().catch(function(error) {
+                    console.error('ServiceWorker-Update fuer Tankseite fehlgeschlagen:', error);
+                });
+
+                function activateWaitingWorker(worker) {
+                    if (!worker) {
+                        return;
+                    }
+
+                    worker.postMessage({ type: 'SKIP_WAITING' });
+                }
+
+                if (registration.waiting) {
+                    activateWaitingWorker(registration.waiting);
+                }
+
+                registration.addEventListener('updatefound', function() {
+                    const newWorker = registration.installing;
+                    if (!newWorker) {
+                        return;
+                    }
+
+                    newWorker.addEventListener('statechange', function() {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            activateWaitingWorker(newWorker);
+                        }
+                    });
+                });
+            }).catch(function(error) {
                 console.error('ServiceWorker fuer Tankseite konnte nicht registriert werden:', error);
             });
+        }
+    }
+
+    const tankSelect = document.getElementById('tank');
+    const treibstoffBereich = document.getElementById('treibstoffBereich');
+    const tankdatenBereich = document.getElementById('tankdatenBereich');
+    const aktionenBereich = document.getElementById('aktionenBereich');
+    const umpumpenFeld = document.getElementById('umpumpenFeld');
+    const zaehlerstandAltInput = document.getElementById('zählerstand_alt');
+    const zaehlerstandUmpumpenInput = document.getElementById('zählerstand_umpumpen');
+    const zaehlerstandNeuInput = document.getElementById('zählerstand_neu');
+    const literpreisAnzeige = document.getElementById('Literpreis');
+
+    function resetTankdaten() {
+        selectedTank = null;
+        tankSelect.value = '';
+        literpreisAnzeige.textContent = '0.00';
+        zaehlerstandAltInput.value = '';
+        zaehlerstandUmpumpenInput.value = '';
+        zaehlerstandNeuInput.value = '';
+        aktualisiereUmpumpenFeld(null);
+        tankdatenBereich.style.display = 'none';
+        aktionenBereich.style.display = 'none';
+    }
+
+    function setzeKundenstatus(istGueltig) {
+        treibstoffBereich.style.display = istGueltig ? 'flex' : 'none';
+        tankSelect.required = istGueltig;
+
+        if (!istGueltig) {
+            resetTankdaten();
         }
     }
 
@@ -240,9 +331,11 @@ $selectedTank = $_POST['tank'] ?? '';
         if (kunde) {
             kundenname = `${kunde.firstname} ${kunde.lastname}`;
             document.getElementById('KundenName').textContent = kundenname;
+            setzeKundenstatus(true);
         } else {
             kundenname = 'unbekannt';
             document.getElementById('KundenName').textContent = kundenname;
+            setzeKundenstatus(false);
         }
     }
 
@@ -259,7 +352,23 @@ $selectedTank = $_POST['tank'] ?? '';
         Kundenprüfung(aktiveKundenID);
     }
 
-    const tankSelect = document.getElementById('tank');
+    function aktualisiereUmpumpenFeld(produkt) {
+        const umpumpenAktiv = produkt?.Umpumpen === 'true';
+
+        umpumpenFeld.style.display = umpumpenAktiv ? 'flex' : 'none';
+        zaehlerstandUmpumpenInput.required = umpumpenAktiv;
+
+        if (!umpumpenAktiv) {
+            zaehlerstandUmpumpenInput.value = zaehlerstandAltInput.value;
+        }
+    }
+
+    zaehlerstandAltInput.addEventListener('input', function() {
+        if (umpumpenFeld.style.display === 'none') {
+            zaehlerstandUmpumpenInput.value = this.value;
+        }
+    });
+
     produkte.forEach(produkt => {
         const option = document.createElement('option');
         option.value = produkt.Bezeichnung;
@@ -274,17 +383,19 @@ $selectedTank = $_POST['tank'] ?? '';
             const rawPreis = selectedProdukt.Preis ?? selectedProdukt.preis ?? '';
             const preis = Number.parseFloat(String(rawPreis).replace(',', '.'));
             if (Number.isFinite(preis)) {
-                document.getElementById('Literpreis').textContent = preis.toFixed(2);
+                literpreisAnzeige.textContent = preis.toFixed(2);
                 const zaehlerstand = selectedProdukt.Zählerstand ?? '';
-                document.getElementById('zählerstand_alt').value = zaehlerstand;
-                document.getElementById('zählerstand_umpumpen').value = zaehlerstand;
-                document.getElementById('zählerstand_neu').value = zaehlerstand;
+                zaehlerstandAltInput.value = zaehlerstand;
+                zaehlerstandUmpumpenInput.value = zaehlerstand;
+                zaehlerstandNeuInput.value = zaehlerstand;
+                aktualisiereUmpumpenFeld(selectedProdukt);
+                tankdatenBereich.style.display = 'flex';
+                aktionenBereich.style.display = 'flex';
             } else {
-                document.getElementById('Literpreis').textContent = '';
-                document.getElementById('zählerstand_alt').value = '';
-                document.getElementById('zählerstand_umpumpen').value = '';
-                document.getElementById('zählerstand_neu').value = '';
+                resetTankdaten();
             }
+        } else {
+            resetTankdaten();
         }
     });
 
@@ -318,53 +429,63 @@ $selectedTank = $_POST['tank'] ?? '';
             const Datensatz = `${new Date().toISOString().split('T')[0]};${new Date().toISOString().split('T')[1].split(':').slice(0, 2).join(':')};T;${aktuelleKundenID};${kunden.find(k => k.schlüssel === aktuelleKundenID)?.uid};${EAN};"${selectedTank.Bezeichnung} - ${verbrauch_tanken} l x ${literpreis.toFixed(2)} €<br>- Zählerstand_alt: #${zählerstand_alt} l<br>- Zählerstand_neu: #${zählerstand_neu} l<br>- Umpumpen: #${verbrauch_umpumpen} l";${selectedTank.Kategorie};${kosten_tanken.toFixed(2)};${selectedTank.MwSt}`;
 
             const Berechnung = `
+            <div class="tanken-logozeile">
+                <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" alt="ClubCash" class="tanken-clubcash-logo">
+                <img src="grafik/tanken-app-icon-192.png" alt="Tankstelle" class="tanken-tank-logo">
+            </div>
             <h1>ClubCash Tankstelle</h1>
             <p>Berechnung</p>
-            <table>
-                <tr>
-                    <td>Schlüsselnummer</td>
-                    <td>${aktuelleKundenID}</td>
-                </tr>
-                <tr>
-                    <td>Kundenname</td>
-                    <td>${kundenname}</td>
-                 </tr>
-                 <tr>
-                    <td>Produkt</td>
-                    <td>${tankSelect.value}</td>
-                 </tr>
-                 <tr>
-                    <td>Literpreis</td>
-                    <td>${document.getElementById('Literpreis').textContent} €</td>
-                 </tr>
-                 <tr>
-                    <td>Zählerstand alt</td>
-                    <td>${document.getElementById('zählerstand_alt').value}</td>
-                </tr>
-                <tr>
-                    <td>Verbrauch Umpumpen</td>
-                    <td>${verbrauch_umpumpen} l</td>
-                </tr>
-                <tr>
-                    <td>Zählerstand nach Tanken</td>
-                    <td>${document.getElementById('zählerstand_neu').value}</td>
-                </tr>
-                <tr>
-                    <td>getankt</td>
-                    <td class="tankkosten">${verbrauch_tanken} l</td>
-                </tr>
-                <tr>
-                    <td>Kosten</td>
-                    <td class="tankkosten">${kosten_tanken.toFixed(2)} €</td> 
-                </tr>
 
-            </table>
+            <div class="tanken-eingabeblock tanken-ergebnisblock">
+                <div class="tanken-ergebniszeile">
+                    <span>Schlüsselnummer</span>
+                    <strong>${aktuelleKundenID}</strong>
+                </div>
+                <div class="tanken-ergebniszeile">
+                    <span>Kundenname</span>
+                    <strong>${kundenname}</strong>
+                </div>
+                <div class="tanken-ergebniszeile">
+                    <span>Treibstoffart</span>
+                    <strong>${tankSelect.value}</strong>
+                </div>
+                <div class="tanken-ergebniszeile">
+                    <span>Literpreis</span>
+                    <strong>${document.getElementById('Literpreis').textContent} €</strong>
+                </div>
+            </div>
 
-            <button id="zurueckButton" type="button" style="background-color: var(--primary-color); color: var(--text-color-dark);" >zurueck</button>
+            <div class="tanken-eingabeblock tanken-ergebnisblock">
+                <div class="tanken-ergebniszeile">
+                    <span>Zählerstand vor Tankvorgang</span>
+                    <strong>${document.getElementById('zählerstand_alt').value}</strong>
+                </div>
+                <div class="tanken-ergebniszeile">
+                    <span>Verbrauch Umpumpen</span>
+                    <strong>${verbrauch_umpumpen} l</strong>
+                </div>
+                <div class="tanken-ergebniszeile">
+                    <span>Zählerstand nach Tankvorgang</span>
+                    <strong>${document.getElementById('zählerstand_neu').value}</strong>
+                </div>
+            </div>
 
-            <button id="bezahlenButton" type="button" style="background-color: var(--success-color); color: var(--text-color-light);" >bezahlen</button>
-       
-            <button id="abbrechenButton" type="button" style="background-color: var(--error-color); color: var(--text-color-light);" onclick="Abbrechen();">abbrechen</button>
+            <div class="tanken-eingabeblock tanken-ergebnisblock">
+                <div class="tanken-ergebniszeile tanken-ergebniszeile-betont">
+                    <span>Getankt</span>
+                    <strong class="tankkosten">${verbrauch_tanken} l</strong>
+                </div>
+                <div class="tanken-ergebniszeile tanken-ergebniszeile-betont">
+                    <span>Kosten</span>
+                    <strong class="tankkosten">${kosten_tanken.toFixed(2)} €</strong>
+                </div>
+            </div>
+
+            <div class="tanken-aktionsblock">
+                <button id="zurueckButton" type="button" style="background-color: var(--primary-color); color: var(--text-color-dark);">zurück</button>
+                <button id="bezahlenButton" type="button" style="background-color: var(--success-color); color: var(--text-color-light);">bezahlen</button>
+                <button id="abbrechenButton" type="button" style="background-color: var(--error-color); color: var(--text-color-light);" onclick="Abbrechen();">abbrechen</button>
+            </div>
             `;
 
             ErbenisDiv.innerHTML = Berechnung;
@@ -397,9 +518,17 @@ $selectedTank = $_POST['tank'] ?? '';
                     }
 
                     ErbenisDiv.innerHTML = `
+                    <div class="tanken-logozeile">
+                        <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" alt="ClubCash" class="tanken-clubcash-logo">
+                        <img src="grafik/tanken-app-icon-192.png" alt="Tankstelle" class="tanken-tank-logo">
+                    </div>
                     <h1>ClubCash Tankstelle</h1>
-                    <p class="zentriert" style="margin: 1.5em;">Der Kauf wurde erfolgreich abgeschlossen!</p>
-                    <button id="neuButton" type="button" style="background-color: var(--primary-color); color: var(--text-color-dark);" onclick="window.location.reload();">neuer Kauf</button>
+                    <div class="tanken-eingabeblock tanken-ergebnisblock">
+                        <p class="zentriert">Der Kauf wurde erfolgreich abgeschlossen!</p>
+                    </div>
+                    <div class="tanken-aktionsblock">
+                        <button id="neuButton" type="button" style="background-color: var(--primary-color); color: var(--text-color-dark);" onclick="window.location.reload();">neuer Kauf</button>
+                    </div>
                     `;
 
                 })

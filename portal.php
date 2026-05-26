@@ -279,7 +279,7 @@ if ($response !== false) {
         const release = <?php echo json_encode($release); ?>;
 
     // Definierte Spaltenreihenfolge für Produkttabellen
-        const produktKeys = ['EAN', 'Bezeichnung', 'Kategorie', 'Preis', 'MwSt', 'Bestand', 'Min', 'Zählerstand', 'Menge', 'Sortierung', 'Bemerkung'];
+        const produktKeys = ['EAN', 'Bezeichnung', 'Kategorie', 'Preis', 'MwSt', 'Bestand', 'Min', 'Zählerstand', 'Umpumpen', 'Menge', 'Sortierung', 'Bemerkung'];
     
     // Definierte Spaltenreihenfolge für Wareneingang
         const wareneingangKeys = ['Eingang', 'EAN', 'Menge'];
@@ -1481,7 +1481,11 @@ if ($response !== false) {
         // Bestand als zusätzliches Feld zu Produkten hinzufügen
         let productsWithBestand = produkte.map(produkt => {
             let bestand = currentWarenbestand.find(w => w.EAN === produkt.EAN)?.Bestand || 0;
-            return {...produkt, Bestand: bestand};
+            return {
+                ...produkt,
+                Umpumpen: produkt.Umpumpen === "true" ? "true" : "false",
+                Bestand: bestand
+            };
         });
 
         createEditableTable(productsWithBestand);
@@ -1620,7 +1624,7 @@ if ($response !== false) {
                             td.classList.add('links'); 
                         }
 
-                        if (key === 'Menge') {
+                        if (key === 'Menge' || key === 'Umpumpen') {
                             const label = document.createElement('label');
                             label.className = 'switch';
                             
@@ -1910,7 +1914,7 @@ if ($response !== false) {
 
             addButton.onclick = () => {
                 const newItem = {};
-                keys.forEach(key => newItem[key] = "");
+                keys.forEach(key => newItem[key] = ['Menge', 'Umpumpen'].includes(key) ? 'false' : '');
                 const newIndex = data.length;
                 data.push(newItem);
                 originalData.push(JSON.parse(JSON.stringify(newItem)));

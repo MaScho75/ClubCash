@@ -717,12 +717,53 @@ p.formularunterüberschrift {
         flex-direction: column;
         align-items: center;
         font-size: 1.6cqh;
+        gap: 1.4cqh;
+        width: 100%;
+        padding: 0 2cqh 3cqh;
+        box-sizing: border-box;
+    }
+
+    .tanken-eingabeblock,
+    .tanken-unterblock {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1cqh;
+        width: min(24cqh, 92vw);
+        max-width: 100%;
+        padding: 1.6cqh;
+        box-sizing: border-box;
+        text-align: center;
+        background-color: var(--text-color-light);
+        border: 1px solid var(--border-color);
+        border-radius: 1.2cqh;
+        box-shadow: 0 0.6cqh 1.8cqh rgba(0, 0, 0, 0.08);
+    }
+
+    .tanken-unterblock {
+        width: 100%;
+        padding: 1.2cqh;
+        background-color: var(--background-light);
+    }
+
+    .tanken-aktionsblock {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1cqh;
+        width: min(24cqh, 92vw);
+        max-width: 100%;
+        padding: 0;
+        background: transparent;
+        border: none;
+        box-shadow: none;
     }
 
     .tanken-startbildschirm {
         display: flex;
         flex-direction: column;
         align-items: center;
+        gap: 1.4cqh;
         min-height: 90vh;
         padding: 4cqh 2cqh;
         box-sizing: border-box;
@@ -730,7 +771,7 @@ p.formularunterüberschrift {
 
     .tanken-startbildschirm h1 {
         font-size: 4cqh;
-        margin: 2cqh 0;
+        margin: 0;
         text-align: center;
     }
 
@@ -755,66 +796,61 @@ p.formularunterüberschrift {
 
     .tanken-buttonzeile {
         display: flex;
+        flex-direction: column;
+        align-items: center;
         justify-content: center;
         gap: 1cqh;
-        flex-wrap: wrap;
-        margin-bottom: 1cqh;
+        margin: 0;
         max-width: calc(100vw - 4cqh);
         padding: 0 2cqh;
     }
 
-    .tanken-install-button {
-        width: auto;
-        min-width: min(16cqh, 40vw);
-        height: 2.8em;
-        padding: 0.35em 1.4em;
-        border: none;
-        border-radius: 1cqh;
-        font-family: 'Carlito', sans-serif;
-        font-size: 1em;
-        font-weight: bold;
-    }
-
+    .tanken-install-button,
     .tanken-start-button {
-        width: auto;
-        min-width: min(28cqh, 82vw);
+        width: min(28cqh, 82vw);
+        max-width: 100%;
         height: 2.8em;
         padding: 0.35em 1.4em;
         border: none;
         border-radius: 1cqh;
         font-family: 'Carlito', sans-serif;
-        font-size: 1.3em;
+        font-size: 1.1em;
         font-weight: bold;
     }
 
     .tanken-form label {
+        display: block;
         font-size: 2em;
         font-weight: bold;
-        margin-top: 2cqh;
+        margin: 0;
     }
 
     .tanken-form input {
         font-size: 2em;
         text-align: center;
         width: 20cqh;
+        margin: 0;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 
     .tanken-form button {
         width: 20cqh;
         height: 2.2em;
         font-size: 2em;
-        margin-top: 1cqh;
-
+        margin-top: 0;
+        box-sizing: border-box;
     }
 
     .tanken-form h1 {
         font-size: 3em;
-        margin: 0.5em 0;
+        margin: 0;
     }
 
     .tanken-form p {
         font-size: 2em;
         margin: 0;
+        line-height: 1.2;
     }
 
     .tanken-form td {
@@ -830,9 +866,123 @@ p.formularunterüberschrift {
     color: var(--text-color-dark);
     border-radius: 1cqh;
     width: 20cqh;
+    margin: 0;
+    max-width: 100%;
+    box-sizing: border-box;
     }
 
     .tanken-form .tankkosten {
         font-size: 2.4em;
         font-weight: bold;
+    }
+
+    .tanken-ergebnisblock {
+        align-items: stretch;
+    }
+
+    .tanken-ergebniszeile {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 1.2cqh;
+        width: 100%;
+        font-size: 1.35em;
+        text-align: left;
+    }
+
+    .tanken-ergebniszeile strong {
+        text-align: right;
+    }
+
+    .tanken-ergebniszeile-betont {
+        align-items: center;
+    }
+
+    @media screen and (max-width: 768px) {
+        .tanken-form {
+            font-size: 1rem;
+            gap: 16px;
+            padding: 0 16px 24px;
+        }
+
+        .tanken-startbildschirm {
+            gap: 16px;
+            min-height: auto;
+            padding: 24px 16px;
+        }
+
+        .tanken-startbildschirm h1 {
+            font-size: clamp(1.8rem, 7vw, 2.4rem);
+        }
+
+        .tanken-logozeile {
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .tanken-clubcash-logo,
+        .tanken-tank-logo {
+            width: min(96px, 24vw);
+        }
+
+        .tanken-eingabeblock,
+        .tanken-unterblock,
+        .tanken-aktionsblock,
+        .tanken-buttonzeile {
+            width: min(100%, 420px);
+        }
+
+        .tanken-eingabeblock,
+        .tanken-unterblock {
+            gap: 12px;
+            padding: 16px;
+            border-radius: 16px;
+        }
+
+        .tanken-install-button,
+        .tanken-start-button,
+        .tanken-form button,
+        .tanken-form input,
+        .tanken-form select {
+            width: 100%;
+        }
+
+        .tanken-form h1 {
+            font-size: clamp(1.8rem, 7vw, 2.3rem);
+        }
+
+        .tanken-form p {
+            font-size: clamp(1.1rem, 4.8vw, 1.5rem);
+        }
+
+        .tanken-ergebniszeile {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+            font-size: 1.1rem;
+        }
+
+        .tanken-ergebniszeile strong {
+            text-align: left;
+        }
+
+        .tanken-form label {
+            font-size: clamp(1.2rem, 5vw, 1.6rem);
+        }
+
+        .tanken-form input,
+        .tanken-form select,
+        .tanken-form button {
+            font-size: clamp(1.1rem, 4.8vw, 1.5rem);
+        }
+
+        .tanken-form button {
+            height: 56px;
+        }
+
+        .tanken-form input,
+        .tanken-form select {
+            min-height: 56px;
+        }
     }

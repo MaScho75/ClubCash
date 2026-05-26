@@ -8,6 +8,7 @@
         "Bemerkung": "",
         "Sortierung": "1",
         "Min": "",
+        "Umpumpen": "false",
         "Menge":"false",
         "Zählerstand": ""
     },
@@ -20,6 +21,7 @@
         "Bemerkung": "Platzhalter",
         "Sortierung": 98,
         "Min": "",
+        "Umpumpen": "false",
         "Menge": "false",
         "Zählerstand": ""
     }
