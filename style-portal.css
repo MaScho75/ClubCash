@@ -271,11 +271,140 @@ th {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 500px;
+    width: min(560px, calc(100vw - 32px));
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: 10px;
+    box-sizing: border-box;
+}
+
+.login-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.login-choice-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.login-choice-member-button {
+    background-color: var(--warning-color);
+}
+
+.login-choice-member-button:hover {
+    background-color: var(--warning-color);
+    opacity: 0.9;
+}
+
+.login-choice-customer-button {
+    background-color: var(--success-color);
+}
+
+.login-choice-customer-button:hover {
+    background-color: var(--success-color);
+    opacity: 0.9;
+}
+
+.login-section {
+    width: 100%;
+}
+
+.login-grid {
+    display: grid;
+    grid-template-columns: 170px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.login-label {
+    padding: 5px;
+    text-align: right;
+    width: auto;
+}
+
+.login-input-wrap {
+    padding: 5px;
+    text-align: center;
+}
+
+.login-input {
+    font-size: 20px;
+    border: none;
+    font-family: 'Carlito', sans-serif;
+    width: 100%;
+    max-width: 320px;
+    box-sizing: border-box;
+}
+
+.login-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.login-submit-button {
+    background-color: var(--success-color);
+}
+
+.login-submit-button:hover {
+    background-color: var(--success-color);
+    opacity: 0.9;
+}
+
+.login-back-button {
+    margin-top: 8px;
+    background-color: var(--warning-color);
+    color: var(--text-color-dark);
+}
+
+.login-back-button:hover {
+    background-color: var(--warning-color);
+    opacity: 0.9;
+}
+
+@media screen and (max-width: 768px) {
+    #login-container {
+        position: static;
+        transform: none;
+        width: calc(100vw - 24px);
+        margin: 12px auto;
+        padding-bottom: 12px;
+    }
+
+    .login-grid {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        padding: 12px;
+    }
+
+    .login-label {
+        text-align: left;
+        padding: 2px 5px 0 5px;
+    }
+
+    .login-input-wrap {
+        text-align: left;
+        padding: 0 5px 5px 5px;
+    }
+
+    .login-input,
+    .button {
+        width: 100%;
+        max-width: none;
+    }
 }
 
 
@@ -436,6 +565,46 @@ th {
 
 .button:hover {
     background-color: var(--button-hover);
+}
+
+#login-choice .login-choice-member-button {
+    background-color: var(--warning-color);
+    color: var(--text-color-dark);
+}
+
+#login-choice .login-choice-member-button:hover {
+    background-color: var(--warning-color);
+    opacity: 0.9;
+}
+
+#login-choice .login-choice-customer-button {
+    background-color: var(--success-color);
+    color: var(--text-color-light);
+}
+
+#login-choice .login-choice-customer-button:hover {
+    background-color: var(--success-color);
+    opacity: 0.9;
+}
+
+.login-actions .login-submit-button {
+    background-color: var(--success-color);
+    color: var(--text-color-light);
+}
+
+.login-actions .login-submit-button:hover {
+    background-color: var(--success-color);
+    opacity: 0.9;
+}
+
+.login-actions .login-back-button {
+    background-color: var(--warning-color);
+    color: var(--text-color-dark);
+}
+
+.login-actions .login-back-button:hover {
+    background-color: var(--warning-color);
+    opacity: 0.9;
 }
 
 .kleinerBt {

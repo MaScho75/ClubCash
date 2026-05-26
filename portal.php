@@ -210,6 +210,15 @@ if ($response !== false) {
 // INITIALISIERUNG & EVENT LISTENER
 // ============================================================================
 
+    function closeMobileMenu() {
+        const navMenu = document.getElementById('navMenu');
+        const hamburger = document.getElementById('hamburger');
+
+        navMenu.classList.remove('active');
+        hamburger.classList.remove('active');
+        navMenu.querySelectorAll('ul.active').forEach(submenu => submenu.classList.remove('active'));
+    }
+
     // Hamburger Menu Toggle - Öffnet/Schließt das mobile Navigationsmenü
     document.getElementById('hamburger').addEventListener('click', function() {
         document.getElementById('navMenu').classList.toggle('active');
@@ -229,13 +238,17 @@ if ($response !== false) {
         });
     });
 
+    document.querySelectorAll('.navbar li ul li a').forEach(item => {
+        item.addEventListener('click', function() {
+            closeMobileMenu();
+        });
+    });
+
     // Schließe Menü wenn außerhalb geklickt wird
     document.addEventListener('click', function(event) {
         const navbar = document.querySelector('.navbar');
-        const hamburger = document.getElementById('hamburger');
         if (!navbar.contains(event.target)) {
-            document.getElementById('navMenu').classList.remove('active');
-            hamburger.classList.remove('active');
+            closeMobileMenu();
         }
     });
 

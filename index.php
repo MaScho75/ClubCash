@@ -24,10 +24,21 @@
 
 session_start();
 
+$error_message = '';
+$selectedLogin = $_GET['role'] ?? '';
+if (!in_array($selectedLogin, ['customer', 'admin'], true)) {
+    $selectedLogin = '';
+}
+
 // Login-Versuche tracken
 if (!isset($_SESSION['login_attempts'])) {
     $_SESSION['login_attempts'] = 0;
     $_SESSION['last_attempt'] = 0;
+}
+
+if (!isset($_SESSION['admin_login_attempts'])) {
+    $_SESSION['admin_login_attempts'] = 0;
+    $_SESSION['admin_last_attempt'] = 0;
 }
 
 // prüfe ob der Ordner "daten" existiert
@@ -99,69 +110,100 @@ if (isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] ==
     exit();
 }
 
-// --- Access Token prüfen oder neu anfordern ---
-if (!isset($_SESSION['accessToken']) || !isset($_SESSION['tokenExpiry']) || $_SESSION['tokenExpiry'] < time()) {
-    // Token neu anfordern
-    $tokenResponse = @file_get_contents("$baseUrl/interface/rest/auth/accesstoken");
-
-    if ($tokenResponse === false) {
-        $error_message = "Fehler beim Abrufen des Access Tokens von Vereinsflieger.";
-    } else {
-        $tokenData = json_decode($tokenResponse, true);
-        if (isset($tokenData['accesstoken'])) {
-            $_SESSION['accessToken'] = $tokenData['accesstoken'];
-            $_SESSION['tokenExpiry'] = time() + 3600; // Gültig für 1 Stunde
-        } else {
-            $error_message = "Ungültige Antwort vom Token-Server.";
-        }
-    }
-}
-
-// Wartezeit berechnen (5 * 2^versuche Sekunden)
-$waitTime = 5 * pow(2, $_SESSION['login_attempts']); 
-$remainingTime = ($_SESSION['last_attempt'] + $waitTime) - time();
+// Wartezeiten berechnen (5 * 2^versuche Sekunden)
+$customerWaitTime = 5 * pow(2, $_SESSION['login_attempts']);
+$customerRemainingTime = max(0, ($_SESSION['last_attempt'] + $customerWaitTime) - time());
+$adminWaitTime = 5 * pow(2, $_SESSION['admin_login_attempts']);
+$adminRemainingTime = max(0, ($_SESSION['admin_last_attempt'] + $adminWaitTime) - time());
 
 // Wenn POST-Formular gesendet wurde
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Prüfen ob Wartezeit vorbei ist
-    if ($remainingTime > 0) {
-        $error_message = "Bitte warten Sie noch {$remainingTime} Sekunden vor dem nächsten Versuch.";
-    } else {
-        $KundenName = trim($_POST['kundenname'] ?? '');
-        $Schlüsselnummer = trim($_POST['schlüsselnummer'] ?? '');
+    $selectedLogin = $_POST['login_type'] ?? '';
 
-        if (!empty($KundenName) && !empty($Schlüsselnummer)) {
-            $found = false;
-            foreach ($kundenDaten as $kunde) {
-                if ($kunde['email'] === $KundenName && $kunde['schlüssel'] === $Schlüsselnummer) {
-                    // Login erfolgreich
+    if ($selectedLogin === 'customer') {
+        if (!isset($_SESSION['accessToken']) || !isset($_SESSION['tokenExpiry']) || $_SESSION['tokenExpiry'] < time()) {
+            $tokenResponse = @file_get_contents("$baseUrl/interface/rest/auth/accesstoken");
+
+            if ($tokenResponse === false) {
+                $error_message = "Fehler beim Abrufen des Access Tokens von Vereinsflieger.";
+            } else {
+                $tokenData = json_decode($tokenResponse, true);
+                if (isset($tokenData['accesstoken'])) {
+                    $_SESSION['accessToken'] = $tokenData['accesstoken'];
+                    $_SESSION['tokenExpiry'] = time() + 3600;
+                } else {
+                    $error_message = "Ungültige Antwort vom Token-Server.";
+                }
+            }
+        }
+
+        if ($error_message === '') {
+            if ($customerRemainingTime > 0) {
+                $error_message = "Bitte warten Sie noch {$customerRemainingTime} Sekunden vor dem nächsten Versuch.";
+            } else {
+                $KundenName = trim($_POST['kundenname'] ?? '');
+                $Schlüsselnummer = trim($_POST['schlüsselnummer'] ?? '');
+
+                if (!empty($KundenName) && !empty($Schlüsselnummer)) {
+                    foreach ($kundenDaten as $kunde) {
+                        if ($kunde['email'] === $KundenName && $kunde['schlüssel'] === $Schlüsselnummer) {
+                            $_SESSION['user_authenticated'] = true;
+                            $_SESSION['username'] = $KundenName;
+                            $_SESSION['customer_login'] = true;
+                            $_SESSION['login_attempts'] = 0;
+                            $_SESSION['last_attempt'] = 0;
+                            header('Location: portal.php');
+                            exit();
+                        }
+                    }
+
+                    $_SESSION['login_attempts']++;
+                    $_SESSION['last_attempt'] = time();
+                    header('Location: ' . $_SERVER['PHP_SELF'] . '?role=customer&error=' . urlencode("Ungültige Email oder Schlüsselnummer!"));
+                    exit();
+                } else {
+                    $error_message = "Bitte Email und Schlüsselnummer eingeben.";
+                }
+            }
+        }
+    } elseif ($selectedLogin === 'admin') {
+        if ($adminRemainingTime > 0) {
+            $error_message = "Bitte warten Sie noch {$adminRemainingTime} Sekunden vor dem nächsten Versuch.";
+        } else {
+            require_once 'VereinsfliegerRestInterface.php';
+
+            $userName = trim($_POST['username'] ?? '');
+            $password = trim($_POST['password'] ?? '');
+            $authentifizier = trim($_POST['authentifizier'] ?? '');
+
+            if (!empty($userName) && !empty($password)) {
+                $api = new VereinsfliegerRestInterface();
+
+                if ($api->SignIn($userName, $password, 0, $configData['appkey'], $authentifizier)) {
+                    $_SESSION['accessToken'] = $api->GetAccessToken();
+                    $_SESSION['tokenExpiry'] = time() + 3600;
                     $_SESSION['user_authenticated'] = true;
-                    $_SESSION['username'] = $KundenName;
-                    $_SESSION['customer_login'] = true;
-                    $_SESSION['login_attempts'] = 0;
-                    $_SESSION['last_attempt'] = 0;
+                    $_SESSION['username'] = $userName;
+                    $_SESSION['customer_login'] = false;
+                    $_SESSION['admin_login_attempts'] = 0;
+                    $_SESSION['admin_last_attempt'] = 0;
                     header('Location: portal.php');
                     exit();
                 }
+
+                $_SESSION['admin_login_attempts']++;
+                $_SESSION['admin_last_attempt'] = time();
+                header('Location: ' . $_SERVER['PHP_SELF'] . '?role=admin&error=' . urlencode("Ungültige Zugangsdaten!"));
+                exit();
+            } else {
+                $error_message = "Bitte alle erforderlichen Felder ausfüllen.";
             }
-            // Login fehlgeschlagen
-            $_SESSION['login_attempts']++;
-            $_SESSION['last_attempt'] = time();
-            $waitTime = 5 * pow(2, $_SESSION['login_attempts']); 
-            
-            // Seite sofort neu laden um den Countdown anzuzeigen
-            header('Location: ' . $_SERVER['PHP_SELF'] . '?error=' . urlencode("Ungültige Email oder Schlüsselnummer!"));
-            exit();
-        } else {
-            $error_message = "Bitte Email und Schlüsselnummer eingeben.";
         }
     }
 }
 
-// Fehlermeldung aus URL-Parameter auslesen (am Anfang der Datei nach session_start())
 if (isset($_GET['error'])) {
     $error_message = $_GET['error'];
-    $remainingTime = ($_SESSION['last_attempt'] + $waitTime) - time();
 }
 
 
@@ -214,74 +256,145 @@ if ($config === null) {
 </head>
 <body class="portal">
     <div id="login-container">
-        <div id="kopf" style="display: block; align-items: center;">
+        <div id="kopf" class="login-header">
             <a href="https://clubcash.net/"><img src="grafik/ClubCashLogo-gelbblauschwarz.svg" style="width: 130px; "></a>
 
         <p><b><a href="<?php echo $config['Webseite']; ?>" target="_blank" style="text-decoration: none; margin: 0px;">
                 <span style="font-size: 24px; color: var(--warning-color););"><?php echo $config['Vereinsname']; ?></span>
             </a></b></p>
-        <p><b>Kunden-Login</b></p>
+        <p><b id="login-title"><?php echo $selectedLogin === 'admin' ? 'Admin-Login' : ($selectedLogin === 'customer' ? 'Kunden-Login' : 'Anmeldung'); ?></b></p>
         </div>
 
         <?php if (!empty($error_message)): ?>
             <p style="text-align: center; color: var(--error-color);"><?= htmlspecialchars($error_message) ?></p>
         <?php endif; ?>
 
-        <form method="POST" action="">
-            <div class="grid-container" style="display: grid; grid-template-columns: auto auto; gap: 10px; padding: 20px;">
-                <div style="padding: 5px; text-align: right; width: 250px;">Email</div>
-                <div style="padding: 5px; text-align: center;">
-                    <input type="text" name="kundenname" id="kundenname" style="font-size: 20px; border: none; font-family: 'Carlito', sans-serif; width: 300px;">
+        <div id="login-choice" class="login-choice-buttons" style="display: <?php echo $selectedLogin === '' ? 'flex' : 'none'; ?>;">
+            <button class="button login-choice-member-button" type="button" id="show-customer-login">Mitglieder Login</button>
+            <button class="button login-choice-customer-button" type="button" id="show-admin-login">Admin Login</button>
+        </div>
+
+        <form method="POST" action="" id="customer-login-form" class="login-section" style="display: <?php echo $selectedLogin === 'customer' ? 'block' : 'none'; ?>;">
+            <input type="hidden" name="login_type" value="customer">
+            <div class="login-grid">
+                <div class="login-label">Email</div>
+                <div class="login-input-wrap">
+                    <input type="text" name="kundenname" id="kundenname" class="login-input">
                 </div>
 
-                <div style="padding: 5px; text-align: right;">Key</div>
-                <div style="padding: 5px; text-align: center;">
-                    <input type="password" name="schlüsselnummer" id="schlüsselnummer" style="font-size: 20px; border: none; font-family: 'Carlito', sans-serif; width: 300px;">
+                <div class="login-label">Key</div>
+                <div class="login-input-wrap">
+                    <input type="password" name="schlüsselnummer" id="schlüsselnummer" class="login-input">
                 </div>
             </div>
 
-            <div style="text-align: center;">
-                <input id="submit-button" class="green button" type="submit" value="Anmelden">
-                <br>
-                <button style="background-color: var(--success-color);"   class="button" type="button" onclick="window.location.href='admin.php';">Admin-Login</button>
+            <div class="login-actions">
+                <input id="customer-submit-button" class="green button login-submit-button" type="submit" value="Anmelden">
+                <button class="button login-back-button" type="button" data-back-to-choice="true">zurück</button>
             </div>
         </form>
 
-        <?php if ($remainingTime > 0): ?>
-            <p style="text-align: center; color: var(--warning-color); margin-top: 30px;" id="countdown-container">
-                Nächster Versuch in <span id="countdown"><?= $remainingTime ?></span> Sekunden möglich.
+        <form method="POST" action="" id="admin-login-form" class="login-section" style="display: <?php echo $selectedLogin === 'admin' ? 'block' : 'none'; ?>;">
+            <input type="hidden" name="login_type" value="admin">
+            <div class="login-grid">
+                <div class="login-label">Email</div>
+                <div class="login-input-wrap">
+                    <input type="text" name="username" id="username" class="login-input">
+                </div>
+
+                <div class="login-label">Passwort</div>
+                <div class="login-input-wrap">
+                    <input type="password" name="password" id="password" class="login-input">
+                </div>
+
+                <div class="login-label">Zwei-Faktor-Authentifizierung</div>
+                <div class="login-input-wrap">
+                    <input type="text" name="authentifizier" id="authentifizier" placeholder="optional" class="login-input">
+                </div>
+            </div>
+
+            <div class="login-actions">
+                <input id="admin-submit-button" class="green button login-submit-button" type="submit" value="Anmelden">
+                <button class="button login-back-button" type="button" data-back-to-choice="true">zurück</button>
+            </div>
+        </form>
+
+        <?php if ($selectedLogin === 'customer' && $customerRemainingTime > 0): ?>
+            <p style="text-align: center; color: var(--warning-color); margin-top: 30px;" id="customer-countdown-container">
+                Nächster Versuch in <span id="customer-countdown"><?= $customerRemainingTime ?></span> Sekunden möglich.
             </p>
-            <script>
-                // Sofort ausführende Funktion (IIFE)
-                (function() {
-                    let timeLeft = <?= $remainingTime ?>;
-                    const countdownElement = document.getElementById('countdown');
-                    const countdownContainer = document.getElementById('countdown-container');
-                    const loginForm = document.querySelector('form');
-                    const submitButton = loginForm.querySelector('input[type="submit"]');
-                    
-                    // Login-Button sofort deaktivieren
+        <?php endif; ?>
+
+        <?php if ($selectedLogin === 'admin' && $adminRemainingTime > 0): ?>
+            <p style="text-align: center; color: var(--warning-color); margin-top: 30px;" id="admin-countdown-container">
+                Nächster Versuch in <span id="admin-countdown"><?= $adminRemainingTime ?></span> Sekunden möglich.
+            </p>
+        <?php endif; ?>
+
+        <script>
+            (function() {
+                const loginChoice = document.getElementById('login-choice');
+                const customerForm = document.getElementById('customer-login-form');
+                const adminForm = document.getElementById('admin-login-form');
+                const loginTitle = document.getElementById('login-title');
+
+                function showSelection(mode) {
+                    const isCustomer = mode === 'customer';
+                    const isAdmin = mode === 'admin';
+
+                    loginChoice.style.display = mode ? 'none' : 'flex';
+                    customerForm.style.display = isCustomer ? 'block' : 'none';
+                    adminForm.style.display = isAdmin ? 'block' : 'none';
+                    loginTitle.textContent = isCustomer ? 'Mitglieder-Login' : (isAdmin ? 'Admin-Login' : 'Anmeldung');
+                }
+
+                document.getElementById('show-customer-login').addEventListener('click', function() {
+                    showSelection('customer');
+                });
+
+                document.getElementById('show-admin-login').addEventListener('click', function() {
+                    showSelection('admin');
+                });
+
+                document.querySelectorAll('[data-back-to-choice="true"]').forEach(button => {
+                    button.addEventListener('click', function() {
+                        window.location.href = 'index.php';
+                    });
+                });
+
+                function initCountdown(containerId, countdownId, submitButtonId, activeColor) {
+                    const container = document.getElementById(containerId);
+                    const countdownElement = document.getElementById(countdownId);
+                    const submitButton = document.getElementById(submitButtonId);
+
+                    if (!container || !countdownElement || !submitButton) {
+                        return;
+                    }
+
+                    let timeLeft = parseInt(countdownElement.textContent, 10) || 0;
                     submitButton.disabled = true;
-                    
-                    // Countdown-Funktion
+
                     function updateCountdown() {
                         if (timeLeft > 0) {
                             countdownElement.textContent = timeLeft;
                             timeLeft--;
                             setTimeout(updateCountdown, 1000);
-                            document.getElementById('submit-button').style= 'background-color: var(--border-color);';
+                            submitButton.style.backgroundColor = 'var(--border-color)';
                         } else {
                             submitButton.disabled = false;
-                            countdownContainer.style.display = 'none';
-                            document.getElementById('submit-button').style= 'background-color: var(--success-color);';
+                            container.style.display = 'none';
+                            submitButton.style.backgroundColor = activeColor;
                         }
                     }
-                    
-                    // Countdown sofort starten
+
                     updateCountdown();
-                })();
-            </script>
-        <?php endif; ?>
+                }
+
+                initCountdown('customer-countdown-container', 'customer-countdown', 'customer-submit-button', 'var(--success-color)');
+                initCountdown('admin-countdown-container', 'admin-countdown', 'admin-submit-button', 'var(--success-color)');
+                showSelection(<?php echo json_encode($selectedLogin); ?>);
+            })();
+        </script>
     </div>
 </body>
 </html>

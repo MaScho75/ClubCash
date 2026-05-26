@@ -18,6 +18,17 @@
  */
 
 session_start();
+
+if (isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] === true) {
+    header('Location: portal.php');
+    exit();
+}
+
+$redirectQuery = $_GET;
+$redirectQuery['role'] = 'admin';
+header('Location: index.php?' . http_build_query($redirectQuery));
+exit();
+
 require_once 'VereinsfliegerRestInterface.php';
 
 // Prüfen, ob der Benutzer bereits eingeloggt ist

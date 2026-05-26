@@ -527,7 +527,7 @@ $selectedTank = $_POST['tank'] ?? '';
                         <p class="zentriert">Der Kauf wurde erfolgreich abgeschlossen!</p>
                     </div>
                     <div class="tanken-aktionsblock">
-                        <button id="neuButton" type="button" style="background-color: var(--primary-color); color: var(--text-color-dark);" onclick="window.location.reload();">neuer Kauf</button>
+                        <button id="neuButton" type="button" style="background-color: var(--primary-color); color: var(--text-color-dark);" onclick="window.location.reload();">nächster Tankvorgang</button>
                     </div>
                     `;
 
