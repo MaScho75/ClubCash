@@ -163,6 +163,15 @@ $selectedTank = $_POST['tank'] ?? '';
     let kundenname = 'unbekannt';
     let deferredInstallPrompt = null;
 
+    function terminalZeitstempel(zeitpunkt = new Date()) {
+        const pad = (wert) => String(wert).padStart(2, '0');
+
+        return {
+            datum: `${zeitpunkt.getFullYear()}-${pad(zeitpunkt.getMonth() + 1)}-${pad(zeitpunkt.getDate())}`,
+            zeit: `${pad(zeitpunkt.getHours())}:${pad(zeitpunkt.getMinutes())}`
+        };
+    }
+
     // KundenID ermitteln aus der URL https://host/index.html?zahl=42
     const urlParams = new URLSearchParams(window.location.search);
     // Holt den Wert von "kundenid" aus der URL
@@ -428,8 +437,6 @@ $selectedTank = $_POST['tank'] ?? '';
 
             form_berechnung.style.display = 'none';
 
-            const Datensatz = `${new Date().toISOString().split('T')[0]};${new Date().toISOString().split('T')[1].split(':').slice(0, 2).join(':')};T;${aktuelleKundenID};${kunden.find(k => k.schlüssel === aktuelleKundenID)?.uid};${EAN};"${selectedTank.Bezeichnung} - ${verbrauch_tanken} l x ${literpreis.toFixed(2)} €<br>- Zählerstand_alt: #${zählerstand_alt} l<br>- Zählerstand_neu: #${zählerstand_neu} l<br>- Umpumpen: #${verbrauch_umpumpen} l";${selectedTank.Kategorie};${kosten_tanken.toFixed(2)};${selectedTank.MwSt}`;
-
             const Berechnung = `
             <div class="tanken-logozeile">
                 <img src="grafik/ClubCashLogo-gelbblauschwarz.svg" alt="ClubCash" class="tanken-clubcash-logo">
@@ -501,6 +508,9 @@ $selectedTank = $_POST['tank'] ?? '';
 
             const bezahlenButton = document.getElementById('bezahlenButton');
             bezahlenButton.addEventListener('click', function() {
+                const terminalZeit = terminalZeitstempel();
+                const Datensatz = `${terminalZeit.datum};${terminalZeit.zeit};T;${aktuelleKundenID};${kunden.find(k => k.schlüssel === aktuelleKundenID)?.uid};${EAN};"${selectedTank.Bezeichnung} - ${verbrauch_tanken} l x ${literpreis.toFixed(2)} €<br>- Zählerstand_alt: #${zählerstand_alt} l<br>- Zählerstand_neu: #${zählerstand_neu} l<br>- Umpumpen: #${verbrauch_umpumpen} l";${selectedTank.Kategorie};${kosten_tanken.toFixed(2)};${selectedTank.MwSt}`;
+
                 fetch('save-umsatz-tanken.php', {
                     method: 'POST',
                     headers: {
