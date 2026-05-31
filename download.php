@@ -22,8 +22,23 @@ if (!isset($_GET['file'])) {
     die('Kein Dateiname angegeben');
 }
 
-$filename = basename($_GET['file']); // Schutz vor Directory Traversal
-$filepath = 'backup/' . $filename;
+$requestedFile = str_replace('\\', '/', $_GET['file']);
+$downloadName = basename($requestedFile);
+
+$allowedDataFiles = [
+    'daten/produkte.json',
+    'daten/kunden.json',
+    'daten/externe.json',
+    'daten/umsatz.csv',
+];
+
+if (in_array($requestedFile, $allowedDataFiles, true)) {
+    $filepath = $requestedFile;
+} else {
+    $filename = basename($requestedFile); // Schutz vor Directory Traversal
+    $filepath = 'backup/' . $filename;
+    $downloadName = $filename;
+}
 
 // Sicherheitsprüfungen
 if (!is_file($filepath)) {
@@ -37,8 +52,17 @@ if ($filesize === false) {
 }
 
 // Download-Header setzen
-header('Content-Type: application/zip');
-header('Content-Disposition: attachment; filename="' . $filename . '"');
+$extension = strtolower(pathinfo($downloadName, PATHINFO_EXTENSION));
+$contentTypes = [
+    'csv' => 'text/csv; charset=UTF-8',
+    'json' => 'application/json; charset=UTF-8',
+    'zip' => 'application/zip',
+];
+$contentType = $contentTypes[$extension] ?? 'application/octet-stream';
+$safeDownloadName = str_replace(['"', "\r", "\n"], '', $downloadName);
+
+header('Content-Type: ' . $contentType);
+header('Content-Disposition: attachment; filename="' . $safeDownloadName . '"');
 header('Content-Length: ' . $filesize);
 header('Cache-Control: no-cache, must-revalidate');
 header('Pragma: no-cache');

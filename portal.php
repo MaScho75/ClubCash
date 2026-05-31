@@ -2412,7 +2412,7 @@ if ($response !== false) {
                 `;
         if (angemeldetesMitglied.cc_admin == true) {
             html += `<button class="kleinerBt" onclick="MitgliederAusweise('${kunde.schlüssel}')" style="margin-left: 10px;">Bezahlkarte</button>
-            <button class="kleinerBt" onclick="TankstellenQRCode('${kunde.schlüssel}')" style="margin-left: 10px;">QR-Code</button>
+            <button class="kleinerBt" onclick="TankstellenQRCode('${kunde.schlüssel}')" style="margin-left: 10px;">Tankstelle</button>
             <button class="kleinerBt" style="width: auto;" onclick="KontoAusgleichen('${kunde.uid}', ${kunde.Kontostand})" style="margin-left: 10px;">Konto ausgleichen</button>
             <button class="kleinerBt" style="width: auto;" onclick="OnlineBuchung('${kunde.uid}')" style="margin-left: 10px;">Buchung hinzufügen</button>`
             ;
