@@ -3486,6 +3486,7 @@ if ($response !== false) {
                 }
                 th, td {
                     text-align: left;
+                    vertical-align: top;
                     padding: 0 10px 0px 0;
                 }
                 th {
