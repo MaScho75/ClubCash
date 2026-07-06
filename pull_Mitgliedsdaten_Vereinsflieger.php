@@ -36,9 +36,9 @@ if (!file_exists($configFile)) {
     die("<pre>❌ Konfigurationsdatei nicht gefunden: $configFile</pre>");
 }
 $config = json_decode(file_get_contents($configFile), true);
-if (!$config) {
-    die("<pre>❌ Fehler beim Laden der Konfigurationsdatei: " . json_last_error_msg() . "</pre>");
-}
+//if (!$config) {
+//    die("<pre>❌ Fehler beim Laden der Konfigurationsdatei: " . json_last_error_msg() . "</pre>");
+//}
 
 echo "<p>✅ Konfigurationsdatei erfolgreich geladen.</p>";
 
@@ -47,7 +47,7 @@ echo "<p>Die Spalte für die Bezahlschlüssel in der Mitgliederverwaltung in Ver
 $schlüsselbezeichnung = $config['schlüssel'] ?? null;
 
 if (!$schlüsselbezeichnung) {
-    die("<pre>❌ Kein Bezahlschlüssel in der Konfigurationsdatei gefunden.</pre>");
+    //die("<pre>❌ Kein Bezahlschlüssel in der Konfigurationsdatei gefunden.</pre>");
 }
 
 echo "<p>✅ Umgebungsvariablen erfolgreich geladen.</p>";
@@ -74,7 +74,7 @@ if (isset($_SESSION['accessToken']) && isset($_SESSION['tokenExpiry']) && $_SESS
         // Nutzer filtern und verarbeiten
         $filteredUsers = array_filter(array_map(function($user) use ($config, $schlüsselbezeichnung) {
 
-            if (!empty($user[$schlüsselbezeichnung])) {
+            //if (!empty($user[$schlüsselbezeichnung])) {
                 // Überprüfen, ob 'roles' ein Array ist oder ein JSON-String
                 $roles = isset($user['roles']) ? (is_array($user['roles']) ? $user['roles'] : json_decode($user['roles'], true)) : [];
         
@@ -96,7 +96,7 @@ if (isset($_SESSION['accessToken']) && isset($_SESSION['tokenExpiry']) && $_SESS
                     'cc_member' => in_array($config['cc_member'], $roles, true),
                     'cc_guest' => in_array($config['cc_guest'], $roles, true),
                 ];
-            }
+            //}
             return null;
         }, $usersData));
         // Alle null-Werte aus dem Array entfernen

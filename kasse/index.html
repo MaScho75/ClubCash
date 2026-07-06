@@ -330,6 +330,7 @@ DATENÜBERTRAGUNG
             let timeout; //Bildschirmschone Timer
             let produkte = [];
             let kunden = [];
+            let zusatzschluessel = [];
             let config = [];
             let spritt = false; // Variable für die Spritt
             let ProduktTemp = []; // Temporäre Variable für das Produkt, wenn es sich um ein Produkt mit Mengeneingabe handelt
@@ -482,6 +483,10 @@ DATENÜBERTRAGUNG
                     ensureAuthenticatedSession(),
                     loadJSON("daten.php?file=produkte.json"),
                     loadJSON("daten.php?file=kunden.json"),
+                    loadJSON("daten.php?file=keys.json").catch(error => {
+                        console.warn("Zusatzschlüssel konnten nicht geladen werden, starte ohne diese Daten:", error);
+                        return [];
+                    }),
                     loadJSON("config-public.php"),
                     loadJSON("daten.php?file=externe.json").catch(error => {
                         console.warn("Externe Kunden konnten nicht geladen werden, starte ohne diese Daten:", error);
@@ -489,7 +494,7 @@ DATENÜBERTRAGUNG
                     }),
                     initializeServiceWorker()
                 ])
-                .then(([, geladeneProdukte, geladeneKunden, geladeneConfig, geladeneExterne]) => {
+                .then(([, geladeneProdukte, geladeneKunden, geladeneZusatzschluessel, geladeneConfig, geladeneExterne]) => {
                     produkte = geladeneProdukte;
                     kunden = geladeneKunden;
                     config = geladeneConfig;
@@ -502,6 +507,7 @@ DATENÜBERTRAGUNG
                             }
                         });
                     kunden = kunden.concat(externe); // Hänge die datensätze externe an die kunden an
+                    zusatzschluessel = Array.isArray(geladeneZusatzschluessel) ? geladeneZusatzschluessel : [];
                     document.getElementById("verein").innerText = config.VereinsnameAbk;
                     configuration();
                     preisliste();
@@ -1435,8 +1441,22 @@ DATENÜBERTRAGUNG
         // KUNDEN-FUNKTIONEN
         // ========================================
 
+        function findeKundeNachSchluessel(Schluesselnummer) {
+            let kunde = kunden.find(kunde => String(kunde.schlüssel) === String(Schluesselnummer));
+            if (kunde) {
+                return kunde;
+            }
+
+            const zusatz = zusatzschluessel.find(eintrag => String(eintrag.addkey) === String(Schluesselnummer));
+            if (!zusatz) {
+                return null;
+            }
+
+            return kunden.find(kunde => String(kunde.uid || kunde.schlüssel) === String(zusatz.uid)) || null;
+        }
+
         function kundenprüfung(KundenNr) {
-            let kunde = kunden.find(kunden => kunden.schlüssel === KundenNr); // schlüssel ist die Kundennummer
+            let kunde = findeKundeNachSchluessel(KundenNr); // schlüssel ist die Kundennummer
 
             if (kunde) {
                 if (!summe == 0) {
@@ -1459,7 +1479,7 @@ DATENÜBERTRAGUNG
                             Datum: datum,
                             Zeit: zeit,
                             Terminal: terminal,
-                            Schlüssel: kunde.schlüssel,
+                            Schlüssel: KundenNr,
                             Kundennummer: kunde.uid,
                             EAN: ds.EAN,
                             Produkt: ds.Bezeichnung,
@@ -1589,7 +1609,7 @@ DATENÜBERTRAGUNG
             }
 
             let kontosumme = 0.0;
-            let kunde = kunden.find(kunden => kunden.schlüssel === Schlüsselnummer);
+            let kunde = findeKundeNachSchluessel(Schlüsselnummer);
 
             try {
             let response = await fetch("kundenkontouebersicht-cvs.php", {
@@ -1701,7 +1721,7 @@ DATENÜBERTRAGUNG
         
             data.data.forEach(row => {
 
-                let kunde = kunden.find(kunden => kunden.schlüssel === row.Schlüssel);
+                let kunde = findeKundeNachSchluessel(row.Schlüssel);
 
                 if (!kunde) {
                     return console.error("Kunde nicht gefunden für Schlüssel: " + row.Schlüssel);
@@ -1971,7 +1991,7 @@ DATENÜBERTRAGUNG
             for (const verkauf of offlineVerkäufe) {
                 for (const ds of verkauf) {
                     //finde den Kundennamen basierend auf dem Schlüssel
-                    let kunde = kunden.find(kunden => kunden.schlüssel === ds.Schlüssel);
+                    let kunde = findeKundeNachSchluessel(ds.Schlüssel);
                     console.log(kunde);
                     let kundeName = kunde.lastname + ", " + kunde.firstname;
                     console.log(kundeName);

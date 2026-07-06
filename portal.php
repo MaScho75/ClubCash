@@ -51,6 +51,14 @@ use PHPMailer\PHPMailer\PHPMailer;
     $jsonWareneingangDatei = file_get_contents("daten/wareneingang.json");
     $jsonWareneingangDaten = json_decode($jsonWareneingangDatei, true); // true gibt ein assoziatives Array zurück
 
+// Zusätzliche Schlüssel laden
+    clearstatcache(true, "daten/keys.json"); // Clear file cache for this specific file
+    $jsonKeysDatei = file_exists("daten/keys.json") ? file_get_contents("daten/keys.json") : "[]";
+    $jsonKeysDaten = json_decode($jsonKeysDatei, true);
+    if (!is_array($jsonKeysDaten)) {
+        $jsonKeysDaten = [];
+    }
+
 // Configurationsdatei einbinden
     clearstatcache(true, "daten/config.json"); // Clear file cache for this specific file
     $jsonConfigDatei = file_get_contents("daten/config.json");
@@ -190,6 +198,8 @@ if ($response !== false) {
         <li><a href="#" onclick="downloadFile('daten/umsatz.csv')">Umsatz CSV</a></li>
         <li><a href="#" onclick="Mitgliederdaten()">Mitgliederdaten</a></li>
         <li><a href="#" onclick="backupliste()">Backups</a></li>
+        <li><a href="#" onclick="downloadFile('daten/config.json')">Config JSON</a></li>
+        <li><a href="#" onclick="Schluesselliste()">Schlüsselliste</a></li>
       </ul>
     </li>
   </ul>
@@ -287,6 +297,7 @@ if ($response !== false) {
         let produkte = <?php echo json_encode($jsonProdukteDaten); ?>;
         let verkäufe = <?php echo json_encode($verkäufe); ?>;
         let wareneingang = <?php echo json_encode($jsonWareneingangDaten); ?>;
+        let zusatzschluessel = <?php echo json_encode($jsonKeysDaten); ?>;
         let customer_login = <?php echo json_encode($_SESSION['customer_login']); ?>;
         let config = <?php echo json_encode($jsonConfigDaten); ?>;
         const release = <?php echo json_encode($release); ?>;
@@ -644,8 +655,10 @@ if ($response !== false) {
                 ...verkäufe.map(v => v.Schlüssel),
                 ...externe.map(e => e.schlüssel), 
                 ...kunden.map(k => k.schlüssel),
+                ...zusatzschluessel.map(k => k.addkey),
+                ...produkte.map(p => p.EAN),
                 ...data.map(d => d.schlüssel) // Include current data
-            ].filter(Boolean));
+            ].filter(value => value !== undefined && value !== null && String(value).trim() !== '').map(value => String(value).trim()));
             
             while (existingKeys.has(baseNum.toString())) {
                 baseNum++;
@@ -665,24 +678,60 @@ if ($response !== false) {
                 return false;
             }
 
-            // Check for duplicate keys in new rows
+            // Check for duplicate keys and conflicts with existing keys/additional keys/EANs
             const keys = new Set();
-            let hasDuplicates = false;
+            const hauptschluessel = new Set(kunden.map(kunde => String(kunde.schlüssel || '').trim()).filter(Boolean));
+            const zusatzkeys = new Set(zusatzschluessel.map(eintrag => String(eintrag.addkey || '').trim()).filter(Boolean));
+            const eans = new Set(produkte.map(produkt => String(produkt.EAN || '').trim()).filter(Boolean));
+            let keyConflict = '';
+
             data.forEach((row, index) => {
-                if (!deletedRows.has(index)) {
-                    if (keys.has(row.schlüssel)) {
-                        hasDuplicates = true;
-                    }
-                    keys.add(row.schlüssel);
+                if (deletedRows.has(index) || keyConflict) {
+                    return;
                 }
+
+                const key = String(row.schlüssel || '').trim();
+
+                if (!key) {
+                    keyConflict = 'Ein externer Kunde hat keine Schlüsselnummer.';
+                    return;
+                }
+
+                if (keys.has(key)) {
+                    keyConflict = `Der Schlüssel ${key} ist bei externen Kunden doppelt vergeben.`;
+                    return;
+                }
+
+                if (hauptschluessel.has(key)) {
+                    keyConflict = `Der Schlüssel ${key} ist bereits als Hauptschlüssel vergeben.`;
+                    return;
+                }
+
+                if (zusatzkeys.has(key)) {
+                    keyConflict = `Der Schlüssel ${key} ist bereits als Zusatzschlüssel vergeben.`;
+                    return;
+                }
+
+                if (eans.has(key)) {
+                    keyConflict = `Der Schlüssel ${key} ist bereits als EAN vergeben.`;
+                    return;
+                }
+
+                keys.add(key);
             });
 
-            if (hasDuplicates) {
-                alert('Warnung: Es gibt doppelte Schlüssel in den Datensätzen!');
+            if (keyConflict) {
+                alert('❌ ' + keyConflict);
                 return false;
             }
 
             return true;
+        }
+
+        function getExternerKontostand(externer) {
+            const uid = String(externer.uid || externer.schlüssel || '');
+            const kunde = käufer.find(k => String(k.uid) === uid || String(k.schlüssel) === String(externer.schlüssel || ''));
+            return parseFloat(kunde?.Kontostand || 0);
         }
 
         function renderTable() {
@@ -700,6 +749,7 @@ if ($response !== false) {
 
             // Durchstreichen-Style für gelöschte Zeilen
             const tdStyle = deletedRows.has(index) ? 'text-decoration: line-through;' : '';
+            const kontostand = getExternerKontostand(externer);
 
             console.log("Externer Kunde:", externer);    
 
@@ -715,7 +765,7 @@ if ($response !== false) {
                          ${(editedRows.has(index) || deletedRows.has(index) || newRows.has(index)) ? 
                     '<a href="#" class="icon" onclick="return false;">↩️</a>' : ''}
                 </td>
-                <td style="${tdStyle}">${externer.Kontostand ? externer.Kontostand.toFixed(2) + ' €' : '0,00 €'}</td>
+                <td style="${tdStyle}">${kontostand.toFixed(2)} €</td>
                 <td style="${tdStyle}"><a href="#" class="icon" onclick="Kundenübersicht('${externer.schlüssel}')">ℹ️</a></td>
             `;
                 
@@ -1984,6 +2034,174 @@ if ($response !== false) {
 // MITGLIEDERVERWALTUNG
 // ============================================================================
 
+    function Schluesselliste() {
+        let sortColumn = 'schluesselnummer';
+        let sortAscending = true;
+
+        function getExterneUid(externer) {
+            return String(externer.uid || externer.schlüssel || '');
+        }
+
+        function findKeyOwner(uid) {
+            const uidText = String(uid || '');
+            const kunde = kunden.find(k => String(k.uid || '') === uidText);
+            if (kunde) {
+                return {
+                    kunde: kunde,
+                    extern: false
+                };
+            }
+
+            const externer = Array.isArray(externe)
+                ? externe.find(e => getExterneUid(e) === uidText || String(e.schlüssel || '') === uidText)
+                : null;
+            if (externer) {
+                return {
+                    kunde: externer,
+                    extern: true
+                };
+            }
+
+            return {
+                kunde: null,
+                extern: false
+            };
+        }
+
+        function booleanText(value) {
+            return value ? 'true' : 'false';
+        }
+
+        function booleanIcon(value) {
+            return value ? '✅' : '';
+        }
+
+        const rows = [];
+
+        kunden.forEach(kunde => {
+            rows.push({
+                schluesselnummer: String(kunde.schlüssel || ''),
+                name: String(kunde.lastname || ''),
+                vorname: String(kunde.firstname || ''),
+                uid: String(kunde.uid || ''),
+                memberid: String(kunde.memberid || ''),
+                email: String(kunde.email || ''),
+                hauptschluessel: true,
+                externerKunde: false,
+                zusatzschluessel: false
+            });
+        });
+
+        if (Array.isArray(externe)) {
+            externe.forEach(externer => {
+                rows.push({
+                    schluesselnummer: String(externer.schlüssel || ''),
+                    name: String(externer.lastname || ''),
+                    vorname: String(externer.firstname || ''),
+                    uid: getExterneUid(externer),
+                    memberid: String(externer.memberid || ''),
+                    email: String(externer.email || ''),
+                    hauptschluessel: true,
+                    externerKunde: true,
+                    zusatzschluessel: false
+                });
+            });
+        }
+
+        zusatzschluessel.forEach(eintrag => {
+            const owner = findKeyOwner(eintrag.uid);
+            const kunde = owner.kunde || {};
+            rows.push({
+                schluesselnummer: String(eintrag.addkey || ''),
+                name: String(kunde.lastname || ''),
+                vorname: String(kunde.firstname || ''),
+                uid: String(eintrag.uid || ''),
+                memberid: String(kunde.memberid || ''),
+                email: String(kunde.email || ''),
+                hauptschluessel: false,
+                externerKunde: owner.extern,
+                zusatzschluessel: true
+            });
+        });
+
+        const columns = [
+            {key: 'schluesselnummer', label: 'Schlüsselnummer'},
+            {key: 'name', label: 'Name'},
+            {key: 'vorname', label: 'Vorname'},
+            {key: 'uid', label: 'uid'},
+            {key: 'memberid', label: 'Memberid'},
+            {key: 'email', label: 'email'},
+            {key: 'hauptschluessel', label: 'Hauptschlüssel (true/false)'},
+            {key: 'externerKunde', label: 'Externer Kunde (true/false)'},
+            {key: 'zusatzschluessel', label: 'Zusatzschlüssel (true/false)'},
+            {key: 'info', label: 'i', sortable: false}
+        ];
+
+        function getSortValue(row, column) {
+            const value = row[column];
+            return typeof value === 'boolean' ? booleanText(value) : String(value || '').toLowerCase();
+        }
+
+        function renderSchluesselliste() {
+            const sortedRows = rows.filter(row => row.schluesselnummer.trim() !== '').sort((a, b) => {
+                const valueA = getSortValue(a, sortColumn);
+                const valueB = getSortValue(b, sortColumn);
+                const result = valueA.localeCompare(valueB, 'de', {numeric: true, sensitivity: 'base'});
+                return sortAscending ? result : -result;
+            });
+
+            const headerHtml = columns.map(column => {
+                if (column.sortable === false) {
+                    return `<th>${column.label}</th>`;
+                }
+
+                const sortMarker = sortColumn === column.key ? (sortAscending ? ' ▲' : ' ▼') : '';
+                return `<th class="sortable" data-field="${column.key}">${column.label}${sortMarker}</th>`;
+            }).join('');
+
+            const bodyHtml = sortedRows.map(row => `
+                <tr>
+                    <td>${escapeHtml(row.schluesselnummer)}</td>
+                    <td class="links">${escapeHtml(row.name)}</td>
+                    <td class="links">${escapeHtml(row.vorname)}</td>
+                    <td>${escapeHtml(row.uid)}</td>
+                    <td>${escapeHtml(row.memberid)}</td>
+                    <td class="links">${escapeHtml(row.email)}</td>
+                    <td>${booleanIcon(row.hauptschluessel)}</td>
+                    <td>${booleanIcon(row.externerKunde)}</td>
+                    <td>${booleanIcon(row.zusatzschluessel)}</td>
+                    <td><a href="#" class="icon" onclick="Kundenübersicht('${escapeHtml(row.uid)}'); return false;">ℹ️</a></td>
+                </tr>
+            `).join('');
+
+            portalInhalt.innerHTML = `
+                <table id="schluessellisteTable" class="portal-table">
+                    <thead>
+                        <tr>${headerHtml}</tr>
+                    </thead>
+                    <tbody>${bodyHtml}</tbody>
+                </table>
+            `;
+
+            document.querySelectorAll('#schluessellisteTable th.sortable').forEach(th => {
+                th.style.cursor = 'pointer';
+                th.addEventListener('click', () => {
+                    const field = th.dataset.field;
+                    if (sortColumn === field) {
+                        sortAscending = !sortAscending;
+                    } else {
+                        sortColumn = field;
+                        sortAscending = true;
+                    }
+                    renderSchluesselliste();
+                });
+            });
+        }
+
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>Schlüsselliste</h2>";
+        renderSchluesselliste();
+    }
+
     /**
      * Zeigt Liste aller Mitglieder mit Kontoinformationen
      * Listet ID, Mitgliedsnr, Name, Email, Rollen, Kontostand
@@ -2444,6 +2662,10 @@ if ($response !== false) {
                     </td>
                 </tr>
                 <tr>
+                    <td><b>Zusatzschlüssel</b> ${angemeldetesMitglied.cc_admin === true ? `<button type="button" onclick="addZusatzschluessel('${kunde.uid}')" style="width: 24px; height: 24px; padding: 0; margin-left: 6px; line-height: 1;">+</button>` : ''}</td>
+                    <td id="zusatzschluessel-${kunde.uid}">${renderZusatzschluessel(kunde.uid)}</td>
+                </tr>
+                <tr>
                     <td><b>Rollen</b></td>
                     <td>${kunde.cc_admin ? "<mark>Kassenwart</mark>" : ""} ${kunde.cc_seller ? "<mark>Verkäufer</mark>" : ""} ${kunde.cc_member ? "<mark>Mitglied</mark>" : ""} ${kunde.cc_guest ? "<mark>Gast</mark>" : ""}</td>
                 </tr>
@@ -2611,6 +2833,223 @@ if ($response !== false) {
             const datumE = document.getElementById("datum_ende").value;
             Kundenübersicht(kundennummer,new Date(datumA), new Date(datumE));
         });
+    }
+
+    function getZusatzschluessel(uid) {
+        return zusatzschluessel.filter(eintrag => String(eintrag.uid) === String(uid));
+    }
+
+    function canEditZusatzschluessel() {
+        return angemeldetesMitglied.cc_admin === true;
+    }
+
+    function renderZusatzschluessel(uid) {
+        const eintraege = getZusatzschluessel(uid);
+
+        if (eintraege.length === 0) {
+            return '<span style="color: var(--border-color);">keine</span>';
+        }
+
+        if (!canEditZusatzschluessel()) {
+            return eintraege.map(eintrag => `<div>${escapeHtml(String(eintrag.addkey || ''))}</div>`).join('');
+        }
+
+        return eintraege.map((eintrag, index) => `
+            <div style="display: flex; align-items: center; gap: 4px; margin: 2px 0;">
+                <input type="text" value="${escapeHtml(String(eintrag.addkey || ''))}" data-zusatzschluessel-index="${index}" onkeydown="handleZusatzschluesselEnter(event, '${uid}', ${index})" style="width: 120px;">
+                <a href="#" class="icon" onclick="saveZusatzschluessel('${uid}', ${index}); return false;" title="speichern" aria-label="speichern">💾</a>
+                <a href="#" class="icon" onclick="deleteZusatzschluessel('${uid}', ${index}); return false;" title="löschen" aria-label="löschen">🗑️</a>
+            </div>
+        `).join('');
+    }
+
+    function handleZusatzschluesselEnter(event, uid, index = null) {
+        if (event.key !== 'Enter') {
+            return;
+        }
+
+        event.preventDefault();
+        if (index === null) {
+            saveNeuerZusatzschluessel(uid);
+        } else {
+            saveZusatzschluessel(uid, index);
+        }
+    }
+
+    function zusatzschluesselExists(addkey, ignoreEintrag = null) {
+        if (käufer.some(kunde => String(kunde.schlüssel) === String(addkey))) {
+            return true;
+        }
+
+        if (produkte.some(produkt => String(produkt.EAN) === String(addkey))) {
+            return true;
+        }
+
+        return zusatzschluessel.some(eintrag => eintrag !== ignoreEintrag && String(eintrag.addkey) === String(addkey));
+    }
+
+    function resetZusatzschluesselInput(input) {
+        if (!input) {
+            return;
+        }
+
+        input.value = '';
+        input.focus();
+    }
+
+    function refreshZusatzschluessel(uid) {
+        const zelle = document.getElementById(`zusatzschluessel-${uid}`);
+        if (zelle) {
+            zelle.innerHTML = renderZusatzschluessel(uid);
+        }
+    }
+
+    function saveZusatzschluesselDatei(successMessage) {
+        if (!canEditZusatzschluessel()) {
+            alert('Nur Administratoren dürfen Zusatzschlüssel ändern.');
+            return Promise.reject(new Error('Keine Berechtigung'));
+        }
+
+        return fetch('json-schreiben.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                data: zusatzschluessel,
+                filename: 'daten/keys.json'
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (!result.success) {
+                throw new Error(result.error || 'Unbekannter Fehler');
+            }
+
+            if (successMessage) {
+                console.log('✅ ' + successMessage);
+            }
+        })
+        .catch(error => {
+            alert('Fehler beim Speichern der Zusatzschlüssel: ' + error.message);
+            throw error;
+        });
+    }
+
+    function addZusatzschluessel(uid) {
+        if (!canEditZusatzschluessel()) {
+            alert('Nur Administratoren dürfen Zusatzschlüssel ändern.');
+            return;
+        }
+
+        const zelle = document.getElementById(`zusatzschluessel-${uid}`);
+        if (!zelle) {
+            return;
+        }
+
+        const vorhandeneHtml = getZusatzschluessel(uid).length > 0 ? renderZusatzschluessel(uid) : '';
+        zelle.innerHTML = `
+            ${vorhandeneHtml}
+            <div style="display: flex; align-items: center; gap: 4px; margin: 2px 0;">
+                <input type="text" id="neuer-zusatzschluessel-${uid}" onkeydown="handleZusatzschluesselEnter(event, '${uid}')" style="width: 120px;" placeholder="Schlüssel">
+                <a href="#" class="icon" onclick="saveNeuerZusatzschluessel('${uid}'); return false;" title="speichern" aria-label="speichern">💾</a>
+                <a href="#" class="icon" onclick="refreshZusatzschluessel('${uid}'); return false;" title="abbruch" aria-label="abbruch">↩️</a>
+            </div>
+        `;
+
+        document.getElementById(`neuer-zusatzschluessel-${uid}`).focus();
+    }
+
+    function saveNeuerZusatzschluessel(uid) {
+        if (!canEditZusatzschluessel()) {
+            alert('Nur Administratoren dürfen Zusatzschlüssel ändern.');
+            return;
+        }
+
+        const input = document.getElementById(`neuer-zusatzschluessel-${uid}`);
+        const addkey = input ? input.value.trim() : '';
+
+        if (!addkey) {
+            alert('Bitte eine Schlüsselnummer eingeben.');
+            return;
+        }
+
+        if (zusatzschluesselExists(addkey)) {
+            alert('❌ Diese Schlüsselnummer ist bereits vergeben.');
+            resetZusatzschluesselInput(input);
+            return;
+        }
+
+        zusatzschluessel.push({
+            uid: String(uid),
+            addkey: addkey
+        });
+
+        saveZusatzschluesselDatei('Zusatzschlüssel gespeichert.')
+            .then(() => refreshZusatzschluessel(uid));
+    }
+
+    function saveZusatzschluessel(uid, index) {
+        if (!canEditZusatzschluessel()) {
+            alert('Nur Administratoren dürfen Zusatzschlüssel ändern.');
+            return;
+        }
+
+        const eintraege = getZusatzschluessel(uid);
+        const eintrag = eintraege[index];
+        const zelle = document.getElementById(`zusatzschluessel-${uid}`);
+        const input = zelle ? zelle.querySelector(`input[data-zusatzschluessel-index="${index}"]`) : null;
+        const addkey = input ? input.value.trim() : '';
+
+        if (!eintrag) {
+            alert('Zusatzschlüssel wurde nicht gefunden.');
+            refreshZusatzschluessel(uid);
+            return;
+        }
+
+        if (!addkey) {
+            alert('Bitte eine Schlüsselnummer eingeben.');
+            return;
+        }
+
+        if (zusatzschluesselExists(addkey, eintrag)) {
+            alert('❌ Diese Schlüsselnummer ist bereits vergeben.');
+            resetZusatzschluesselInput(input);
+            return;
+        }
+
+        eintrag.addkey = addkey;
+        saveZusatzschluesselDatei('Zusatzschlüssel geändert.')
+            .then(() => refreshZusatzschluessel(uid));
+    }
+
+    function deleteZusatzschluessel(uid, index) {
+        if (!canEditZusatzschluessel()) {
+            alert('Nur Administratoren dürfen Zusatzschlüssel ändern.');
+            return;
+        }
+
+        const eintraege = getZusatzschluessel(uid);
+        const eintrag = eintraege[index];
+
+        if (!eintrag) {
+            alert('Zusatzschlüssel wurde nicht gefunden.');
+            refreshZusatzschluessel(uid);
+            return;
+        }
+
+        if (!confirm(`Zusatzschlüssel ${eintrag.addkey} löschen?`)) {
+            return;
+        }
+
+        const globalIndex = zusatzschluessel.indexOf(eintrag);
+        if (globalIndex !== -1) {
+            zusatzschluessel.splice(globalIndex, 1);
+        }
+
+        saveZusatzschluesselDatei('Zusatzschlüssel gelöscht.')
+            .then(() => refreshZusatzschluessel(uid));
     }
 
     /**

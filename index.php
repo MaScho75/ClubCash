@@ -75,6 +75,12 @@ $baseUrl = 'https://www.vereinsflieger.de';
 // Kunden-Daten laden
 $kundenDaten = json_decode(file_get_contents('daten/kunden.json'), true);
 
+// Zusätzliche Schlüssel laden
+$zusatzschluesselDaten = file_exists('daten/keys.json') ? json_decode(file_get_contents('daten/keys.json'), true) : [];
+if (!is_array($zusatzschluesselDaten)) {
+    $zusatzschluesselDaten = [];
+}
+
 // Lade externe Kunendaten
 $externeKundenDaten = json_decode(file_get_contents('daten/externe.json'), true);
 
@@ -102,6 +108,22 @@ if (is_array($externeKundenDaten)) {
             ];
         }
     }
+}
+
+function kundeHatSchluessel(array $kunde, string $schluesselnummer, array $zusatzschluesselDaten): bool
+{
+    if (($kunde['schlüssel'] ?? '') === $schluesselnummer) {
+        return true;
+    }
+
+    $uid = (string)($kunde['uid'] ?? $kunde['schlüssel'] ?? '');
+    foreach ($zusatzschluesselDaten as $zusatzschluessel) {
+        if ((string)($zusatzschluessel['uid'] ?? '') === $uid && (string)($zusatzschluessel['addkey'] ?? '') === $schluesselnummer) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 // Prüfen, ob Benutzer bereits eingeloggt ist
@@ -146,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!empty($KundenName) && !empty($Schlüsselnummer)) {
                     foreach ($kundenDaten as $kunde) {
-                        if ($kunde['email'] === $KundenName && $kunde['schlüssel'] === $Schlüsselnummer) {
+                        if ($kunde['email'] === $KundenName && kundeHatSchluessel($kunde, $Schlüsselnummer, $zusatzschluesselDaten)) {
                             $_SESSION['user_authenticated'] = true;
                             $_SESSION['username'] = $KundenName;
                             $_SESSION['customer_login'] = true;

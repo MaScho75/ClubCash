@@ -26,6 +26,7 @@ $allowed = [
     'produkte.json',
     'kunden.json',
     'externe.json',
+    'keys.json',
 ];
 
 if (!in_array($file, $allowed, true)) {

@@ -24,6 +24,10 @@
 // frage die datei "kunden.json" ab und speichere nur "uid" und "firstname" und "lastname" und "schlüssel" als php code 
 $kunden = json_decode(file_get_contents('daten/kunden.json'), true);
 $externe = json_decode(file_get_contents('daten/externe.json'), true);
+$zusatzschluessel = file_exists('daten/keys.json') ? json_decode(file_get_contents('daten/keys.json'), true) : [];
+if (!is_array($zusatzschluessel)) {
+    $zusatzschluessel = [];
+}
 $kundenListe = array_map(function($kunde) {
     return [
         'uid' => $kunde['uid'],
@@ -160,6 +164,7 @@ $selectedTank = $_POST['tank'] ?? '';
 
     // Daten aus PHP in JavaScript übergeben
     const kunden = <?php echo json_encode($kundenListe); ?>;
+    const zusatzschluessel = <?php echo json_encode($zusatzschluessel); ?>;
     const produkte = <?php echo json_encode($produkteListe); ?>;
     let selectedTank;
     
@@ -342,8 +347,22 @@ $selectedTank = $_POST['tank'] ?? '';
         }
     }
 
+    function findeKundeNachSchluessel(schluesselnummer) {
+        const kunde = kunden.find(k => String(k.schlüssel) === String(schluesselnummer));
+        if (kunde) {
+            return kunde;
+        }
+
+        const zusatz = zusatzschluessel.find(eintrag => String(eintrag.addkey) === String(schluesselnummer));
+        if (!zusatz) {
+            return null;
+        }
+
+        return kunden.find(k => String(k.uid || k.schlüssel) === String(zusatz.uid)) || null;
+    }
+
     function Kundenprüfung(chipId) {
-        const kunde = kunden.find(k => k.schlüssel === chipId);
+        const kunde = findeKundeNachSchluessel(chipId);
         if (kunde) {
             kundenname = `${kunde.firstname} ${kunde.lastname}`;
             document.getElementById('KundenName').textContent = kundenname;
@@ -445,6 +464,12 @@ $selectedTank = $_POST['tank'] ?? '';
             const kosten_umpumpen = verbrauch_umpumpen * literpreis;
             const kosten_tanken = verbrauch_tanken * literpreis;
             const EAN = produkte.find(produkt => produkt.Bezeichnung === tankSelect.value)?.EAN ?? 'unbekannt';
+            const aktuellerKunde = findeKundeNachSchluessel(aktuelleKundenID);
+
+            if (!aktuellerKunde) {
+                alert('Kunde wurde nicht gefunden.');
+                return;
+            }
 
             form_berechnung.style.display = 'none';
 
@@ -524,7 +549,7 @@ $selectedTank = $_POST['tank'] ?? '';
             const bezahlenButton = document.getElementById('bezahlenButton');
             bezahlenButton.addEventListener('click', function() {
                 const terminalZeit = terminalZeitstempel();
-                const Datensatz = `${verkaufsdatum};${terminalZeit.zeit};T;${aktuelleKundenID};${kunden.find(k => k.schlüssel === aktuelleKundenID)?.uid};${EAN};"${selectedTank.Bezeichnung} - ${verbrauch_tanken} l x ${literpreis.toFixed(2)} €<br>- Zählerstand_alt: #${zählerstand_alt} l<br>- Zählerstand_neu: #${zählerstand_neu} l<br>- Umpumpen: #${verbrauch_umpumpen} l";${selectedTank.Kategorie};${kosten_tanken.toFixed(2)};${selectedTank.MwSt}`;
+                const Datensatz = `${verkaufsdatum};${terminalZeit.zeit};T;${aktuelleKundenID};${aktuellerKunde?.uid};${EAN};"${selectedTank.Bezeichnung} - ${verbrauch_tanken} l x ${literpreis.toFixed(2)} €<br>- Zählerstand_alt: #${zählerstand_alt} l<br>- Zählerstand_neu: #${zählerstand_neu} l<br>- Umpumpen: #${verbrauch_umpumpen} l";${selectedTank.Kategorie};${kosten_tanken.toFixed(2)};${selectedTank.MwSt}`;
 
                 fetch('save-umsatz-tanken.php', {
                     method: 'POST',
