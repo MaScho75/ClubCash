@@ -66,6 +66,7 @@ try {
 
     $allowed = [
         'produkte.json',
+        'keys.json',
     ];
     $file = basename((string)$input['filename']);
     if (!in_array($file, $allowed, true)) {

@@ -199,7 +199,7 @@ if ($response !== false) {
         <li><a href="#" onclick="Mitgliederdaten()">Mitgliederdaten</a></li>
         <li><a href="#" onclick="backupliste()">Backups</a></li>
         <li><a href="#" onclick="downloadFile('daten/config.json')">Config JSON</a></li>
-        <li><a href="#" onclick="Schluesselliste()">Schlüsselliste</a></li>
+        <li><a href="#" onclick="Schluesselliste()"><img class="menu-icon" src="kasse/fonts/key.svg" alt="">Schlüsselliste</a></li>
       </ul>
     </li>
   </ul>

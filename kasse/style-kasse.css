@@ -61,6 +61,10 @@ body {
 h1 {
     margin: 0;
     text-align: center;
+    max-width: 100%;
+    font-size: clamp(1rem, 4cqw, 5rem);
+    line-height: 1.08;
+    overflow-wrap: anywhere;
 }
 
 h2 {
@@ -77,6 +81,8 @@ p {
 p.infortext {
     font-size: 2.5cqw;
     color: var(--text-color-dark);
+    margin-top: 0.4cqw;
+    margin-bottom: 0.4cqw;
 }
 
 a {
@@ -266,17 +272,94 @@ th {
     font-size: 2cqw;
 }
 
-#Tankstelle {
+#tankstelleKeyZeile {
+    display: flex;
+    gap: 0.6cqw;
+    justify-content: center;
+    align-items: center;
+    width: 22cqw;
+    margin: 0.3cqw;
+}
+
+#Tankstelle,
+#Bt_addKey {
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0.6cqw;
+    flex: 1;
+    width: auto;
+    margin: 0;
 }
 
 #Tankstelle img {
     display: block;
     height: 7cqw;
     padding-top: 2cqw;
+}
+
+#Bt_addKey img {
+    display: block;
+    height: 5cqw;
+    padding: 0;
+}
+
+.zusatzschluessel-box {
+    gap: 1cqw;
+    padding: 1cqw;
+}
+
+.zusatzschluessel-liste {
+    width: 48cqw;
+}
+
+.zusatzschluessel-zeile,
+.zusatzschluessel-neu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1cqw;
+    margin: 0.5cqw 0;
+}
+
+.zusatzschluessel-zeile span {
+    flex: 1;
+    font-size: 3cqw;
+    font-weight: bold;
+    text-align: center;
+    background: var(--background-light);
+    border: 1px solid var(--border-color);
+    border-radius: 1cqw;
+    padding: 1cqw;
+}
+
+.zusatzschluessel-neu input {
+    width: 34cqw;
+    height: 5.5cqw;
+    font-size: 2.6cqw;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    border-radius: 1cqw;
+}
+
+.zusatzschluessel-neu button,
+.zusatzschluessel-loeschen {
+    width: 7cqw;
+    min-width: 7cqw;
+    height: 6cqw;
+    font-size: 3cqw;
+    padding: 0;
+}
+
+.zusatzschluessel-loeschen {
+    background-color: var(--error-color);
+    color: var(--text-color-light);
+}
+
+.zusatzschluessel-fehler {
+    min-height: 3cqw;
+    color: var(--error-color);
+    font-size: 2.5cqw;
 }
 
 #menubar {

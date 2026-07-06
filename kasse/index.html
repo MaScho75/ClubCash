@@ -248,9 +248,14 @@ DATENÜBERTRAGUNG
                     </div>
                 <button id="Bt_preisfenster" onclick="preisfenster_öffnen()">Produkte</button>
                 <button id="Bt_manuelleBuchung" onclick="manuell();">manuelle Buchung</button>
-                <button style="display: none" id="Tankstelle" type="button" aria-label="Tankstelle" title="Tankstelle">
-                    <img src="./fonts/tankstelle.svg" alt="Tankstelle">
-                </button>
+                <div id="tankstelleKeyZeile" style="display: none;">
+                    <button id="Tankstelle" type="button" aria-label="Tankstelle" title="Tankstelle">
+                        <img src="./fonts/tankstelle.svg" alt="Tankstelle">
+                    </button>
+                    <button id="Bt_addKey" onclick="addKey();" aria-label="Schlüssel" title="Schlüssel">
+                        <img src="./fonts/key.svg" alt="Schlüssel">
+                    </button>
+                </div>
                 <button id="abbruch" onclick="NeuLaden();">Abbruch</button>                
             </div>
 
@@ -331,6 +336,7 @@ DATENÜBERTRAGUNG
             let produkte = [];
             let kunden = [];
             let zusatzschluessel = [];
+            let aktuellerKundeFuerZusatzschluessel = null;
             let config = [];
             let spritt = false; // Variable für die Spritt
             let ProduktTemp = []; // Temporäre Variable für das Produkt, wenn es sich um ein Produkt mit Mengeneingabe handelt
@@ -359,6 +365,7 @@ DATENÜBERTRAGUNG
             const zifferneingabefeld = document.getElementById("zifferneingabefeld");
             const preloader = document.getElementById("preloader");
             const tankstelleButton = document.getElementById('Tankstelle');
+            const tankstelleKeyZeile = document.getElementById('tankstelleKeyZeile');
             const preislistenContainer = document.getElementById("preislisten_container");
 
         // Logs
@@ -1033,6 +1040,42 @@ DATENÜBERTRAGUNG
             timeout = setTimeout(showScreensaver, 60000 * config.bildschirmschoner);
         }
 
+        function h1TextgroesseAnpassen(container = datenfeld) {
+            if (!container) {
+                return;
+            }
+
+            requestAnimationFrame(() => {
+                container.querySelectorAll('h1').forEach(ueberschrift => {
+                    const parent = ueberschrift.parentElement;
+                    const verfuegbareBreite = Math.max(0, (parent?.clientWidth || container.clientWidth || ueberschrift.clientWidth) - 16);
+                    if (!verfuegbareBreite) {
+                        return;
+                    }
+
+                    ueberschrift.style.fontSize = '';
+                    ueberschrift.style.maxWidth = '100%';
+                    ueberschrift.style.lineHeight = '1.08';
+                    ueberschrift.style.overflowWrap = 'anywhere';
+
+                    let schriftgroesse = parseFloat(getComputedStyle(ueberschrift).fontSize) || 48;
+                    const minimaleSchriftgroesse = 14;
+
+                    while (schriftgroesse > minimaleSchriftgroesse && ueberschrift.scrollWidth > verfuegbareBreite) {
+                        schriftgroesse -= 1;
+                        ueberschrift.style.fontSize = schriftgroesse + 'px';
+                    }
+                });
+            });
+        }
+
+        new MutationObserver(() => h1TextgroesseAnpassen()).observe(datenfeld, {
+            childList: true,
+            subtree: true
+        });
+
+        window.addEventListener('resize', () => h1TextgroesseAnpassen());
+
         // ========================================
         // PRODUKT-FUNKTIONEN
         // ========================================
@@ -1441,6 +1484,177 @@ DATENÜBERTRAGUNG
         // KUNDEN-FUNKTIONEN
         // ========================================
 
+        function htmlSicher(text) {
+            return String(text ?? '').replace(/[&<>"']/g, zeichen => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[zeichen]));
+        }
+
+        function kundenUid(kunde) {
+            return String(kunde?.uid || kunde?.schlüssel || '');
+        }
+
+        function zusatzschluesselDesKunden(kunde) {
+            const uid = kundenUid(kunde);
+            return zusatzschluessel.filter(eintrag => String(eintrag.uid) === uid);
+        }
+
+        function schluesselSchonVergeben(schluessel) {
+            const wert = String(schluessel).trim();
+            if (!wert) {
+                return false;
+            }
+
+            return kunden.some(kunde => String(kunde.schlüssel || '').trim() === wert)
+                || zusatzschluessel.some(eintrag => String(eintrag.addkey || '').trim() === wert)
+                || produkte.some(produkt => String(produkt.EAN || '').trim() === wert);
+        }
+
+        async function speichereZusatzschluessel() {
+            const response = await fetch('json-schreiben.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    data: zusatzschluessel,
+                    filename: 'keys.json'
+                })
+            });
+
+            const result = await response.json();
+            if (!response.ok || !result.success) {
+                throw new Error(result.error || 'Zusatzschlüssel konnten nicht gespeichert werden.');
+            }
+        }
+
+        function renderZusatzschluesselVerwaltung(fehlermeldung = '') {
+            const kunde = aktuellerKundeFuerZusatzschluessel;
+            if (!kunde) {
+                statusfeld.innerText = 'Bitte zuerst einen Kunden auswählen.';
+                Fehlerton();
+                return;
+            }
+
+            const vorhandeneSchluessel = zusatzschluesselDesKunden(kunde);
+            const kundenname = `${kunde.firstname || ''} ${kunde.lastname || ''}`.trim();
+            const listenHtml = vorhandeneSchluessel.length
+                ? vorhandeneSchluessel.map(eintrag => `
+                    <div class="zusatzschluessel-zeile">
+                        <span>${htmlSicher(eintrag.addkey)}</span>
+                        <button type="button" class="zusatzschluessel-loeschen" data-zusatzschluessel-key="${htmlSicher(eintrag.addkey)}" title="Löschen">&times;</button>
+                    </div>
+                `).join('')
+                : '<p class="zentriert infortext">Noch keine Zusatzschlüssel vorhanden.</p>';
+
+            statusfeld.innerText = 'Zusatzschlüssel ' + kundenname;
+            summenfeld.innerText = '0.00';
+            tastatur.style.display = 'none';
+            document.getElementById('abbruch').innerText = 'zurück';
+
+            datenfeld.innerHTML = `
+                <div class="box_zentrieren zusatzschluessel-box">
+                    <h1>Zusatzschlüssel</h1>
+                    <p class="zentriert infortext">${htmlSicher(kundenname)}<br>Hauptschlüssel: ${htmlSicher(kunde.schlüssel || '')}</p>
+                    <div class="zusatzschluessel-liste">${listenHtml}</div>
+                    <div class="zusatzschluessel-neu">
+                        <input id="zusatzschluessel-neu-input" type="text" inputmode="numeric" autocomplete="off" placeholder="Neue Schlüsselnummer">
+                        <button type="button" onclick="zusatzschluesselHinzufuegen()">+</button>
+                    </div>
+                    <p id="zusatzschluessel-meldung" class="zentriert zusatzschluessel-fehler">${htmlSicher(fehlermeldung)}</p>
+                </div>
+            `;
+
+            const input = document.getElementById('zusatzschluessel-neu-input');
+            input.focus();
+            input.addEventListener('keydown', event => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    zusatzschluesselHinzufuegen();
+                }
+            });
+
+            datenfeld.querySelectorAll('.zusatzschluessel-loeschen').forEach(button => {
+                button.addEventListener('click', () => {
+                    zusatzschluesselLoeschen(button.dataset.zusatzschluesselKey || '');
+                });
+            });
+        }
+
+        function addKey() {
+            eingabestopp();
+
+            if (!isOnline) {
+                datenfeld.innerHTML = `<div class="box_zentrieren"><h1>Das System ist offline! Zusatzschlüssel können derzeit nicht geändert werden.</h1></div>`;
+                return;
+            }
+
+            renderZusatzschluesselVerwaltung();
+        }
+
+        async function zusatzschluesselHinzufuegen() {
+            const kunde = aktuellerKundeFuerZusatzschluessel;
+            const input = document.getElementById('zusatzschluessel-neu-input');
+            const neuerSchluessel = String(input?.value || '').trim();
+
+            if (!kunde || !input) {
+                return;
+            }
+
+            if (!neuerSchluessel) {
+                renderZusatzschluesselVerwaltung('Bitte eine Schlüsselnummer eingeben.');
+                return;
+            }
+
+            if (schluesselSchonVergeben(neuerSchluessel)) {
+                input.value = '';
+                renderZusatzschluesselVerwaltung('Diese Schlüsselnummer ist bereits vergeben.');
+                Fehlerton();
+                return;
+            }
+
+            zusatzschluessel.push({
+                uid: kundenUid(kunde),
+                addkey: neuerSchluessel
+            });
+
+            try {
+                await speichereZusatzschluessel();
+                renderZusatzschluesselVerwaltung();
+            } catch (error) {
+                console.error('Fehler beim Speichern der Zusatzschlüssel:', error);
+                zusatzschluessel = zusatzschluessel.filter(eintrag => !(String(eintrag.uid) === kundenUid(kunde) && String(eintrag.addkey) === neuerSchluessel));
+                renderZusatzschluesselVerwaltung(error.message);
+                Fehlerton();
+            }
+        }
+
+        async function zusatzschluesselLoeschen(schluessel) {
+            const kunde = aktuellerKundeFuerZusatzschluessel;
+            if (!kunde || !confirm('Zusatzschlüssel löschen?')) {
+                return;
+            }
+
+            const uid = kundenUid(kunde);
+            const alterStand = [...zusatzschluessel];
+            zusatzschluessel = zusatzschluessel.filter(eintrag => !(String(eintrag.uid) === uid && String(eintrag.addkey) === String(schluessel)));
+
+            try {
+                await speichereZusatzschluessel();
+                renderZusatzschluesselVerwaltung();
+            } catch (error) {
+                console.error('Fehler beim Löschen des Zusatzschlüssels:', error);
+                zusatzschluessel = alterStand;
+                renderZusatzschluesselVerwaltung(error.message);
+                Fehlerton();
+            }
+        }
+
         function findeKundeNachSchluessel(Schluesselnummer) {
             let kunde = kunden.find(kunde => String(kunde.schlüssel) === String(Schluesselnummer));
             if (kunde) {
@@ -1575,7 +1789,7 @@ DATENÜBERTRAGUNG
         async function kundenkontoübersicht(Schlüsselnummer) {
             document.getElementById('abbruch').innerText="zurück";
             
-                tankstelleButton.style.display = 'flex';
+                tankstelleKeyZeile.style.display = 'flex';
 
                 tankstelleButton.onclick = () => {
                     //Bein Klick auf den Button soll mit "tanken_qr_code.php" in dem Element warenkorbdatellen ein QR-Code angezeigt werden, der mit der Tankstelle verbunden ist, damit der Kunde an der Tankstelle bezahlen kann.
@@ -1610,6 +1824,7 @@ DATENÜBERTRAGUNG
 
             let kontosumme = 0.0;
             let kunde = findeKundeNachSchluessel(Schlüsselnummer);
+            aktuellerKundeFuerZusatzschluessel = kunde;
 
             try {
             let response = await fetch("kundenkontouebersicht-cvs.php", {

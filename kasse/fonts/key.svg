@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="64" height="64" aria-label="Schlüssel" role="img">
+  <title>Schlüssel</title>
+  <g fill="none" stroke="#111827" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="7.5" cy="14.5" r="3.5"/>
+    <path d="M10 12l8-8"/>
+    <path d="M15 7l2 2"/>
+    <path d="M13 9l2 2"/>
+    <path d="M17 5l2 2"/>
+  </g>
+</svg>
