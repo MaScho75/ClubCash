@@ -41,13 +41,15 @@ try {
 
     $mail->isSMTP();
     $mail->Host       = $config['SMTPServer'];
-    $mail->SMTPAuth   = true;
+    $mail->SMTPAuth   = !empty($config['SMTPBenutzer']) || !empty($config['SMTPPasswort']);
     $mail->Username   = $config['SMTPBenutzer'];
     $mail->Password   = $config['SMTPPasswort'];
 
     $enc = strtolower($config['SMTPVerschluesselung'] ?? 'tls');
     if ($enc === 'ssl') {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;   // 465
+    } elseif ($enc === 'none') {
+        $mail->SMTPSecure = false;
     } else {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // 587
     }
@@ -66,6 +68,8 @@ try {
     $mail->send();
     echo 'OK: Test-E-Mail wurde gesendet.';
 } catch (Exception $e) {
-    echo 'FEHLER: ' . htmlspecialchars($mail->ErrorInfo);
+    http_response_code(500);
+    $fehler = $mail->ErrorInfo ?: $e->getMessage();
+    echo 'FEHLER: ' . htmlspecialchars($fehler);
 }
 ?>

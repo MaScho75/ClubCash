@@ -40,17 +40,31 @@ $input = json_decode(file_get_contents('php://input'), true);
 
 //fehlerbehandlung
 if (!isset($input['kundennummer']) || !isset($input['name']) || !isset($input['vorname']) || !isset($input['email']) || !isset($input['datum1']) || !isset($input['datum2']) || !isset($input['html'])) {
+    http_response_code(400);
     echo 'FEHLER: Fehlende Parameter.';
     exit();
 }
 
 try {
+    $pflichtfelder = ['SMTPServer', 'SMTPAbsenderadresse', 'SMTPAntwortadresse', 'SMTPPort'];
+    foreach ($pflichtfelder as $feld) {
+        if (empty($config[$feld])) {
+            throw new Exception('SMTP-Konfiguration unvollständig: ' . $feld);
+        }
+    }
+
+    if (!filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
+        echo 'FEHLER: Ungültige Empfängeradresse.';
+        exit();
+    }
+
     // Debug-Modus nur für Entwicklung (auskommentieren für Produktion)
     // $mail->SMTPDebug = 2;
 
     $mail->isSMTP();
     $mail->Host       = $config['SMTPServer'];
-    $mail->SMTPAuth   = true;
+    $mail->SMTPAuth   = !empty($config['SMTPBenutzer']) || !empty($config['SMTPPasswort']);
     $mail->Username   = $config['SMTPBenutzer'];
     $mail->Password   = $config['SMTPPasswort'];
 
@@ -58,6 +72,9 @@ try {
     if ($enc === 'ssl') {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;   // 465
         $mail->Port = 465;
+    } elseif ($enc === 'none') {
+        $mail->SMTPSecure = false;
+        $mail->Port = 25;
     } else {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // 587
         $mail->Port = 587;
@@ -121,6 +138,8 @@ try {
     if (isset($tempFile) && file_exists($tempFile)) {
         unlink($tempFile);
     }
-    echo 'FEHLER: ' . htmlspecialchars($mail->ErrorInfo);
+    http_response_code(500);
+    $fehler = $mail->ErrorInfo ?: $e->getMessage();
+    echo 'FEHLER: ' . htmlspecialchars($fehler);
 }
 ?>

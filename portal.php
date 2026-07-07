@@ -2626,7 +2626,7 @@ if ($response !== false) {
         html += `
 
             <button class="kleinerBt" onclick="RechnungErstellen('${kunde.uid}', '${datum1}', '${datum2}')" style="margin-left: 10px;">Abrechnung</button>
-            <button class="kleinerBt" onclick="Emailrechnung('${kunde.uid}', '${datum1}', '${datum2}'); alert('Email wurde gesendet.');" style="margin-left: 10px;">@ Abrechnung</button>
+            <button class="kleinerBt" onclick="Emailrechnung('${kunde.uid}', '${datum1}', '${datum2}')" style="margin-left: 10px;">@ Abrechnung</button>
                 `;
         if (angemeldetesMitglied.cc_admin == true) {
             html += `<button class="kleinerBt" onclick="MitgliederAusweise('${kunde.schlüssel}')" style="margin-left: 10px;">Bezahlkarte</button>
@@ -4835,65 +4835,66 @@ if ($response !== false) {
         };
     }   
 
+    async function sendeAbrechnungEmail(kunde, datum1, datum2) {
+        const html = RechnungstextErstellen(kunde.uid, datum1, datum2);
+        const response = await fetch("Emailrechnung.php", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json;charset=UTF-8"
+            },
+            body: JSON.stringify({
+                kundennummer: kunde.uid,
+                name: kunde.lastname,
+                vorname: kunde.firstname,
+                email: kunde.email,
+                datum1: datum1.toISOString().split('T')[0],
+                datum2: datum2.toISOString().split('T')[0],
+                html: html,
+                anhang: true
+            })
+        });
+
+        const text = await response.text();
+        if (!response.ok || !text.startsWith('OK:')) {
+            throw new Error(text || 'E-Mail konnte nicht gesendet werden.');
+        }
+
+        return text;
+    }
+
     /**
-     * Sendet Einzelrechnung per E-Mail (Platzhalter-Funktion)
+     * Sendet Einzelrechnung per E-Mail
      * @param {string} kundennummer - ID des Kunden
      * @param {Date} datum1 - Startdatum
      * @param {Date} datum2 - Enddatum
      */
-    function Emailrechnung(kundennummer, datum1, datum2) {
+    async function Emailrechnung(kundennummer, datum1, datum2) {
 
         console.log("Sende Einzelrechnung an KundeID: " + kundennummer + " für Zeitraum: " + datum1 + " bis " + datum2);
 
-        let Statusmeldung;
-
         let kunde = käufer.find(k => String(k.uid) === String(kundennummer));
 
-        if (!kunde.email || kunde.email.trim() === "") {
-            let Statusmeldung = "<p>❌ <b>" + kunde.firstname + ", " + kunde.lastname + "</b> hat keine E-Mail-Adresse. Rechnung wurde nicht gesendet.</p>";
-            //portalInhalt.innerHTML = Statusmeldung;
-            return Statusmeldung;
+        if (!kunde) {
+            portalInhalt.innerHTML = "<p>❌ Kunde wurde nicht gefunden. Rechnung wurde nicht gesendet.</p>";
+            return;
         }
 
-        // Datum-Strings in Date-Objekte umwandeln
+        if (!kunde.email || kunde.email.trim() === "") {
+            portalInhalt.innerHTML = "<p>❌ <b>" + kunde.firstname + ", " + kunde.lastname + "</b> hat keine E-Mail-Adresse. Rechnung wurde nicht gesendet.</p>";
+            return;
+        }
+
         if (typeof datum1 === 'string') datum1 = new Date(datum1);
         if (typeof datum2 === 'string') datum2 = new Date(datum2);
 
-        // HTML-Inhalt für die Abrechnung erstellen
-        let html = RechnungstextErstellen(kundennummer, datum1, datum2);
-        
-       // E-Mail Senden via AJAX
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "Emailrechnung.php", true); 
-        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    //alert("Rechnung erfolgreich per E-Mail gesendet.");
-                    Statusmeldung = "<p>✅ Rechnung an <b>" + kunde.firstname + ", " + kunde.lastname + "</b> (" + kunde.email + ") gesendet</p>";
-                    //portalInhalt.innerHTML = Statusmeldung;
-                } else {
-                    //alert("Fehler beim Senden der Rechnung per E-Mail: " + xhr.responseText);
-                    Statusmeldung = "<p>❌ Es konnte keine Rechnung an <b>" + kunde.firstname + ", " + kunde.lastname + "</b> gesendet werden. Fehler: " + xhr.responseText + "</p>";
-                    //portalInhalt.innerHTML = Statusmeldung;
-                }
-            }
-        };
+        portalInhalt.innerHTML = "<p>Bitte warten, die Rechnung wird per E-Mail gesendet...</p>";
 
-        //Ich möchte die html als Anlage senden
-
-        xhr.send(JSON.stringify({
-            kundennummer: kundennummer,
-            name: kunde.lastname,
-            vorname: kunde.firstname,
-            email: kunde.email,
-            datum1: datum1.toISOString().split('T')[0],
-            datum2: datum2.toISOString().split('T')[0],
-            html: html,
-            anhang: true
-        }));
-
-        return Statusmeldung;
+        try {
+            await sendeAbrechnungEmail(kunde, datum1, datum2);
+            portalInhalt.innerHTML = "<p>✅ Rechnung an <b>" + kunde.firstname + ", " + kunde.lastname + "</b> (" + kunde.email + ") gesendet.</p>";
+        } catch (error) {
+            portalInhalt.innerHTML = "<p>❌ Es konnte keine Rechnung an <b>" + kunde.firstname + ", " + kunde.lastname + "</b> gesendet werden.<br>Fehler: " + error.message + "</p>";
+        }
     }
 
     /**
@@ -4917,7 +4918,7 @@ if ($response !== false) {
         // Nur Kunden mit Umsatz im Zeitraum
         const kundenMitUmsatz = kunden.filter(kunde => {
             return verkäufe.some(verkauf => 
-                verkauf.Kundennummer === kunde.uid &&
+                String(verkauf.Kundennummer) === String(kunde.uid) &&
                 verkauf.Datum >= datum1.toISOString().split('T')[0] && 
                 verkauf.Datum <= datum2.toISOString().split('T')[0]
             );
@@ -4934,7 +4935,7 @@ if ($response !== false) {
         // E-Mails sequenziell versenden
         let index = 0;
 
-        function sendeNächsteEmail() {
+        async function sendeNächsteEmail() {
             if (index >= kundenMitUmsatz.length) {
                 // Fertig
                 gesamtStatus += `<hr><p><b>Fertig!</b> ✅ ${erfolgreich} erfolgreich | ❌ ${fehler} Fehler</p>`;
@@ -4954,38 +4955,17 @@ if ($response !== false) {
             }
             index++;
 
-            // E-Mail senden
-            const html = RechnungstextErstellen(kunde.uid, datum1, datum2);
-            
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", "Emailrechnung.php", true); 
-            xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        erfolgreich++;
-                        gesamtStatus += `<p>✅ ${index}/${kundenMitUmsatz.length} - <b>${kunde.firstname} ${kunde.lastname}</b> (${kunde.email})</p>`;
-                    } else {
-                        fehler++;
-                        gesamtStatus += `<p>❌ ${index}/${kundenMitUmsatz.length} - <b>${kunde.firstname} ${kunde.lastname}</b> - Fehler: ${xhr.responseText}</p>`;
-                    }
-                    portalInhalt.innerHTML = gesamtStatus;
-                    
-                    // Nächste E-Mail nach kurzer Verzögerung
-                    setTimeout(sendeNächsteEmail, 500);
-                }
-            };
+            try {
+                await sendeAbrechnungEmail(kunde, datum1, datum2);
+                erfolgreich++;
+                gesamtStatus += `<p>✅ ${index}/${kundenMitUmsatz.length} - <b>${kunde.firstname} ${kunde.lastname}</b> (${kunde.email})</p>`;
+            } catch (error) {
+                fehler++;
+                gesamtStatus += `<p>❌ ${index}/${kundenMitUmsatz.length} - <b>${kunde.firstname} ${kunde.lastname}</b> - Fehler: ${error.message}</p>`;
+            }
 
-            xhr.send(JSON.stringify({
-                kundennummer: kunde.uid,
-                name: kunde.lastname,
-                vorname: kunde.firstname,
-                email: kunde.email,
-                datum1: datum1.toISOString().split('T')[0],
-                datum2: datum2.toISOString().split('T')[0],
-                html: html,
-                anhang: true
-            }));
+            portalInhalt.innerHTML = gesamtStatus;
+            setTimeout(sendeNächsteEmail, 500);
         }
 
         sendeNächsteEmail();
