@@ -310,6 +310,59 @@ if ($response !== false) {
 
     // Mitglieder und externe Kunden zusammenführen    
         let käufer = MitgliederExterneZusammenführen();
+
+        function normalisiereCode(wert) {
+            return String(wert ?? '').trim();
+        }
+
+        function kundenSchluesselKonflikt(ean) {
+            const code = normalisiereCode(ean);
+            if (!code) {
+                return '';
+            }
+
+            const hauptschluesselTreffer = käufer.find(kunde => normalisiereCode(kunde.schlüssel) === code);
+            if (hauptschluesselTreffer) {
+                const name = `${hauptschluesselTreffer.firstname || ''} ${hauptschluesselTreffer.lastname || ''}`.trim();
+                return `Die EAN ${code} ist bereits als Kundenschlüssel${name ? ' von ' + name : ''} vergeben.`;
+            }
+
+            const zusatzTreffer = zusatzschluessel.find(eintrag => normalisiereCode(eintrag.addkey) === code);
+            if (zusatzTreffer) {
+                const kunde = käufer.find(kunde => normalisiereCode(kunde.uid || kunde.schlüssel) === normalisiereCode(zusatzTreffer.uid));
+                const name = `${kunde?.firstname || ''} ${kunde?.lastname || ''}`.trim();
+                return `Die EAN ${code} ist bereits als Zusatzschlüssel${name ? ' von ' + name : ''} vergeben.`;
+            }
+
+            return '';
+        }
+
+        function produktEanKonflikt(data, index, ean, deletedRows = new Set()) {
+            const code = normalisiereCode(ean);
+            if (!code) {
+                return '';
+            }
+
+            const doppelt = data.some((produkt, produktIndex) =>
+                produktIndex !== index
+                && !deletedRows.has(produktIndex)
+                && normalisiereCode(produkt.EAN) === code
+            );
+            if (doppelt) {
+                return `Die EAN ${code} ist bereits bei einem anderen Produkt vergeben.`;
+            }
+
+            const kundenKonflikt = kundenSchluesselKonflikt(code);
+            if (kundenKonflikt) {
+                return kundenKonflikt;
+            }
+
+            if (code === '1' || code === '9990000000000' || code === '9999') {
+                return 'Die EANs 1, 9990000000000 und 9999 sind reserviert.';
+            }
+
+            return '';
+        }
     
     //aktuelle Kontostände der Kunden berechnen und in die Kundenliste einfügen
         let kundenkontostand = Kundenkontostand(verkäufe);
@@ -1783,14 +1836,13 @@ if ($response !== false) {
                                     td.innerText = number.toFixed(2); // z. B. "12.00"
                                 }
                                 if (key === 'EAN') {
-                                    const newEAN = td.innerText;
-                                    const isDuplicate = data.some((dataItem, dataIndex) => 
-                                        dataIndex !== index && dataItem.EAN === newEAN
-                                    );
-                                    if (isDuplicate || newEAN === '1' || newEAN === '9990000000000' || newEAN === '9999') {
-                                        alert('Diese EAN existiert bereits! Auch 1, 9990000000000 und 9999 sind nicht erlaubt. Bitte wählen Sie eine andere EAN.');
+                                    const newEAN = normalisiereCode(td.innerText);
+                                    const konflikt = produktEanKonflikt(data, index, newEAN, deletedRows);
+                                    if (konflikt) {
+                                        alert(konflikt + ' Bitte wählen Sie eine andere EAN.');
                                         td.innerText = item[key];
                                     } else {
+                                        td.innerText = newEAN;
                                         markAsEdited(index, key, newEAN, td);
                                     }
                                 } else {
@@ -1964,6 +2016,29 @@ if ($response !== false) {
                 renderTable();
             }
 
+            function validateProduktEans() {
+                for (let index = 0; index < data.length; index++) {
+                    if (deletedRows.has(index)) {
+                        continue;
+                    }
+
+                    const ean = normalisiereCode(data[index].EAN);
+                    data[index].EAN = ean;
+
+                    if ((ean === '1' || ean === '9990000000000') && (data[index].Bezeichnung === 'Essen' || data[index].Bezeichnung === 'manuelle Buchung')) {
+                        continue;
+                    }
+
+                    const konflikt = produktEanKonflikt(data, index, ean, deletedRows);
+                    if (konflikt) {
+                        alert(konflikt + ' Der Produktkatalog wurde nicht gespeichert.');
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
             function saveChanges() {
                 const savedData = data.filter((_, index) => !deletedRows.has(index));
                 data = JSON.parse(JSON.stringify(savedData));
@@ -1986,6 +2061,11 @@ if ($response !== false) {
             };
 
             saveButton.onclick = () => {
+                if (!validateProduktEans()) {
+                    renderTable();
+                    return;
+                }
+
                 const updatedData = saveChanges();
                 produkte = updatedData.map(({Bestand, ...rest}) => rest);
 

@@ -437,12 +437,19 @@ DATENÜBERTRAGUNG
                     preisfenster.style.display = 'none'; //sollte das Preisfenster noch offen sein, wird es geschlossen
                     document.activeElement.blur(); // ist notwendig, damit nicht ein Button fokussiert bleibt und nach dem Enter eine Aktion auslöst
 
+                    let eingabeVerarbeitet = false;
+
                     if (!tankvorgang) {
-                        produktprüfung(eingabe);
-                        sonderfunktionen(eingabe);
+                        eingabeVerarbeitet = produktprüfung(eingabe);
+
+                        if (!eingabeVerarbeitet) {
+                            eingabeVerarbeitet = sonderfunktionen(eingabe);
+                        }
                     }
-                                        
-                    kundenprüfung(eingabe);     
+
+                    if (!eingabeVerarbeitet) {
+                        kundenprüfung(eingabe);
+                    }
 
                     if (eingabe) {
                         statusfeld.innerText = "Kein Produkt und kein Kunde erkannt."
@@ -1080,6 +1087,10 @@ DATENÜBERTRAGUNG
         // PRODUKT-FUNKTIONEN
         // ========================================
 
+        function normalisiereCode(wert) {
+            return String(wert ?? '').trim();
+        }
+
         function direktwahl() {
             produkte.forEach(produkt => {
             if (produkt.Sortierung > 0 && produkt.Sortierung < 13) {
@@ -1097,7 +1108,8 @@ DATENÜBERTRAGUNG
             console.log("Produktprüfung für EAN: " + EANr);
             document.querySelector(".menu").classList.remove("active"); //Menu ausblenden, sollte es geöffnet sein. 
 
-            let produkt = produkte.find(produkte => produkte.EAN === EANr);
+            const gesuchteEAN = normalisiereCode(EANr);
+            let produkt = produkte.find(produkt => normalisiereCode(produkt.EAN) === gesuchteEAN);
 
             if (produkt) {
                 // Überprüfe, ob das Produkt die Eingange eines Zählerstandes erfordert
@@ -1262,7 +1274,7 @@ DATENÜBERTRAGUNG
                         }
                     }
                     
-                    return
+                    return true
                 
                 }    
 
@@ -1275,14 +1287,17 @@ DATENÜBERTRAGUNG
                     //öffnet die Tastatur für die Mengeneingabe
                     tastatur.style.display = 'block';
                     statusfeld.innerHTML = "Bitte Menge für <b>&nbsp;" + produkt.Bezeichnung + "&nbsp;</b> in Litern eingeben";
-                    return  
+                    return true
                 }
                 
                 warenkorbüberschrift();
                 warenkorb.push(produkt);
                 warenkorbaddition(produkt);
                 eingabe = "";
+                return true;
             }
+
+            return false;
         }
 
         function preisliste() {
@@ -1343,7 +1358,7 @@ DATENÜBERTRAGUNG
 
         function update_mittagspreis(neuerPreis) {
             document.getElementById('abbruch').innerText="zurück";
-            const produkt = produkte.find(item => item.EAN === "1");
+            const produkt = produkte.find(item => normalisiereCode(item.EAN) === "1");
             if (!produkt) {
             statusbar.innerHTML = "Fehler in der Produktdatenbank!";
             return;
@@ -1656,17 +1671,18 @@ DATENÜBERTRAGUNG
         }
 
         function findeKundeNachSchluessel(Schluesselnummer) {
-            let kunde = kunden.find(kunde => String(kunde.schlüssel) === String(Schluesselnummer));
+            const gesuchterSchluessel = normalisiereCode(Schluesselnummer);
+            let kunde = kunden.find(kunde => normalisiereCode(kunde.schlüssel) === gesuchterSchluessel);
             if (kunde) {
                 return kunde;
             }
 
-            const zusatz = zusatzschluessel.find(eintrag => String(eintrag.addkey) === String(Schluesselnummer));
+            const zusatz = zusatzschluessel.find(eintrag => normalisiereCode(eintrag.addkey) === gesuchterSchluessel);
             if (!zusatz) {
                 return null;
             }
 
-            return kunden.find(kunde => String(kunde.uid || kunde.schlüssel) === String(zusatz.uid)) || null;
+            return kunden.find(kunde => normalisiereCode(kunde.uid || kunde.schlüssel) === normalisiereCode(zusatz.uid)) || null;
         }
 
         function kundenprüfung(KundenNr) {
@@ -1709,7 +1725,7 @@ DATENÜBERTRAGUNG
                     //Zählerstand anpassen, falls es sich um einen Tankvorgang handelt
                     if (tankvorgang) {
 
-                        let produktIndex = produkte.findIndex(p => p.EAN === ProduktTemp.EAN);
+                        let produktIndex = produkte.findIndex(p => normalisiereCode(p.EAN) === normalisiereCode(ProduktTemp.EAN));
                         if (produktIndex !== -1) {
                             produkte[produktIndex].Zählerstand = ProduktTemp.Zählerstand ?? produkte[produktIndex].Zählerstand; // Aktualisiert den Zählerstand des Produkts in der Hauptproduktliste
                             // Speichere die aktualisierte Produktliste zurück auf den Server
@@ -2354,24 +2370,26 @@ DATENÜBERTRAGUNG
         }
 
         function sonderfunktionen(EANr) {
-            switch (EANr) {
+            switch (normalisiereCode(EANr)) {
             case "1111":
                 tagesabrechnung();
                 eingabe="";
-                break;
+                return true;
             case "2222":
                 tageszusammenfassung();
                 eingabe="";
-                break;
+                return true;
             case "3333":
                 kundentagesübersicht();
                 eingabe="";
-                break;
+                return true;
             case "4444":
                 mittagspreis();
                 eingabe="";
-                break;
+                return true;
             }
+
+            return false;
         }
 
         // ========================================

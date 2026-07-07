@@ -1,4 +1,4 @@
-const CACHE_NAME = 'clubcash-tanken-v2';
+const CACHE_NAME = 'clubcash-tanken-1.6.1';
 const ASSETS = [
   './tanken.php',
   './style-portal.css',
