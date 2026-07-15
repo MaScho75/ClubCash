@@ -347,6 +347,8 @@ DATENÜBERTRAGUNG
             let tankvorgang = false; // Variable, die anzeigt, ob gerade ein Tankvorgang stattfindet
             let leerlaufZählerstand = 0; // Zählerstand nach Umpumpen/Leerlauf
             let leerlaufMenge = 0; // Differenz zwischen altem Zählerstand und Umpumpen-Zählerstand
+            let wartungsmodusPruefung = null;
+            const wartungsmodusPruefintervallMs = 15000;
 
             const display_fenster = document.getElementById("display");
             const datenfeld = document.getElementById("datenfeld");
@@ -528,12 +530,12 @@ DATENÜBERTRAGUNG
                     direktwahl();
                     
                     preloader.style.display = "none"; // Preloader ausblenden
-                    if (navigator.onLine) {
+                    if (isOnline) {
                         setLastOnlineNow();
                     }
                     
                     // Offline-Prüfung nach dem Laden der Config
-                    if (!navigator.onLine && config.OfflineErlaubt == 'false') {
+                    if (!isOnline && config.OfflineErlaubt == 'false') {
                         console.log('Offline nicht erlaubt');  
                         if (OfflineBildschirm) {
                             OfflineBildschirm.style.display = 'block';
@@ -571,11 +573,16 @@ DATENÜBERTRAGUNG
 
 
         // Offline-Funktionalität
-            let isOnline = navigator.onLine;
+            // navigator.onLine zeigt nur eine vorhandene Netzwerkverbindung an.
+            // Als online gilt die Kasse erst, wenn der ClubCash-Server antwortet.
+            let isOnline = false;
             let offlineFenster = document.getElementById('offlineFenster');
             let OfflineBildschirm = document.getElementById('OfflineBildschirm');
             let lastOnlineEl = document.getElementById('last-online-text');
             const lastOnlineKey = 'clubcash_last_online';
+            const serverCheckIntervalMs = 15000;
+            const serverCheckTimeoutMs = 5000;
+            let connectivityCheckPromise = null;
 
             function formatLastOnline(isoString) {
                 try {
@@ -611,50 +618,94 @@ DATENÜBERTRAGUNG
             const storedLastOnline = localStorage.getItem(lastOnlineKey);
             updateLastOnlineDisplay(storedLastOnline);
 
-            // Initiale Offline-Prüfung
-            if (!navigator.onLine) {
+            function setOfflineState() {
                 isOnline = false;
                 if (offlineFenster) offlineFenster.style.visibility = 'visible';
+                if (config && config.OfflineErlaubt == 'false') {
+                    if (OfflineBildschirm) OfflineBildschirm.style.display = 'block';
+                    eingabestopp();
+                }
                 updateOfflineCounter();
             }
 
+            async function clubCashServerIsReachable() {
+                if (!navigator.onLine) return false;
+
+                const controller = new AbortController();
+                const timeoutId = window.setTimeout(() => controller.abort(), serverCheckTimeoutMs);
+
+                try {
+                    const response = await fetch(`auth-status.php?connectivity_check=${Date.now()}`, {
+                        method: 'GET',
+                        cache: 'no-store',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Cache-Control': 'no-cache, no-store, must-revalidate',
+                            'Pragma': 'no-cache'
+                        },
+                        signal: controller.signal
+                    });
+                    return response.ok;
+                } catch (error) {
+                    console.warn('ClubCash-Server nicht erreichbar:', error);
+                    return false;
+                } finally {
+                    window.clearTimeout(timeoutId);
+                }
+            }
+
+            async function updateConnectivityStatus() {
+                if (connectivityCheckPromise) return connectivityCheckPromise;
+
+                connectivityCheckPromise = (async () => {
+                    const serverReachable = await clubCashServerIsReachable();
+                    if (!serverReachable) {
+                        setOfflineState();
+                        return false;
+                    }
+
+                    const wasOffline = !isOnline;
+                    isOnline = true;
+                    if (offlineFenster) offlineFenster.style.visibility = 'hidden';
+                    if (OfflineBildschirm) OfflineBildschirm.style.display = 'none';
+                    setLastOnlineNow();
+                    updateOfflineCounter();
+
+                    const offlineData = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
+                    if (wasOffline || offlineData.length > 0) {
+                        await syncOfflineData();
+                    }
+                    return true;
+                })().finally(() => {
+                    connectivityCheckPromise = null;
+                });
+
+                return connectivityCheckPromise;
+            }
+
+            // Bis zur erfolgreichen Serverantwort bleibt die Kasse im Offline-Modus.
+            setOfflineState();
+            updateConnectivityStatus();
+
             window.addEventListener('online', () => {
-                console.log('Online-Event erkannt');
-                isOnline = true;
-                offlineFenster.style.visibility = 'hidden';
-                OfflineBildschirm.style.display = 'none';
-                setLastOnlineNow();
-                updateOfflineCounter();
-                syncOfflineData();
+                console.log('Netzwerkverbindung erkannt, prüfe ClubCash-Server');
+                updateConnectivityStatus();
             });
 
             window.addEventListener('offline', () => {
                 console.log('Offline-Event erkannt');
-                if (config && config.OfflineErlaubt == 'false') {
-                    OfflineBildschirm.style.display = 'block';
-                    eingabestopp();
-                }
-                isOnline = false;
-                offlineFenster.style.visibility = 'visible';
-                updateOfflineCounter();
+                setOfflineState();
             });
+
+            // Erkennt auch Serverausfälle und Wiederverbindungen, bei denen der
+            // Browser kein eigenes online/offline-Ereignis auslöst.
+            window.setInterval(updateConnectivityStatus, serverCheckIntervalMs);
         
 
         // Zeite an, wie viele Datensätze offline gespeichert sind
             updateOfflineCounter();
 
     
-        // Wenn online ist, versuche offline Daten zu synchronisieren
-            console.log("Seite geladen. Online-Status:", isOnline);
-            if (isOnline) {
-                console.log("Starte Synchronisation offline Daten nach dem Laden der Seite");
-                syncOfflineData();
-                console.log("Synchronisiere offline Daten nach dem Laden der Seite");
-                console.table(localStorage.getItem('offlineVerkäufe'));
-            }
-            
-
-
         // ========================================
         // KONFIGURATION & INITIALISIERUNG
         // ========================================
@@ -752,9 +803,48 @@ DATENÜBERTRAGUNG
                     });
             }
         }
+
+        async function pruefeWartungsmodus() {
+            try {
+                const response = await fetch(`config-public.php?maintenance_check=${Date.now()}`, {
+                    cache: 'no-store',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server-Fehler: ${response.status}`);
+                }
+
+                const aktuelleConfig = await response.json();
+                if (aktuelleConfig.wartungsmodus != 'true') {
+                    window.clearInterval(wartungsmodusPruefung);
+                    wartungsmodusPruefung = null;
+                    window.location.reload();
+                }
+            } catch (error) {
+                // Bei Nichterreichbarkeit bleibt der Wartungsbildschirm aktiv.
+                console.warn('Wartungsstatus konnte nicht geprüft werden:', error);
+            }
+        }
+
+        function starteWartungsmodusPruefung() {
+            if (wartungsmodusPruefung !== null) return;
+            wartungsmodusPruefung = window.setInterval(
+                pruefeWartungsmodus,
+                wartungsmodusPruefintervallMs
+            );
+        }
+
         function configuration() {
             // Konfigutarionen - Ansicht anpassen je nach Benutzergruppe
-            if (config.wartungsmodus == "true") document.getElementById("Wartungsfenster").style = "display: flex"; // Wartungsmodus
+            if (config.wartungsmodus == "true") {
+                document.getElementById("Wartungsfenster").style = "display: flex";
+                starteWartungsmodusPruefung();
+            }
             if (config.tagesabrechnung == "false") document.getElementById("bt_tagesabrechnung").style = "display: none";
             if (config.tageszusammenfassung == "false") document.getElementById("bt_tageszusammenfassung").style = "display: none";
             if (config.kundentagesübersicht == "false") document.getElementById("bt_kundentagesübersicht").style = "display: none";
@@ -955,12 +1045,12 @@ DATENÜBERTRAGUNG
                         body: JSON.stringify(offlineVerkäufe[i])
                     });
 
-                    if (response.ok) {
-                        const result = await response.json();
+                    const result = await response.json();
+                    if (response.ok && result.status === 'success') {
                         console.log(`Verkauf ${i + 1} erfolgreich synchronisiert:`, result);
                         erfolgreicheSyncs++;
                     } else {
-                        console.error(`Verkauf ${i + 1} Fehler: ${response.status}`);
+                        console.error(`Verkauf ${i + 1} Fehler: ${response.status}`, result);
                         fehlerhafte.push(offlineVerkäufe[i]);
                     }
                 } catch (error) {
@@ -969,9 +1059,13 @@ DATENÜBERTRAGUNG
                 }
             }
 
-            // Speichere nur die fehlerhaften Verkäufe zurück
-            if (fehlerhafte.length > 0) {
-                localStorage.setItem('offlineVerkäufe', JSON.stringify(fehlerhafte));
+            // Verkäufe, die während der Synchronisation neu hinzukamen, behalten.
+            const aktuellerOfflineStand = JSON.parse(localStorage.getItem('offlineVerkäufe') || '[]');
+            const neuHinzugekommeneVerkäufe = aktuellerOfflineStand.slice(offlineVerkäufe.length);
+            const verbleibendeVerkäufe = fehlerhafte.concat(neuHinzugekommeneVerkäufe);
+
+            if (verbleibendeVerkäufe.length > 0) {
+                localStorage.setItem('offlineVerkäufe', JSON.stringify(verbleibendeVerkäufe));
                 statusfeld.innerText = `${erfolgreicheSyncs} Verkäufe synchronisiert, ${fehlerhafte.length} fehlgeschlagen`;
                 console.log(`${erfolgreicheSyncs} Verkäufe synchronisiert, ${fehlerhafte.length} fehlgeschlagen`);
             } else {
@@ -2420,6 +2514,9 @@ DATENÜBERTRAGUNG
                 }
 
                 const result = await response.json();
+                if (result.status !== 'success') {
+                    throw new Error(result.message || 'Server hat den Verkauf nicht gespeichert');
+                }
                 console.log(result);
                 statusfeld.innerText = "Verkauf online gespeichert";
                 console.log("Verkauf online gespeichert");
@@ -2428,13 +2525,9 @@ DATENÜBERTRAGUNG
             } catch (error) {
                 console.error("Fehler:", error);
                 
-                // Nur offline speichern wenn nicht während Sync-Vorgang
-                // (während Sync ist der Verkauf bereits in offlineVerkäufe)
-                if (!isSyncing) {
-                    speichereOfflineVerkauf(data);
-                    statusfeld.innerText = "Fehler - Verkauf offline gespeichert";
-                    console.log("Fehler - Verkauf offline gespeichert");
-                }
+                speichereOfflineVerkauf(data);
+                statusfeld.innerText = "Fehler - Verkauf offline gespeichert";
+                console.log("Fehler - Verkauf offline gespeichert");
                 return false; // Fehler bei Übertragung
             }
         }

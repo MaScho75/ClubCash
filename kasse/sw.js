@@ -71,6 +71,22 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  const requestUrl = new URL(event.request.url);
+
+  // Erreichbarkeitsprüfungen dürfen niemals aus dem Cache beantwortet werden.
+  if (
+    requestUrl.searchParams.has('connectivity_check') ||
+    requestUrl.searchParams.has('maintenance_check')
+  ) {
+    event.respondWith(
+      fetch(event.request).catch(() => new Response('', {
+        status: 503,
+        statusText: 'Service Unavailable'
+      }))
+    );
+    return;
+  }
+
   event.respondWith(
     (async () => {
       // Navigations-Requests: Offline-Reload robust machen
