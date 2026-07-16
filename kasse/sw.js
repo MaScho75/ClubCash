@@ -15,7 +15,7 @@
  * along with ClubCash. If not, see <https://www.gnu.org/licenses/>.
  */
 
-const CACHE_NAME = 'clubcash-v1.6.1';
+const CACHE_NAME = 'clubcash-v1.6.2';
 const ASSETS = [
   './login.php',
   './config-public.php',
