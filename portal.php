@@ -2856,7 +2856,7 @@ if ($response !== false) {
             </tr>   
         </tbody></table>`;
 
-        // Übersicht nach Produktengrupen
+        // Übersicht nach Produktengruppen
         html += `    
             <hr>
             <h2 style="display: inline;"><a id="TabellenLink3" style='text-decoration: none;' href='#' onclick='toggleTabelle("Tabelle3", "TabellenLink3")'>➡️</a> Übersicht nach Produktgruppen</h2>
@@ -2904,6 +2904,68 @@ if ($response !== false) {
             </tr>
         </tbody></table>`;
     
+        // 4. Übersicht der Mehrwertsteuer insgesamt
+
+        let nettoGesamt = 0;
+        let bruttoGesamt = 0;
+        let mwstGesamt = 0;
+        const mwstSummen = {};
+
+        KäufeFilter.forEach(verkauf => {
+            const brutto = parseFloat(verkauf.Preis);
+            const mwstSatz = parseFloat(verkauf.MwSt);
+
+            if (isNaN(brutto) || isNaN(mwstSatz)) {
+                return;
+            }
+
+            const netto = brutto / (1 + mwstSatz / 100);
+            const mwst = brutto - netto;
+
+            bruttoGesamt += brutto;
+            nettoGesamt += netto;
+            mwstGesamt += mwst;
+
+            if (!mwstSummen[mwstSatz]) {
+                mwstSummen[mwstSatz] = 0;
+            }
+            mwstSummen[mwstSatz] += mwst;
+        });
+
+        const mwstSaetze = Object.keys(mwstSummen)
+            .map(satz => parseFloat(satz))
+            .sort((a, b) => a - b);
+
+        html += `    
+            <hr>
+            <h2 style="display: inline;">4. Übersicht der Mehrwertsteuer</h2>
+            <table class="portal-table" style="margin-top: 20px;">
+                <tr>
+                    <th class="links">Position</th>
+                    <th class="rechts">Betrag</th>
+                </tr>
+            <tbody>
+                <tr>
+                    <td class="links"><b>Netto gesamt</b></td>
+                    <td class="rechts"><b>${nettoGesamt.toFixed(2)} €</b></td>
+                </tr>
+                ${mwstSaetze.map(satz => `
+                <tr>
+                    <td class="links">MwSt ${satz.toFixed(0)} %</td>
+                    <td class="rechts">${mwstSummen[satz].toFixed(2)} €</td>
+                </tr>`).join('')}
+                <tr style="border-top: 1px solid black;">
+                    <td class="links"><b>Summe MwSt</b></td>
+                    <td class="rechts"><b>${mwstGesamt.toFixed(2)} €</b></td>
+                </tr>
+                <tr style="border-top: 1px solid black;">
+                    <td class="links"><b>Brutto gesamt</b></td>
+                    <td class="rechts"><b>${bruttoGesamt.toFixed(2)} €</b></td>
+                </tr>
+            </tbody>
+            </table>`;
+
+
 
         portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
@@ -2914,6 +2976,8 @@ if ($response !== false) {
             const datumE = document.getElementById("datum_ende").value;
             Kundenübersicht(kundennummer,new Date(datumA), new Date(datumE));
         });
+
+        
     }
 
     function getZusatzschluessel(uid) {
@@ -3634,6 +3698,70 @@ if ($response !== false) {
 
             </table>`;
 
+            //Tabelle4 - Übersicht der Mehrwertsteuer
+            let nettoGesamt = 0;
+            let bruttoGesamt = 0;
+            let mwstGesamt = 0;
+            const mwstSummen = {};
+
+            verkäufe.forEach(verkauf => {
+                if (verkauf.Datum < datum1.toISOString().split('T')[0] || verkauf.Datum > datum2.toISOString().split('T')[0]) {
+                    return;
+                }
+
+                const brutto = parseFloat(verkauf.Preis);
+                const mwstSatz = parseFloat(verkauf.MwSt);
+
+                if (isNaN(brutto) || isNaN(mwstSatz)) {
+                    return;
+                }
+
+                const netto = brutto / (1 + mwstSatz / 100);
+                const mwst = brutto - netto;
+
+                bruttoGesamt += brutto;
+                nettoGesamt += netto;
+                mwstGesamt += mwst;
+
+                if (!mwstSummen[mwstSatz]) {
+                    mwstSummen[mwstSatz] = 0;
+                }
+                mwstSummen[mwstSatz] += mwst;
+            });
+
+            const mwstSaetze = Object.keys(mwstSummen)
+                .map(satz => parseFloat(satz))
+                .sort((a, b) => a - b);
+
+            html += `
+                <hr>
+                <h2 style="display: inline;"><a id="TabellenLink4" style='text-decoration: none;' href='#' onclick='toggleTabelle("Tabelle4", "TabellenLink4")'>➡️</a> Übersicht der Mehrwertsteuer</h2>
+                <table id="Tabelle4" class="portal-table" style="display: none; margin-top: 20px;">
+                    <tr>
+                        <th class="links">Position</th>
+                        <th class="rechts">Betrag</th>
+                    </tr>
+                <tbody>
+                    <tr>
+                        <td class="links"><b>Netto gesamt</b></td>
+                        <td class="rechts"><b>${nettoGesamt.toFixed(2)} €</b></td>
+                    </tr>
+                    ${mwstSaetze.map(satz => `
+                    <tr>
+                        <td class="links">MwSt ${satz.toFixed(0)} %</td>
+                        <td class="rechts">${mwstSummen[satz].toFixed(2)} €</td>
+                    </tr>`).join('')}
+                    <tr style="border-top: 1px solid black;">
+                        <td class="links"><b>Summe MwSt</b></td>
+                        <td class="rechts"><b>${mwstGesamt.toFixed(2)} €</b></td>
+                    </tr>
+                    <tr style="border-top: 1px solid black;">
+                        <td class="links"><b>Brutto gesamt</b></td>
+                        <td class="rechts"><b>${bruttoGesamt.toFixed(2)} €</b></td>
+                    </tr>
+                </tbody>
+                </table>`;
+
         portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
 
@@ -4038,15 +4166,15 @@ if ($response !== false) {
                         <br> <br> <br>    
                     </div>
 
-                    <div">
+                    <div>
                         <table>
                             <thead>
                                 <tr>        
                                     <th><pre>Datum</pre></th>
-                                    <th><pre>Zeit</pre></th>
-                                    <th><pre>Terminal</pre></th>
+                                    <th style="text-align: center;"><pre>Zeit</pre></th>
+                                    <th style="text-align: center;"><pre>Terminal</pre></th>
                                     <th><pre>Buchungstext</pre></th>
-                                    <th><pre>MwSt</pre></th>
+                                    <th style="text-align: center;"><pre>MwSt</pre></th>
                                     <th style="text-align: right;"><pre>Preis</pre></th>
                                 </tr>
                             </thead>
@@ -4063,10 +4191,10 @@ if ($response !== false) {
             html += `
                 <tr>
                     <td><pre>${verkauf.Datum}</pre></td>
-                    <td><pre>${verkauf.Zeit}</pre></td>
-                    <td><pre>${verkauf.Terminal}</pre></td>
+                    <td style="text-align: center;"><pre>${verkauf.Zeit}</pre></td>
+                    <td style="text-align: center;"><pre>${verkauf.Terminal}</pre></td>
                     <td><pre>${verkauf.Produkt}</pre></td>
-                    <td><pre>${verkauf.MwSt} %</pre></td>
+                    <td style="text-align: right;"><pre>${verkauf.MwSt} %</pre></td>
                     <td style="text-align: right; vertical-align: bottom;"><pre>${brutto.toFixed(2)} €</pre></td>
                 </tr>`;
             summe += brutto;
@@ -4085,26 +4213,26 @@ if ($response !== false) {
                                 <tr style="border-top: 1px solid black; height: 30px;">
                                     <td colspan="3"></td>
                                     <td><pre><b>Bruttosumme</b></pre></td>
-                                    <td><pre>inkl.</pre></td>
+                                    <td style="text-align: right;"><pre>inkl.</pre></td>
                                     <td style="text-align: right;"><pre><b>${summe.toFixed(2)} €</b></pre></td>
                                 </tr>
                                 <tr>
                                     <td colspan="3"></td>
                                     <td><pre><b>Nettosumme</b></pre></td>
-                                    <td><pre>ohne</pre></td>
+                                    <td style="text-align: right;"><pre>ohne</pre></td>
                                     <td style="text-align: right;"><pre>${nettosumme.toFixed(2)} €</pre></td>
                                 </tr>
                                 ${mwstSaetze.map(satz => `
                                 <tr>
                                     <td colspan="3"></td>
                                     <td><pre>MwSt</pre></td>
-                                    <td><pre>${satz.toFixed(0)} %</pre></td>
+                                    <td style="text-align: right;"><pre>${satz.toFixed(0)} %</pre></td>
                                     <td style="text-align: right;"><pre>${mwstSummen[satz].toFixed(2)} €</pre></td>
                                 </tr>`).join('')}
                                 <tr>
                                     <td colspan="3"></td>
                                     <td><pre>MwSt</pre></td>
-                                    <td><pre>gesamt</pre></td>
+                                    <td style="text-align: right;"><pre>gesamt</pre></td>
                                     <td style="text-align: right;"><pre>${(summe - nettosumme).toFixed(2)} €</pre></td>
                                 </tr>
                             </tfoot>
@@ -4909,6 +5037,25 @@ if ($response !== false) {
             alert('Fehler beim Download: ' + error.message);
         }
         
+        return false;
+    }
+
+    function downloadProtectedFiles() {
+        const downloadUrl = 'download-protected-files.php';
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        document.body.appendChild(link);
+
+        try {
+            link.click();
+            setTimeout(() => {
+                document.body.removeChild(link);
+            }, 100);
+        } catch (error) {
+            console.error('Download Fehler:', error);
+            alert('Fehler beim Download: ' + error.message);
+        }
+
         return false;
     }
 

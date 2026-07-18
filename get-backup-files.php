@@ -32,6 +32,8 @@ if (!is_dir($folderPath)) {
     exit();
 }
 
+echo "<p><a class='kleinerBt' href='javascript:void(0)' onclick='return downloadProtectedFiles();'>Alle geschützten Dateien als ZIP herunterladen</a></p>";
+
 // Datei löschen, falls der Parameter gesetzt ist
 if (isset($_GET['delete'])) {
     $deleteFile = basename($_GET['delete']); // schützt vor Pfadmanipulation
