@@ -1,4 +1,3 @@
-
 <?php
 /*
  * This file is part of ClubCash.
@@ -98,6 +97,7 @@ $safeDownloadName = str_replace(['"', "\r", "\n"], '', $downloadName);
 
 header('Content-Type: ' . $contentType);
 header('Content-Disposition: attachment; filename="' . $safeDownloadName . '"');
+header('Content-Transfer-Encoding: binary');
 header('Content-Length: ' . $filesize);
 header('Cache-Control: no-cache, must-revalidate');
 header('Pragma: no-cache');
