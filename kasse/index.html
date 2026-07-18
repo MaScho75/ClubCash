@@ -315,6 +315,7 @@ DATENÜBERTRAGUNG
     <div id="Wartungsfenster">
             <img src="../grafik/ClubCashLogo-gelbblauweiss.svg" alt="ClubCash" id="wartungs-logo">
          <h1>System ist im Wartungsmodus!</h1>
+            <a href="#" onclick="window.location.reload(); return false;">Neu Laden</a>
     </div>
 
     <!-- Offline Bildschrim  -->
@@ -466,7 +467,7 @@ DATENÜBERTRAGUNG
                 }
             }
 
-            document.addEventListener("keydown", tastenkontrolle);
+            eingabestart();
 
         // Daten laden
             // Lade die JSON-Dateien mit den Produkten und Kunden
@@ -1090,11 +1091,13 @@ DATENÜBERTRAGUNG
             document.querySelector(".menu").classList.remove("active");
             preisfenster.style.display = 'flex';
             display_fenster.style.display = 'none';
+            eingabestopp();
         }
 
         function preisfenster_schliessen() {
             preisfenster.style.display = 'none';
             display_fenster.style.display = 'flex';
+            eingabestart();
         }
 
         function eingabestopp() {
@@ -1102,6 +1105,11 @@ DATENÜBERTRAGUNG
             document.removeEventListener("keydown", tastenkontrolle);
             Bt_preisfenster.style.display = 'none';
             Bt_manuelleBuchung.style.display = 'none';
+        }
+
+        function eingabestart() {
+            console.log("Eingabestart aktiviert");
+            document.addEventListener("keydown", tastenkontrolle);
         }
 
         function Fehlerton() {
@@ -1362,7 +1370,7 @@ DATENÜBERTRAGUNG
                                 summenfeld.innerText = (parseFloat(ProduktTemp.Preis)).toFixed(2) ; 
                                 
                                 // EventListener wieder aktivieren, damit Kunde den Chip scannen kann
-                                document.addEventListener("keydown", tastenkontrolle);
+                                eingabestart();
                                 eingabe = "";
                             }  
                         }
@@ -1529,7 +1537,8 @@ DATENÜBERTRAGUNG
                 let zelle3 = zeile.insertCell();
                 zelle3.innerHTML = "<button onclick='produktprüfung(`" + produkt.EAN + "`)' class='plus-button'>+</button>"; 
                 zelle3.className = "plus-button-zelle";
-            }
+            } 
+            eingabestart();
         }
 
         function manuell() {
