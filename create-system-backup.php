@@ -18,6 +18,14 @@
  */
 
 session_start();
+require_once __DIR__ . '/kasse/auth.php';
+
+try {
+    $config = loadKasseConfig();
+} catch (Throwable $e) {
+    echo "<p>❌ Konfiguration konnte nicht geladen werden.</p>";
+    exit();
+}
 
 // Prüfen, ob der Benutzer eingeloggt ist
 if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
@@ -76,39 +84,13 @@ if ($zip->open($backupFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE
     $zip->close();
     
     $backupFileName = basename($backupFile);
+    $timestamp = time();
+    $signature = buildDownloadSignature($backupFileName, $timestamp, $config);
+    $downloadUrl = 'download.php?file=' . urlencode($backupFileName) . '&ts=' . $timestamp . '&sig=' . urlencode($signature);
     
     echo "<p>✅ Backup erfolgreich erstellt:</p>";
-    echo "<a class='kleinerBt' href='javascript:void(0)' onclick='return downloadBackup(\"" . 
-         htmlspecialchars($backupFileName, ENT_QUOTES) . "\");'>" . 
+    echo "<a class='kleinerBt' href='" . htmlspecialchars($downloadUrl, ENT_QUOTES) . "'>" . 
          htmlspecialchars($backupFileName) . "</a>";
-    
-    // JavaScript für sicheren Download
-    echo <<<HTML
-    <script>
-        function downloadBackup(filename) {
-            if (!confirm('Möchten Sie das Backup ' + filename + ' herunterladen?')) {
-                return false;
-            }
-
-            const downloadUrl = 'download.php?file=' + encodeURIComponent(filename);
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            document.body.appendChild(link);
-
-            try {
-                link.click();
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                }, 100);
-            } catch (error) {
-                console.error('Download Fehler:', error);
-                alert('Fehler beim Download: ' + error.message);
-            }
-            
-            return false;
-        }
-    </script>
-HTML;
 
 } else {
     echo "<p>❌ Fehler beim Erstellen des Backups.</p>";

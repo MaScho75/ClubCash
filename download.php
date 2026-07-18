@@ -10,9 +10,36 @@
  */
 
 session_start();
+require_once __DIR__ . '/kasse/auth.php';
 
-// Prüfen, ob der Benutzer eingeloggt ist
-if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
+try {
+    $config = loadKasseConfig();
+} catch (Throwable $e) {
+    http_response_code(500);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'Konfiguration konnte nicht geladen werden';
+    exit();
+}
+
+function hasDownloadAccess(array $config): bool
+{
+    if (isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] === true) {
+        return true;
+    }
+
+    $requestedFile = str_replace('\\', '/', (string)($_GET['file'] ?? ''));
+    $signature = (string)($_GET['sig'] ?? '');
+    $timestamp = (int)($_GET['ts'] ?? 0);
+
+    if ($requestedFile === '' || $signature === '' || $timestamp === 0) {
+        return false;
+    }
+
+    return isValidDownloadSignature($requestedFile, $signature, $timestamp, $config);
+}
+
+// Prüfen, ob der Benutzer eingeloggt ist oder eine gültige Download-Signatur hat
+if (!hasDownloadAccess($config)) {
     http_response_code(401);
     header('Content-Type: text/plain; charset=UTF-8');
     echo 'Nicht autorisiert';

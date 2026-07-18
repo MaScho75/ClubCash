@@ -18,6 +18,14 @@
  */
 
 session_start();
+require_once __DIR__ . '/kasse/auth.php';
+
+try {
+    $config = loadKasseConfig();
+} catch (Throwable $e) {
+    echo "<p>❌ Konfiguration konnte nicht geladen werden.</p>";
+    exit();
+}
 
 // Prüfen, ob der Benutzer eingeloggt ist
 if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
@@ -74,10 +82,13 @@ try {
         // Dateien anzeigen
         foreach ($backupFiles as $file) {
             $deleteLink = $_SERVER['PHP_SELF'] . '?delete=' . urlencode($file);
+            $timestamp = time();
+            $signature = buildDownloadSignature($file, $timestamp, $config);
+            $downloadLink = 'download.php?file=' . urlencode($file) . '&ts=' . $timestamp . '&sig=' . urlencode($signature);
             echo "<p>
                     <a href=\"{$deleteLink}\" onclick=\"return confirm('Wirklich löschen?');\">🗑️</a>
                     &nbsp;
-                    <a href=\"javascript:void(0)\" onclick=\"return downloadBackup('" . htmlspecialchars($file, ENT_QUOTES) . "');\">" . 
+                    <a href=\"{$downloadLink}\">" . 
                     htmlspecialchars($file) . "</a>
                   </p>";
         }

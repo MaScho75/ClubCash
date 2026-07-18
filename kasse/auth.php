@@ -58,6 +58,30 @@ function getAuthSecret(array $config): string
     return hash('sha256', $appKey . '|' . $kassenPw, true);
 }
 
+function downloadAuthTtlSeconds(): int
+{
+    return 86400;
+}
+
+function buildDownloadSignature(string $requestedFile, int $timestamp, array $config): string
+{
+    return hash_hmac('sha256', $requestedFile . '|' . $timestamp, getAuthSecret($config));
+}
+
+function isValidDownloadSignature(string $requestedFile, string $signature, int $timestamp, array $config): bool
+{
+    $now = time();
+    if ($timestamp <= 0) {
+        return false;
+    }
+
+    if ($timestamp < ($now - downloadAuthTtlSeconds()) || $timestamp > ($now + 300)) {
+        return false;
+    }
+
+    return hash_equals(buildDownloadSignature($requestedFile, $timestamp, $config), $signature);
+}
+
 function verifyKassenPw(string $inputCode, array $config): bool
 {
     $stored = trim((string)($config['kassenpw'] ?? ''));
