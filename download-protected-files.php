@@ -80,17 +80,26 @@ $zip->close();
 
 $downloadName = 'ClubCash_geschuetzte_Dateien_' . date('Y-m-d_H-i-s') . '.zip';
 
-header('Content-Type: application/zip');
-header('Content-Disposition: attachment; filename="' . $downloadName . '"');
-header('Content-Length: ' . filesize($zipPath));
-header('Cache-Control: no-cache, must-revalidate');
-header('Pragma: no-cache');
-header('Expires: 0');
-header('X-Content-Type-Options: nosniff');
+if (function_exists('ini_set')) {
+    @ini_set('zlib.output_compression', 'Off');
+}
+if (function_exists('apache_setenv')) {
+    @apache_setenv('no-gzip', '1');
+}
 
 while (ob_get_level() > 0) {
     ob_end_clean();
 }
+
+header('Content-Type: application/zip');
+header('Content-Disposition: attachment; filename="' . $downloadName . '"');
+header('Content-Transfer-Encoding: binary');
+header('Content-Length: ' . filesize($zipPath));
+header('Content-Description: File Transfer');
+header('Cache-Control: no-cache, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
+header('X-Content-Type-Options: nosniff');
 
 readfile($zipPath);
 @unlink($zipPath);

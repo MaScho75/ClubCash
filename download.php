@@ -95,21 +95,31 @@ $contentTypes = [
 $contentType = $contentTypes[$extension] ?? 'application/octet-stream';
 $safeDownloadName = str_replace(['"', "\r", "\n"], '', $downloadName);
 
-header('Content-Type: ' . $contentType);
-header('Content-Disposition: attachment; filename="' . $safeDownloadName . '"');
-header('Content-Transfer-Encoding: binary');
-header('Content-Length: ' . $filesize);
-header('Cache-Control: no-cache, must-revalidate');
-header('Pragma: no-cache');
-header('Expires: 0');
-header('X-Content-Type-Options: nosniff');
+// Ausgabe-Kompression für Binärdownloads deaktivieren
+if (function_exists('ini_set')) {
+    @ini_set('zlib.output_compression', 'Off');
+}
+if (function_exists('apache_setenv')) {
+    @apache_setenv('no-gzip', '1');
+}
 
 while (ob_get_level() > 0) {
     ob_end_clean();
 }
 
+header('Content-Type: ' . $contentType);
+header('Content-Disposition: attachment; filename="' . $safeDownloadName . '"');
+header('Content-Transfer-Encoding: binary');
+header('Content-Length: ' . $filesize);
+header('Content-Description: File Transfer');
+header('Cache-Control: no-cache, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
+header('X-Content-Type-Options: nosniff');
+
 // Datei ausgeben
 if (readfile($filepath) === false) {
     die('Fehler beim Lesen der Datei');
 }
-?>
+
+exit();
