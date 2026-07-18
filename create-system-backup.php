@@ -89,36 +89,21 @@ if ($zip->open($backupFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE
             if (!confirm('Möchten Sie das Backup ' + filename + ' herunterladen?')) {
                 return false;
             }
-            
-            fetch('download.php?file=' + encodeURIComponent(filename), {
-                method: 'GET',
-                headers: {
-                    'Cache-Control': 'no-cache',
-                    'Pragma': 'no-cache'
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Download fehlgeschlagen');
-                return response.blob();
-            })
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
+
+            const downloadUrl = 'download.php?file=' + encodeURIComponent(filename);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            document.body.appendChild(link);
+
+            try {
+                link.click();
                 setTimeout(() => {
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
+                    document.body.removeChild(link);
                 }, 100);
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Download Fehler:', error);
                 alert('Fehler beim Download: ' + error.message);
-            });
+            }
             
             return false;
         }

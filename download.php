@@ -13,7 +13,9 @@ session_start();
 
 // Prüfen, ob der Benutzer eingeloggt ist
 if (!isset($_SESSION['user_authenticated']) || $_SESSION['user_authenticated'] !== true) {
-    header('Location: index.php');
+    http_response_code(401);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'Nicht autorisiert';
     exit();
 }
 
@@ -24,6 +26,7 @@ if (!isset($_GET['file'])) {
 
 $requestedFile = str_replace('\\', '/', $_GET['file']);
 $downloadName = basename($requestedFile);
+$baseDir = __DIR__;
 
 $allowedDataFiles = [
     'daten/produkte.json',
@@ -33,14 +36,15 @@ $allowedDataFiles = [
 ];
 
 if (in_array($requestedFile, $allowedDataFiles, true)) {
-    $filepath = $requestedFile;
+    $filepath = $baseDir . DIRECTORY_SEPARATOR . $requestedFile;
 } else {
     $filename = basename($requestedFile); // Schutz vor Directory Traversal
-    $filepath = 'backup/' . $filename;
+    $filepath = $baseDir . DIRECTORY_SEPARATOR . 'backup' . DIRECTORY_SEPARATOR . $filename;
     $downloadName = $filename;
 }
 
 // Sicherheitsprüfungen
+clearstatcache(true, $filepath);
 if (!is_file($filepath)) {
     die('Datei nicht gefunden');
 }
@@ -49,6 +53,10 @@ if (!is_file($filepath)) {
 $filesize = filesize($filepath);
 if ($filesize === false) {
     die('Fehler beim Ermitteln der Dateigröße');
+}
+
+if ($filesize === 0) {
+    die('Datei ist leer');
 }
 
 // Download-Header setzen
@@ -67,6 +75,11 @@ header('Content-Length: ' . $filesize);
 header('Cache-Control: no-cache, must-revalidate');
 header('Pragma: no-cache');
 header('Expires: 0');
+header('X-Content-Type-Options: nosniff');
+
+while (ob_get_level() > 0) {
+    ob_end_clean();
+}
 
 // Datei ausgeben
 if (readfile($filepath) === false) {
