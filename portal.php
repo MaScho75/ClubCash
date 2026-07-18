@@ -4053,7 +4053,13 @@ if ($response !== false) {
                             <tbody>`;
         let KäufeFilter = verkäufe.filter(auswahl => auswahl.Kundennummer == kundennummer && auswahl.Datum >= datum1.toISOString().split('T')[0] && auswahl.Datum <= datum2.toISOString().split('T')[0]);
         let summe = 0;
+        let nettosumme = 0;
+        const mwstSummen = {};
         KäufeFilter.forEach(verkauf => {
+            const brutto = parseFloat(verkauf.Preis);
+            const mwstSatz = parseFloat(verkauf.MwSt);
+            const netto = brutto / (1 + mwstSatz / 100);
+
             html += `
                 <tr>
                     <td><pre>${verkauf.Datum}</pre></td>
@@ -4061,16 +4067,45 @@ if ($response !== false) {
                     <td><pre>${verkauf.Terminal}</pre></td>
                     <td><pre>${verkauf.Produkt}</pre></td>
                     <td><pre>${verkauf.MwSt} %</pre></td>
-                    <td style="text-align: right; vertical-align: bottom;"><pre>${parseFloat(verkauf.Preis).toFixed(2)} €</pre></td>
+                    <td style="text-align: right; vertical-align: bottom;"><pre>${brutto.toFixed(2)} €</pre></td>
                 </tr>`;
-            summe += parseFloat(verkauf.Preis);
+            summe += brutto;
+            nettosumme += netto;
+            if (!mwstSummen[mwstSatz]) {
+                mwstSummen[mwstSatz] = 0;
+            }
+            mwstSummen[mwstSatz] += brutto - netto;
         });
+        const mwstSaetze = Object.keys(mwstSummen)
+            .map(satz => parseFloat(satz))
+            .sort((a, b) => a - b);
         html += `
                     </tbody>
                         <tfoot style="background-color: #f2f2f2">
-                                <tr>
-                                    <td colspan="4" style="text-align: right;"><pre><b>Summe</b></pre></td>
+                                <tr style="border-top: 1px solid black; height: 30px;">
+                                    <td colspan="3"></td>
+                                    <td><pre><b>Bruttosumme</b></pre></td>
+                                    <td><pre>inkl.</pre></td>
                                     <td style="text-align: right;"><pre><b>${summe.toFixed(2)} €</b></pre></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"></td>
+                                    <td><pre><b>Nettosumme</b></pre></td>
+                                    <td><pre>ohne</pre></td>
+                                    <td style="text-align: right;"><pre>${nettosumme.toFixed(2)} €</pre></td>
+                                </tr>
+                                ${mwstSaetze.map(satz => `
+                                <tr>
+                                    <td colspan="3"></td>
+                                    <td><pre>MwSt</pre></td>
+                                    <td><pre>${satz.toFixed(0)} %</pre></td>
+                                    <td style="text-align: right;"><pre>${mwstSummen[satz].toFixed(2)} €</pre></td>
+                                </tr>`).join('')}
+                                <tr>
+                                    <td colspan="3"></td>
+                                    <td><pre>MwSt</pre></td>
+                                    <td><pre>gesamt</pre></td>
+                                    <td style="text-align: right;"><pre>${(summe - nettosumme).toFixed(2)} €</pre></td>
                                 </tr>
                             </tfoot>
                         </table>
