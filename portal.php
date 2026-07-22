@@ -4108,6 +4108,7 @@ if ($response !== false) {
                 <button class="kleinerBt" onclick="Abrechnung(heute, heute)">Tag</button>
                 <button id="bt-abrechnungExport" class="kleinerBt">Export an VF</button>
                 <button id="bt-emailAlle" class="kleinerBt">Email an alle</button>
+                <button class="kleinerBt" onclick="PDFArchiv()">PDF-Archiv</button>
             </div> `;
 
             let html = `
@@ -4166,6 +4167,89 @@ if ($response !== false) {
             emailAlleBtn.addEventListener("click", () => {
                 Emailabrechnung_alle(datum1, datum2);
             });
+        }
+    }
+
+    /**
+     * Erstellt alle Einzelabrechnungen des gewählten Zeitraums als PDF-Archiv
+     */
+    async function PDFArchiv() {
+        const datumAnfang = document.getElementById('datum_anfang')?.value;
+        const datumEnde = document.getElementById('datum_ende')?.value;
+
+        if (!datumAnfang || !datumEnde || datumAnfang > datumEnde) {
+            alert('Bitte einen gültigen Abrechnungszeitraum auswählen.');
+            return;
+        }
+
+        const startdatum = new Date(datumAnfang);
+        const enddatum = new Date(datumEnde);
+        const kundenMitUmsatz = kunden.filter(kunde => {
+            return verkäufe.some(verkauf =>
+                String(verkauf.Kundennummer) === String(kunde.uid) &&
+                verkauf.Datum >= datumAnfang &&
+                verkauf.Datum <= datumEnde
+            );
+        });
+
+        if (kundenMitUmsatz.length === 0) {
+            portalInhalt.innerHTML = '<p>⚠️ Keine Mitglieder mit Umsatz im gewählten Zeitraum gefunden.</p>';
+            return;
+        }
+
+        if (!confirm(`Sollen ${kundenMitUmsatz.length} Einzelabrechnungen als PDF-Archiv erstellt werden?`)) {
+            return;
+        }
+
+        const abrechnungen = kundenMitUmsatz.map(kunde => ({
+            kundennummer: kunde.uid,
+            name: kunde.lastname,
+            vorname: kunde.firstname,
+            html: RechnungstextErstellen(kunde.uid, startdatum, enddatum)
+        }));
+
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>PDF-Archiv</h2>";
+        portalInhalt.innerHTML = `<p>Bitte warten, ${abrechnungen.length} PDF-Abrechnungen und das ZIP-Archiv werden erstellt...</p>`;
+        const preloader = document.getElementById('preloader');
+        if (preloader) {
+            preloader.style.display = 'block';
+        }
+
+        try {
+            const response = await fetch('create-pdf-archive.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json;charset=UTF-8'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    datum1: datumAnfang,
+                    datum2: datumEnde,
+                    abrechnungen: abrechnungen
+                })
+            });
+
+            const result = await response.json();
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Das PDF-Archiv konnte nicht erstellt werden.');
+            }
+
+            portalInhalt.innerHTML = '';
+            const status = document.createElement('p');
+            status.textContent = `✅ ${result.count} PDF-Abrechnungen wurden erfolgreich archiviert.`;
+            portalInhalt.appendChild(status);
+
+            const downloadLink = document.createElement('a');
+            downloadLink.className = 'kleinerBt';
+            downloadLink.href = result.downloadUrl;
+            downloadLink.textContent = result.filename;
+            portalInhalt.appendChild(downloadLink);
+        } catch (error) {
+            portalInhalt.innerHTML = `<p>❌ PDF-Archiv konnte nicht erstellt werden:<br>${escapeHtml(error.message)}</p>`;
+        } finally {
+            if (preloader) {
+                preloader.style.display = 'none';
+            }
         }
     }
 

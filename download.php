@@ -63,6 +63,10 @@ $allowedDataFiles = [
 
 if (in_array($requestedFile, $allowedDataFiles, true)) {
     $filepath = $baseDir . DIRECTORY_SEPARATOR . $requestedFile;
+} elseif (preg_match('#^abrechnungen/[^/]+\.zip$#', $requestedFile) === 1) {
+    $filename = basename($requestedFile);
+    $filepath = $baseDir . DIRECTORY_SEPARATOR . 'abrechnungen' . DIRECTORY_SEPARATOR . $filename;
+    $downloadName = $filename;
 } else {
     $filename = basename($requestedFile); // Schutz vor Directory Traversal
     $filepath = $baseDir . DIRECTORY_SEPARATOR . 'backup' . DIRECTORY_SEPARATOR . $filename;
