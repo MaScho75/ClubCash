@@ -965,6 +965,34 @@ if ($response !== false) {
 	            <link rel="stylesheet" href="style-portal.css?v=<?php echo time(); ?>">
 	
 	            <link rel="stylesheet" href="farben.css?v=<?php echo time(); ?>">
+                <style>
+                    .eiskarte-produkt {
+                        break-inside: avoid;
+                        page-break-inside: avoid;
+                    }
+                    .eiskarte-produktbild-zelle {
+                        width: 140px;
+                        padding: 10px 20px 10px 0;
+                        text-align: center;
+                        vertical-align: middle;
+                        border-bottom: 1px solid var(--border-color);
+                    }
+                    .eiskarte-produktbild {
+                        display: block;
+                        width: 120px;
+                        height: 120px;
+                        margin: 0 auto;
+                        object-fit: contain;
+                    }
+                    .eiskarte-produktname,
+                    .eiskarte-produktpreis {
+                        vertical-align: middle;
+                    }
+                    .eiskarte-barcodezeile td {
+                        padding-bottom: 15px;
+                        border-bottom: 1px solid var(--border-color);
+                    }
+                </style>
         
             </head>
             <body>
@@ -975,26 +1003,33 @@ if ($response !== false) {
                 </div>
                 <div class="preisliste-print">
                     <table class="preisliste-table">
-                        <tbody>
         `;
 
         // Barcodezeilen hinzufügen
         sortedProdukte.forEach(produkt => {
             // Barcode-Text im Code 39 Format mit * am Anfang/Ende
-            const barcodeText = `*${produkt.EAN}*`;
+            const ean = String(produkt.EAN || '').trim();
+            const barcodeText = escapeHtml(`*${ean}*`);
+            const bezeichnung = escapeHtml(String(produkt.Bezeichnung || ''));
+            const preis = escapeHtml(String(produkt.Preis || ''));
+            const bildPfad = `Produktbilder/${encodeURIComponent(ean)}.png`;
             html += `
+                <tbody class="eiskarte-produkt">
                 <tr>
-                    <td class="links">${produkt.Bezeichnung}</td>
-                    <td class="rechts">${produkt.Preis} €</td>
+                    <td rowspan="2" class="eiskarte-produktbild-zelle">
+                        <img class="eiskarte-produktbild" src="${bildPfad}" alt="${bezeichnung}" onerror="this.onerror=null; this.src='grafik/produktbild-platzhalter.svg';">
+                    </td>
+                    <td class="links eiskarte-produktname">${bezeichnung}</td>
+                    <td class="rechts eiskarte-produktpreis">${preis} €</td>
                 </tr>
-                <tr padding-top: 20px;">
+                <tr class="eiskarte-barcodezeile">
                     <td colspan="2" class="barcode" >${barcodeText}</td>
                 </tr>
+                </tbody>
             `;
         });
 
         html += `
-                        </tbody>
                     </table>
                     <button class="no-print" style="position: absolute; top: 10px; right: 10px;" onclick="window.print();">drucken</button>
                 </div>
