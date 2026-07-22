@@ -2705,16 +2705,15 @@ if ($response !== false) {
         `;
 
         html += `
-
+            <button class="kleinerBt" style="width: auto; margin-left: 10px;" onclick="OnlineBuchung('${kunde.uid}')">Buchung hinzufügen</button>
             <button class="kleinerBt" onclick="RechnungErstellen('${kunde.uid}', '${datum1}', '${datum2}')" style="margin-left: 10px;">Abrechnung</button>
             <button class="kleinerBt" onclick="Emailrechnung('${kunde.uid}', '${datum1}', '${datum2}')" style="margin-left: 10px;">@ Abrechnung</button>
-                `;
+            <button class="kleinerBt" onclick="MitgliederAusweise('${kunde.schlüssel}')" style="margin-left: 10px;">Bezahlkarte</button>
+            <button class="kleinerBt" onclick="TankstellenQRCode('${kunde.schlüssel}')" style="margin-left: 10px;">Tankstelle</button>    `;
         if (angemeldetesMitglied.cc_admin == true) {
-            html += `<button class="kleinerBt" onclick="MitgliederAusweise('${kunde.schlüssel}')" style="margin-left: 10px;">Bezahlkarte</button>
-            <button class="kleinerBt" onclick="TankstellenQRCode('${kunde.schlüssel}')" style="margin-left: 10px;">Tankstelle</button>
-            <button class="kleinerBt" style="width: auto;" onclick="KontoAusgleichen('${kunde.uid}', ${kunde.Kontostand})" style="margin-left: 10px;">Konto ausgleichen</button>
-            <button class="kleinerBt" style="width: auto;" onclick="OnlineBuchung('${kunde.uid}')" style="margin-left: 10px;">Buchung hinzufügen</button>`
-            ;
+            html += `
+            <button class="kleinerBt" style="width: auto; margin-left: 10px;" onclick="KontoAusgleichen('${kunde.uid}', ${kunde.Kontostand})">Konto ausgleichen</button>
+            <button class="kleinerBt" style="width: auto; margin-left: 10px;" onclick="EinzelabrechnungVereinsflieger('${kunde.uid}', '${datum1.toISOString().split('T')[0]}', '${datum2.toISOString().split('T')[0]}')">Export an VF</button>`;
         }
 
         html += `
@@ -3932,6 +3931,91 @@ if ($response !== false) {
     }
 
     /**
+     * Erstellt und überträgt die Abrechnung eines einzelnen Mitglieds an Vereinsflieger
+     * @param {string} kundennummer - ID des Mitglieds
+     * @param {string|Date} datum1 - Startdatum
+     * @param {string|Date} datum2 - Enddatum
+     */
+    function EinzelabrechnungVereinsflieger(kundennummer, datum1, datum2) {
+        const startdatum = datum1 instanceof Date ? datum1 : new Date(datum1);
+        const enddatum = datum2 instanceof Date ? datum2 : new Date(datum2);
+
+        if (isNaN(startdatum.getTime()) || isNaN(enddatum.getTime())) {
+            alert('Der Abrechnungszeitraum ist ungültig.');
+            return;
+        }
+
+        const kunde = kunden.find(kunde => String(kunde.uid) === String(kundennummer));
+        if (!kunde) {
+            alert('Das ausgewählte Mitglied besitzt keinen Vereinsflieger-Zugang.');
+            return;
+        }
+
+        const memberid = parseInt(kunde.memberid, 10);
+        if (isNaN(memberid)) {
+            alert('Für das ausgewählte Mitglied ist keine Vereinsflieger-Mitgliedsnummer hinterlegt.');
+            return;
+        }
+
+        const startdatumText = startdatum.toISOString().split('T')[0];
+        const enddatumText = enddatum.toISOString().split('T')[0];
+        const kundenVerkaeufe = verkäufe.filter(verkauf =>
+            String(verkauf.Kundennummer) === String(kunde.uid) &&
+            verkauf.Datum >= startdatumText &&
+            verkauf.Datum <= enddatumText
+        );
+
+        if (kundenVerkaeufe.length === 0) {
+            alert('Für das ausgewählte Mitglied liegen im gewählten Zeitraum keine Buchungen vor.');
+            return;
+        }
+
+        const kundenSumme = kundenVerkaeufe.reduce((summe, verkauf) => {
+            return summe + parseFloat(verkauf.Preis);
+        }, 0);
+        const mwstSummen = kundenVerkaeufe.reduce((summen, verkauf) => {
+            const brutto = parseFloat(verkauf.Preis);
+            const mwstSatz = parseFloat(verkauf.MwSt);
+
+            if (isNaN(brutto) || isNaN(mwstSatz) || mwstSatz === 0) {
+                return summen;
+            }
+
+            const mwst = brutto - (brutto / (1 + mwstSatz / 100));
+            summen[mwstSatz] = (summen[mwstSatz] || 0) + mwst;
+            return summen;
+        }, {});
+        const mwstAufschluesselung = Object.keys(mwstSummen)
+            .map(satz => parseFloat(satz))
+            .sort((a, b) => a - b)
+            .map(satz => `#${Number.isInteger(satz) ? satz.toFixed(0) : satz}% ${mwstSummen[satz].toFixed(2)}€`)
+            .join(' ');
+
+        const abrechnungsdatensatz = {
+            bookingdate: enddatumText,
+            Zeit: enddatum.toISOString().split('T')[1].substring(0, 5),
+            Terminal: 'Z',
+            Schlüssel: kunde.schlüssel,
+            Uid: kunde.uid,
+            EAN: 9999,
+            Produkt: 'Kontoausgleich-VF',
+            Art: 'Buchung',
+            Gutschrift: (-kundenSumme).toFixed(2),
+            Steuern: 0,
+            articleid: '1017',
+            memberid: memberid,
+            amount: kundenVerkaeufe.length,
+            callsign: 'ClubCash',
+            saletax: 19,
+            comment: startdatumText + ' bis ' + enddatumText + ' - ' + kunde.lastname + ', ' + kunde.firstname + ' - MwSt: ' + mwstAufschluesselung,
+            spid: 4,
+            totalprice: kundenSumme.toFixed(2)
+        };
+
+        abrechnungExport([abrechnungsdatensatz]);
+    }
+
+    /**
      * Erstellt Abrechnungsübersicht mit MwSt-Aufschlüsselung
      * Gruppiert Umsätze nach Kunden und Steuersätzen
      * @param {Date} datum1 - Startdatum (optional)
@@ -4202,11 +4286,12 @@ if ($response !== false) {
         let KäufeFilter = verkäufe.filter(auswahl => auswahl.Kundennummer == kundennummer && auswahl.Datum >= datum1.toISOString().split('T')[0] && auswahl.Datum <= datum2.toISOString().split('T')[0]);
         let summe = 0;
         let nettosumme = 0;
-        const mwstSummen = {};
+        const steuerSummen = {};
         KäufeFilter.forEach(verkauf => {
             const brutto = parseFloat(verkauf.Preis);
             const mwstSatz = parseFloat(verkauf.MwSt);
             const netto = brutto / (1 + mwstSatz / 100);
+            const mwst = brutto - netto;
 
             html += `
                 <tr>
@@ -4219,48 +4304,65 @@ if ($response !== false) {
                 </tr>`;
             summe += brutto;
             nettosumme += netto;
-            if (!mwstSummen[mwstSatz]) {
-                mwstSummen[mwstSatz] = 0;
+            if (!steuerSummen[mwstSatz]) {
+                steuerSummen[mwstSatz] = {netto: 0, mwst: 0, brutto: 0};
             }
-            mwstSummen[mwstSatz] += brutto - netto;
+            steuerSummen[mwstSatz].netto += netto;
+            steuerSummen[mwstSatz].mwst += mwst;
+            steuerSummen[mwstSatz].brutto += brutto;
         });
-        const mwstSaetze = Object.keys(mwstSummen)
+        const mwstSaetze = Object.keys(steuerSummen)
             .map(satz => parseFloat(satz))
             .sort((a, b) => a - b);
+        const mwstGesamt = mwstSaetze.reduce((gesamt, satz) => {
+            return gesamt + parseFloat(steuerSummen[satz].mwst.toFixed(2));
+        }, 0);
         html += `
                     </tbody>
                         <tfoot style="background-color: #f2f2f2">
-                                <tr style="border-top: 1px solid black; height: 30px;">
+                                <tr style="border-top: 1px solid black;">
                                     <td colspan="3"></td>
                                     <td><pre><b>Bruttosumme</b></pre></td>
                                     <td style="text-align: right;"><pre>inkl.</pre></td>
                                     <td style="text-align: right;"><pre><b>${summe.toFixed(2)} €</b></pre></td>
                                 </tr>
+                            </tfoot>
+                        </table>
+                        <table style="margin-top: 20px">
+                            <thead>
                                 <tr>
-                                    <td colspan="3"></td>
-                                    <td><pre><b>Nettosumme</b></pre></td>
-                                    <td style="text-align: right;"><pre>ohne</pre></td>
-                                    <td style="text-align: right;"><pre>${nettosumme.toFixed(2)} €</pre></td>
+                                    <th><pre>Steuersatz</pre></th>
+                                    <th style="text-align: right;"><pre>Nettosumme</pre></th>
+                                    <th style="text-align: right;"><pre>MwSt</pre></th>
+                                    <th style="text-align: right;"><pre>Bruttosumme</pre></th>
                                 </tr>
-                                ${mwstSaetze.map(satz => `
-                                <tr>
-                                    <td colspan="3"></td>
-                                    <td><pre>MwSt</pre></td>
-                                    <td style="text-align: right;"><pre>${satz.toFixed(0)} %</pre></td>
-                                    <td style="text-align: right;"><pre>${mwstSummen[satz].toFixed(2)} €</pre></td>
-                                </tr>`).join('')}
-                                <tr>
-                                    <td colspan="3"></td>
-                                    <td><pre>MwSt</pre></td>
-                                    <td style="text-align: right;"><pre>gesamt</pre></td>
-                                    <td style="text-align: right;"><pre>${(summe - nettosumme).toFixed(2)} €</pre></td>
+                            </thead>
+                            <tbody>
+                            ${mwstSaetze.map(satz => {
+                                const steuerSumme = steuerSummen[satz];
+                                return `
+                                    <tr>
+                                        <td><pre>${satz.toFixed(0)} %</pre></td>
+                                        <td style="text-align: right;"><pre>${steuerSumme.netto.toFixed(2)} €</pre></td>
+                                        <td style="text-align: right;"><pre>${steuerSumme.mwst.toFixed(2)} €</pre></td>
+                                        <td style="text-align: right;"><pre>${steuerSumme.brutto.toFixed(2)} €</pre></td>
+                                    </tr>`;
+                            }).join('')}
+                            </tbody>
+                            <tfoot>
+                                <tr style="border-top: 1px solid black;">
+                                    <td><pre><b>Gesamt</b></pre></td>
+                                    <td style="text-align: right;"><pre>${nettosumme.toFixed(2)} €</pre></td>
+                                    <td style="text-align: right;"><pre>${mwstGesamt.toFixed(2)} €</pre></td>
+                                    <td style="text-align: right;"><pre>${summe.toFixed(2)} €</pre></td>
                                 </tr>
                             </tfoot>
                         </table>
+
                     </div>
                     <hr>
                     <div>
-                        <pre style="text-align: center;">Die Abrechnung wurde automatisiert erstellt mit <br> ClubCash - Das bargeldlose Bezahlsystem für Flugsportvereine <br>&copy; 2026 Marcel Schommer</pre>
+                    <pre style="text-align: center;">Die Abrechnung beinhaltet alle Umsätze innerhalb des angegebenen Zeitraums. <br>Umsätze außerhalb dieses Zeitraums sind nicht enthalten und geben <br>entsprechend nicht den akteullen Kontostand mit den Buttosummen der MwSt an. <br>Die Abrechnung wurde automatisiert erstellt mit <br> ClubCash - Das bargeldlose Bezahlsystem für Flugsportvereine <br>&copy; 2026 Marcel Schommer</pre>
                     </div>
                 </div>    
             </body>
