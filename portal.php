@@ -192,14 +192,18 @@ if ($response !== false) {
     <li>
       <a href="#" id="MenuDownload" style="display: none;">Download</a>
       <ul>
+        <li><a href="#" onclick="downloadFile('daten/umsatz.csv')">Umsatz CSV</a></li>
+        <li><a href="#" onclick="backupliste()">Backups</a></li>
+        <li><a href="#" onclick="abrechnungsliste()">Abrechnungen</a></li>
+        <li><a href="#" onclick="Schluesselliste()"><img class="menu-icon" src="kasse/fonts/key.svg" alt="">Schlüsselliste</a></li>
         <li><a href="#" onclick="downloadFile('daten/produkte.json')">Produktliste JSON</a></li>
         <li><a href="#" onclick="downloadFile('daten/kunden.json')">Kundenliste JSON</a></li>
         <li><a href="#" onclick="downloadFile('daten/externe.json')">Externe Kunden JSON</a></li>
-        <li><a href="#" onclick="downloadFile('daten/umsatz.csv')">Umsatz CSV</a></li>
+
         <li><a href="#" onclick="Mitgliederdaten()">Mitgliederdaten</a></li>
-        <li><a href="#" onclick="backupliste()">Backups</a></li>
+
         <li><a href="#" onclick="downloadFile('daten/config.json')">Config JSON</a></li>
-        <li><a href="#" onclick="Schluesselliste()"><img class="menu-icon" src="kasse/fonts/key.svg" alt="">Schlüsselliste</a></li>
+
       </ul>
     </li>
   </ul>
@@ -484,6 +488,12 @@ if ($response !== false) {
            if (action === 'backupliste') {
                 backupliste(); // JavaScript-Funktion aufrufen
                 // Danach 'action' aus der URL entfernen, ohne neu zu laden:
+                urlParams.delete('action');
+                const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+                window.history.replaceState({}, '', newUrl);
+           }
+           else if (action === 'abrechnungsliste') {
+                abrechnungsliste();
                 urlParams.delete('action');
                 const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
                 window.history.replaceState({}, '', newUrl);
@@ -3225,6 +3235,19 @@ if ($response !== false) {
             portalInhalt.innerHTML = data;
         })
         .catch(error => console.error('Fehler beim Laden der Dateien:', error));
+    }
+
+    /**
+     * Zeigt die gespeicherten ZIP-Archive der Abrechnungen
+     */
+    function abrechnungsliste() {
+        portalmenu2.innerHTML = "<h2 style='display: inline;'>gespeicherte Abrechnungen</h2>";
+        fetch('get-abrechnung-files.php')
+        .then(response => response.text())
+        .then(data => {
+            portalInhalt.innerHTML = data;
+        })
+        .catch(error => console.error('Fehler beim Laden der Abrechnungen:', error));
     }
 
     /**
