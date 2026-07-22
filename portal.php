@@ -3950,18 +3950,38 @@ if ($response !== false) {
         // Über alle Kunden iterieren
         kunden.forEach(kunde => {
             // Summe aller Verkäufe für diesen Kunden im gewählten Zeitraum
-            const kundenUmsatz = verkäufe
-                .filter(verkauf => 
+            const kundenVerkaeufe = verkäufe
+                .filter(verkauf =>
                     verkauf.Kundennummer === kunde.uid &&
                     verkauf.Datum >= datum1.toISOString().split('T')[0] && 
                     verkauf.Datum <= datum2.toISOString().split('T')[0]
-                )
-                .reduce((acc, verkauf) => {
+                );
+
+            const kundenUmsatz = kundenVerkaeufe.reduce((acc, verkauf) => {
                     return {
                         Anzahl: acc.Anzahl + 1,
                         Summe: acc.Summe + parseFloat(verkauf.Preis)
                     };
                 }, {Anzahl: 0, Summe: 0});
+
+            const mwstSummen = kundenVerkaeufe.reduce((summen, verkauf) => {
+                const brutto = parseFloat(verkauf.Preis);
+                const mwstSatz = parseFloat(verkauf.MwSt);
+
+                if (isNaN(brutto) || isNaN(mwstSatz) || mwstSatz === 0) {
+                    return summen;
+                }
+
+                const mwst = brutto - (brutto / (1 + mwstSatz / 100));
+                summen[mwstSatz] = (summen[mwstSatz] || 0) + mwst;
+                return summen;
+            }, {});
+
+            const mwstAufschluesselung = Object.keys(mwstSummen)
+                .map(satz => parseFloat(satz))
+                .sort((a, b) => a - b)
+                .map(satz => `#${Number.isInteger(satz) ? satz.toFixed(0) : satz}% ${mwstSummen[satz].toFixed(2)}€`)
+                .join(" ");
 
             // Nur Kunden mit Umsatz hinzufügen
             if (kundenUmsatz.Anzahl > 0) {
@@ -3984,7 +4004,7 @@ if ($response !== false) {
                     amount: kundenUmsatz.Anzahl,
                     callsign: "ClubCash",
                     saletax: 19,
-                    comment: datum1.toISOString().split('T')[0] + " bis " + datum2.toISOString().split('T')[0] + " - " + kunde.lastname + ", " + kunde.firstname,
+                    comment: datum1.toISOString().split('T')[0] + " bis " + datum2.toISOString().split('T')[0] + " - " + kunde.lastname + ", " + kunde.firstname + " - MwSt: " + mwstAufschluesselung,
                     spid: 4,
                     totalprice: kundenUmsatz.Summe.toFixed(2)
                 });
