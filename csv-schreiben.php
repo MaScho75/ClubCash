@@ -40,8 +40,6 @@ if ($input && isset($input['data']) && isset($input['filename'])) {
     ]);
 }
 
-writeArrayToCSV($data, $filename);
-
 function writeArrayToCSV($data, $filename) {
     if (empty($data) || !is_array($data)) {
         return false;

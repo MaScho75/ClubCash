@@ -506,20 +506,23 @@ if ($response !== false) {
     /**
      * Löscht einen Verkauf aus der Umsatzdatei
      * @param {number} index - Index des zu löschenden Verkaufs im Array
+     * @param {string} ansicht - Aktuell angezeigte Umsatzansicht
+     * @param {string|null} kundennummer - Kundennummer bei einer Kundenübersicht
      */
-    function deleteVerkauf(index) {
+    function deleteVerkauf(index, ansicht, kundennummer = null) {
         if (confirm(`Möchtest du den ausgewählten Verkauf wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden!`)) {
-            // Verkauf aus dem Array entfernen
-            verkäufe.splice(index, 1);
+            const datumAnfang = document.getElementById("datum_anfang")?.value;
+            const datumEnde = document.getElementById("datum_ende")?.value;
+            const offeneTabellen = Array.from(portalInhalt.querySelectorAll('[id^="Tabelle"], [id^="zusatzspalte_"]'))
+                .filter(element => element.style.display !== 'none' && element.style.display !== '')
+                .map(element => ({ id: element.id, display: element.style.display }));
+            const aktualisierteVerkäufe = verkäufe.filter((_, verkaufsindex) => verkaufsindex !== index);
 
-            //Bildschirm leeren
             document.getElementById("preloader").style.display = "block"; // Preloader anzeigen
-            portalmenu2.innerHTML = '<h2>Datenaktualisierung</h2>';
-            portalInhalt.innerHTML = '<p>Bitte Warten! Der Datenbestand wird aktualisiert. Es können in dieser Zeit keine Verkäufe getätigt werden!<br>Nach Abschluss der Aktualierung wird die Seite neu gelanden.</p>';
 
             // Array zur Übertragung vorbereiten
             const csvData = {
-                data: verkäufe,
+                data: aktualisierteVerkäufe,
                 filename: "daten/umsatz.csv"
             };
 
@@ -532,14 +535,45 @@ if ($response !== false) {
                 },
                 body: JSON.stringify(csvData)
             })
-            .then(response => response.json())
-            .then(result => { 
-                    alert(`Der ausgewählte Verkauf wurde erfolgreich gelöscht.`);
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Der Server konnte den Verkauf nicht löschen.');
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (result.success !== true) {
+                    throw new Error(result.error || 'Der Verkauf konnte nicht gespeichert werden.');
+                }
+
+                verkäufe = aktualisierteVerkäufe;
+
+                if (ansicht === 'kunde' && kundennummer !== null) {
+                    Kundenübersicht(kundennummer, new Date(datumAnfang), new Date(datumEnde));
+                } else {
+                    Umsätze(new Date(datumAnfang), new Date(datumEnde));
+                }
+
+                offeneTabellen.forEach(zustand => {
+                    const element = document.getElementById(zustand.id);
+                    if (!element) return;
+
+                    element.style.display = zustand.display;
+                    const linkId = zustand.id.startsWith('zusatzspalte_')
+                        ? `TabellenLink_${zustand.id.substring('zusatzspalte_'.length)}`
+                        : `TabellenLink${zustand.id.substring('Tabelle'.length)}`;
+                    const link = document.getElementById(linkId);
+                    if (link) link.textContent = '⬇️';
+                });
+
+                alert(`Der ausgewählte Verkauf wurde erfolgreich gelöscht.`);
             })
             .catch(error => {
                 alert('Fehler beim Löschen des Verkaufs: ' + error);
             })
-            .finally(() => location.reload()); // seite aktualisieren
+            .finally(() => {
+                document.getElementById("preloader").style.display = "none";
+            });
         }
     }       
 
@@ -2834,7 +2868,7 @@ if ($response !== false) {
             `;
             
             if (angemeldetesMitglied.cc_admin === true) {
-                html += `<td><a href="#" onclick="deleteVerkauf(${verkauf.originalIndex})">🗑️</a></td>`;
+                html += `<td><a href="#" onclick="deleteVerkauf(${verkauf.originalIndex}, 'kunde', '${kunde.uid}'); return false;">🗑️</a></td>`;
             }
             
             html += `</tr>`;
@@ -3454,7 +3488,7 @@ if ($response !== false) {
                             <td class="rechts">${(verkauf.Preis/(1 + verkauf.MwSt/100)).toFixed(2)} €</td>
                             <td class="rechts">${verkauf.MwSt} %</td>
                             <td class="rechts">${verkauf.Preis} €</td>
-                            <td><a href="#" onclick="deleteVerkauf(${index})">🗑️</a></td>
+                            <td><a href="#" onclick="deleteVerkauf(${index}, 'umsaetze'); return false;">🗑️</a></td>
                         </tr>`;
                         if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
                             summe += parseFloat(verkauf.Preis);
