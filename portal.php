@@ -170,12 +170,12 @@ if ($response !== false) {
     <li>
       <a href="#" id="MenuAdministrator" style="display: none;">Administration</a>
       <ul>
-        <li><a href="#" onclick="Mitgliederdaten_anzeigen()">Mitgliederliste</a></li>
-        <li><a href="#" onclick="ExterneKunden()">Externe</a></li>
         <li><a href="#" onclick="Produkte_editieren()">Produkte</a></li>
-        <li><a href="#" onclick="Wareneingang()">Wareneingang</a></li>
         <li><a href="#" onclick="Umsätze()">Umsätze</a></li>
         <li><a href="#" onclick="Abrechnung()">Abrechnung</a></li>
+        <li><a href="#" onclick="Wareneingang()">Wareneingang</a></li>
+        <li><a href="#" onclick="Mitgliederdaten_anzeigen()">Mitgliederliste</a></li>
+        <li><a href="#" onclick="ExterneKunden()">Externe</a></li>
       </ul>
     </li>
  
@@ -2982,8 +2982,9 @@ if ($response !== false) {
 
         html += `    
             <hr>
-            <h2 style="display: inline;">4. Übersicht der Mehrwertsteuer</h2>
-            <table class="portal-table" style="margin-top: 20px;">
+            <h2 style="display: inline;"><a id="TabellenLink4" style='text-decoration: none;' href='#' onclick='toggleTabelle("Tabelle4", "TabellenLink4")'>➡️</a> Übersicht der Mehrwertsteuer</h2>
+            <table id="Tabelle4" class="portal-table" style="display: none; margin-top: 20px;">
+            <!--<table class="portal-table" style="margin-top: 20px;">-->
                 <tr>
                     <th class="links">Position</th>
                     <th class="rechts">Betrag</th>
@@ -4062,11 +4063,11 @@ if ($response !== false) {
             Steuern: 0,
             articleid: '1017',
             memberid: memberid,
-            amount: kundenVerkaeufe.length,
+            amount: 1,
             callsign: 'ClubCash',
-            saletax: 19,
+            salestax: 0,
             comment: startdatumText + ' bis ' + enddatumText + ' - ' + kunde.lastname + ', ' + kunde.firstname + ' - MwSt: ' + mwstAufschluesselung,
-            spid: 4,
+            spid: 9,
             totalprice: kundenSumme.toFixed(2)
         };
 
