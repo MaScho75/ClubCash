@@ -68,6 +68,7 @@ $selectedTank = $_POST['tank'] ?? '';
     <!-- Skalierbarkeit für mobile Geräte sicherstellen -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#000000">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
@@ -135,6 +136,9 @@ $selectedTank = $_POST['tank'] ?? '';
             <label for="verkaufsdatum">Verkaufsdatum</label>
             <input type="date" id="verkaufsdatum" name="verkaufsdatum" required>
 
+            <label for="verkaufszeit">Verkaufsuhrzeit</label>
+            <input type="time" id="verkaufszeit" name="verkaufszeit" step="60" required>
+
             <label for="zählerstand_alt">Zählerstand vor Tankvorgang</label>
             <input type="number" id="zählerstand_alt" name="zählerstand_alt" step="0" required>
 
@@ -193,9 +197,6 @@ $selectedTank = $_POST['tank'] ?? '';
     const startTankButton = document.getElementById('startTankButton');
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     const isAppleMobile = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-    console.log('KundenID aus URL:', KundenID);
-    console.log('Kasse aus URL:', kasse);
 
     if (KundenID) {
         localStorage.setItem('clubcash_tanken_kundenid', KundenID);
@@ -323,8 +324,11 @@ $selectedTank = $_POST['tank'] ?? '';
     const zaehlerstandUmpumpenInput = document.getElementById('zählerstand_umpumpen');
     const zaehlerstandNeuInput = document.getElementById('zählerstand_neu');
     const verkaufsdatumInput = document.getElementById('verkaufsdatum');
+    const verkaufszeitInput = document.getElementById('verkaufszeit');
     const literpreisAnzeige = document.getElementById('Literpreis');
-    verkaufsdatumInput.value = terminalZeitstempel().datum;
+    const aktuellerZeitstempel = terminalZeitstempel();
+    verkaufsdatumInput.value = aktuellerZeitstempel.datum;
+    verkaufszeitInput.value = aktuellerZeitstempel.zeit;
 
     function resetTankdaten() {
         selectedTank = null;
@@ -452,9 +456,15 @@ $selectedTank = $_POST['tank'] ?? '';
         const zählerstand_umpumpen = parseFloat(document.getElementById('zählerstand_umpumpen').value);
         const zählerstand_neu = parseFloat(document.getElementById('zählerstand_neu').value);
         const verkaufsdatum = verkaufsdatumInput.value;
+        const verkaufszeit = verkaufszeitInput.value;
 
         if (!/^\d{4}-\d{2}-\d{2}$/.test(verkaufsdatum)) {
             alert('Bitte ein gültiges Verkaufsdatum auswählen.');
+            return;
+        }
+
+        if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(verkaufszeit)) {
+            alert('Bitte eine gültige Verkaufsuhrzeit auswählen.');
             return;
         }
 
@@ -493,6 +503,10 @@ $selectedTank = $_POST['tank'] ?? '';
                 <div class="tanken-ergebniszeile">
                     <span>Verkaufsdatum</span>
                     <strong>${verkaufsdatum}</strong>
+                </div>
+                <div class="tanken-ergebniszeile">
+                    <span>Verkaufsuhrzeit</span>
+                    <strong>${verkaufszeit}</strong>
                 </div>
                 <div class="tanken-ergebniszeile">
                     <span>Treibstoffart</span>
@@ -548,8 +562,7 @@ $selectedTank = $_POST['tank'] ?? '';
 
             const bezahlenButton = document.getElementById('bezahlenButton');
             bezahlenButton.addEventListener('click', function() {
-                const terminalZeit = terminalZeitstempel();
-                const Datensatz = `${verkaufsdatum};${terminalZeit.zeit};T;${aktuelleKundenID};${aktuellerKunde?.uid};${EAN};"${selectedTank.Bezeichnung} - ${verbrauch_tanken} l x ${literpreis.toFixed(2)} €<br>- Zählerstand_alt: #${zählerstand_alt} l<br>- Zählerstand_neu: #${zählerstand_neu} l<br>- Umpumpen: #${verbrauch_umpumpen} l";${selectedTank.Kategorie};${kosten_tanken.toFixed(2)};${selectedTank.MwSt}`;
+                const Datensatz = `${verkaufsdatum};${verkaufszeit};T;${aktuelleKundenID};${aktuellerKunde?.uid};${EAN};"${selectedTank.Bezeichnung} - ${verbrauch_tanken} l x ${literpreis.toFixed(2)} €<br>- Zählerstand_alt: #${zählerstand_alt} l<br>- Zählerstand_neu: #${zählerstand_neu} l<br>- Umpumpen: #${verbrauch_umpumpen} l";${selectedTank.Kategorie};${kosten_tanken.toFixed(2)};${selectedTank.MwSt}`;
 
                 fetch('save-umsatz-tanken.php', {
                     method: 'POST',

@@ -1166,7 +1166,14 @@ p.formularunterüberschrift {
         }
 
         .tanken-install-button,
-        .tanken-start-button,
+        .tanken-start-button {
+            width: 100%;
+            padding-inline: 0.6em;
+            box-sizing: border-box;
+            font-size: clamp(0.9rem, 5vw, 1.25rem);
+            white-space: nowrap;
+        }
+
         .tanken-form button,
         .tanken-form input,
         .tanken-form select {
