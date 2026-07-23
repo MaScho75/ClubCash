@@ -3823,6 +3823,103 @@ if ($response !== false) {
         portalmenu2.innerHTML = menu2;
         portalInhalt.innerHTML = html;
 
+        function aktiviereUmsatzSortierung(tabelle) {
+            const kopfzeile = tabelle.rows[0];
+            if (!kopfzeile) return;
+
+            const spaltenkoepfe = Array.from(kopfzeile.cells);
+            let sortierspalte = -1;
+            let aufsteigend = true;
+
+            function vergleichswert(zelle) {
+                const text = zelle.textContent.trim();
+                const zahlentext = text
+                    .replace(/\s/g, '')
+                    .replace(/[€%l]$/i, '')
+                    .replace(',', '.');
+
+                if (/^-?\d+(?:\.\d+)?$/.test(zahlentext)) {
+                    return { typ: 'zahl', wert: parseFloat(zahlentext) };
+                }
+
+                return { typ: 'text', wert: text };
+            }
+
+            spaltenkoepfe.forEach((spaltenkopf, spaltenindex) => {
+                const beschriftung = spaltenkopf.textContent.trim();
+                if (!beschriftung) return;
+
+                spaltenkopf.classList.add('sortable');
+                spaltenkopf.style.cursor = 'pointer';
+                spaltenkopf.dataset.sortLabel = beschriftung;
+                spaltenkopf.title = 'Nach dieser Spalte sortieren';
+
+                spaltenkopf.addEventListener('click', () => {
+                    if (sortierspalte === spaltenindex) {
+                        aufsteigend = !aufsteigend;
+                    } else {
+                        sortierspalte = spaltenindex;
+                        aufsteigend = true;
+                    }
+
+                    const zeilen = Array.from(tabelle.rows).slice(1);
+                    const datenZeilen = zeilen.filter(zeile =>
+                        zeile.cells.length === spaltenkoepfe.length &&
+                        !zeile.classList.contains('summenzeile')
+                    );
+
+                    datenZeilen.sort((zeileA, zeileB) => {
+                        const wertA = vergleichswert(zeileA.cells[spaltenindex]);
+                        const wertB = vergleichswert(zeileB.cells[spaltenindex]);
+                        let ergebnis;
+
+                        if (wertA.typ === 'zahl' && wertB.typ === 'zahl') {
+                            ergebnis = wertA.wert - wertB.wert;
+                        } else {
+                            ergebnis = String(wertA.wert).localeCompare(String(wertB.wert), 'de', {
+                                numeric: true,
+                                sensitivity: 'base'
+                            });
+                        }
+
+                        return aufsteigend ? ergebnis : -ergebnis;
+                    });
+
+                    const zeilengruppen = datenZeilen.map(zeile => {
+                        const gruppe = [zeile];
+                        const detailzeile = zeile.nextElementSibling;
+                        if (detailzeile && detailzeile.id.startsWith('zusatzspalte_')) {
+                            gruppe.push(detailzeile);
+                        }
+                        return gruppe;
+                    });
+                    const gruppierteZeilen = new Set(zeilengruppen.flat());
+                    const tabellenbereich = datenZeilen[0]?.parentElement;
+
+                    if (tabellenbereich) {
+                        const festeZeile = Array.from(tabellenbereich.children).find(zeile =>
+                            zeile !== kopfzeile && !gruppierteZeilen.has(zeile)
+                        ) || null;
+
+                        zeilengruppen.forEach(gruppe => {
+                            gruppe.forEach(zeile => tabellenbereich.insertBefore(zeile, festeZeile));
+                        });
+                    }
+
+                    spaltenkoepfe.forEach(kopf => {
+                        kopf.textContent = kopf.dataset.sortLabel;
+                        kopf.removeAttribute('aria-sort');
+                    });
+                    spaltenkopf.textContent += aufsteigend ? ' ▲' : ' ▼';
+                    spaltenkopf.setAttribute('aria-sort', aufsteigend ? 'ascending' : 'descending');
+                });
+            });
+        }
+
+        portalInhalt.querySelectorAll(
+            '#Tabelle1, #Tabelle2, #Tabelle2 table.portal-table, #Tabelle3'
+        ).forEach(aktiviereUmsatzSortierung);
+
         const btn = document.getElementById("bt_aktualisierung");
         btn.addEventListener("click", () => {
             const datumA = document.getElementById("datum_anfang").value;
