@@ -783,50 +783,80 @@ if ($response !== false) {
      * @param {string} KdNr - Kundennummer des ausgewählten Kunden
      */
     function OnlineBuchung(KdNr) {
-        let AusgewählterKunde = käufer.find(kunde => kunde.uid === KdNr);
-        let AusgewählterKundenname = AusgewählterKunde ? `${AusgewählterKunde.firstname} ${AusgewählterKunde.lastname}` : 'Unbekannt';
-        let Kategorie;
-        let menu2 = `<h2 style='display: inline;'>Buchung</h2><p>Durch die Auswahl eines der folgenden Produktes wird es auf das Konto von <b>${AusgewählterKundenname}</b> geschrieben.</p>`;
-        let html = "<button onclick='OnlineBuchung_ManuelleBuchung()' style='width: 400px; height: 80px; margin: 10px;' class='grosserBt'>manuelle Buchung</button>";
-  
-        sortedProdukte = [...produkte].sort((a, b) => {
-            if (a.Kategorie === b.Kategorie) {
-                // Numerischer Vergleich der Sortierungswerte
-                return parseInt(a.Sortierung) - parseInt(b.Sortierung);
-            }
-            return a.Kategorie.localeCompare(b.Kategorie);
-        });
+        const AusgewählterKunde = käufer.find(kunde => String(kunde.uid) === String(KdNr));
+        const AusgewählterKundenname = AusgewählterKunde
+            ? `${AusgewählterKunde.firstname} ${AusgewählterKunde.lastname}`
+            : 'Unbekannt';
+        const menu2 = `<h2 style='display: inline;'>Buchung</h2><p>Das ausgewählte Produkt wird auf das Konto von <b>${escapeHtml(AusgewählterKundenname)}</b> gebucht.</p>`;
+
+        portalmenu2.innerHTML = menu2;
+        portalInhalt.innerHTML = '';
+
+        const manuelleBuchungButton = document.createElement('button');
+        manuelleBuchungButton.type = 'button';
+        manuelleBuchungButton.className = 'kleinerBt portal-manuelle-buchung';
+        manuelleBuchungButton.textContent = 'manuelle Buchung';
+        manuelleBuchungButton.onclick = () => OnlineBuchung_ManuelleBuchung();
+        portalInhalt.appendChild(manuelleBuchungButton);
+
+        const produktKatalog = document.createElement('div');
+        produktKatalog.className = 'portal-produktkatalog';
+        const sortedProdukte = [...produkte].sort((a, b) =>
+            Number(a.Sortierung || 0) - Number(b.Sortierung || 0)
+        );
 
         sortedProdukte.forEach(produkt => {
-            if (produkt.EAN === "9990000000000") return; // Skip "manuelle Buchung")
-            if (Kategorie !== produkt.Kategorie) {
-                Kategorie = produkt.Kategorie;
-                html += `
-                    <h3 style="margin-top: 30px; margin-bottom: 10px;">${Kategorie}</h3>
-                `;
-            }
-            html += `
-                <button style="width: 400px; height: 80px; margin: 10px;" class="grosserBt" onclick="OnlineBuchung_Produkt('${produkt.EAN}', '${produkt.Bezeichnung}', '${produkt.Kategorie}', '${produkt.Preis}', '${produkt.MwSt}', '${KdNr}', '${AusgewählterKundenname}')">
-                    ${produkt.Bezeichnung} <br> ${parseFloat(produkt.Preis).toFixed(2)} €
-                </button>
-            `;
+            const ean = normalisiereCode(produkt.EAN);
+            if (!ean || ean === '9990000000000') return;
+
+            const produktButton = document.createElement('button');
+            produktButton.type = 'button';
+            produktButton.className = 'portal-produktkarte';
+            produktButton.onclick = () => OnlineBuchung_Produkt(ean, KdNr);
+
+            const produktBild = document.createElement('img');
+            produktBild.className = 'portal-produktkarte-bild';
+            produktBild.src = `Produktbilder/${encodeURIComponent(ean)}.png`;
+            produktBild.alt = produkt.Bezeichnung || '';
+            produktBild.loading = 'lazy';
+            produktBild.onerror = () => {
+                produktBild.onerror = null;
+                produktBild.src = 'grafik/produktbild-platzhalter.svg';
+            };
+
+            const produktName = document.createElement('span');
+            produktName.className = 'portal-produktkarte-name';
+            produktName.textContent = produkt.Bezeichnung || '';
+
+            const produktPreis = document.createElement('span');
+            produktPreis.className = 'portal-produktkarte-preis';
+            produktPreis.textContent = `${parseFloat(produkt.Preis || 0).toFixed(2)} €`;
+
+            produktButton.append(produktBild, produktName, produktPreis);
+            produktKatalog.appendChild(produktButton);
         });
-        portalmenu2.innerHTML = menu2;
-        portalInhalt.innerHTML = html;
+
+        portalInhalt.appendChild(produktKatalog);
     }
 
     /**
      * Bucht ein ausgewähltes Produkt auf das Kundenkonto
      * @param {string} EAN - EAN-Code des Produkts
-     * @param {string} Bezeichnung - Produktbezeichnung
-     * @param {string} Kategorie - Produktkategorie
-     * @param {number} Preis - Produktpreis
-     * @param {number} MwSt - Mehrwertsteuersatz
      * @param {string} KdNr - Kundennummer
-     * @param {string} AusgewählterKundenname - Name des Kunden für Bestätigung
      */
-    function OnlineBuchung_Produkt(EAN, Bezeichnung, Kategorie, Preis, MwSt, KdNr, AusgewählterKundenname) {
-        
+    function OnlineBuchung_Produkt(EAN, KdNr) {
+        const produkt = produkte.find(eintrag => normalisiereCode(eintrag.EAN) === normalisiereCode(EAN));
+        const ausgewaehlterKunde = käufer.find(kunde => String(kunde.uid) === String(KdNr));
+        if (!produkt || !ausgewaehlterKunde) {
+            alert('Produkt oder Kunde wurde nicht gefunden.');
+            return;
+        }
+
+        const Bezeichnung = produkt.Bezeichnung;
+        const Kategorie = produkt.Kategorie;
+        const MwSt = produkt.MwSt;
+        const AusgewählterKundenname = `${ausgewaehlterKunde.firstname} ${ausgewaehlterKunde.lastname}`;
+        let Preis = produkt.Preis;
         Preis = parseFloat(Preis).toFixed(2); // Sicherstellen, dass Preis eine Zahl mit 2 Dezimalstellen ist
 
         let buchungsDaten = {

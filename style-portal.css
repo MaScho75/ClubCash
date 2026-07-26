@@ -487,6 +487,54 @@ th {
     opacity: 0.45;
 }
 
+.portal-manuelle-buchung {
+    width: auto;
+    min-width: 220px;
+    margin: 15px 0 5px;
+}
+
+.portal-produktkatalog {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+    margin-top: 20px;
+}
+
+.portal-produktkarte {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    height: 270px;
+    margin: 0;
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.portal-produktkarte-bild {
+    display: block;
+    width: 100%;
+    height: 160px;
+    object-fit: contain;
+    background: var(--background-light);
+    border-radius: 8px;
+}
+
+.portal-produktkarte-name {
+    line-height: 1.15;
+}
+
+.portal-produktkarte-preis {
+    color: var(--success-color);
+    font-size: 28px;
+}
+
 .preisliste-table {
     width: 100%;
     max-width: 900px;
