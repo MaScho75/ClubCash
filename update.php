@@ -125,7 +125,7 @@ if (is_dir($extractedFolder)) {
     echo "🚚 Verschiebe Dateien aus $extractedFolder...<br>";
     $files = scandir($extractedFolder);
     foreach ($files as $file) {
-        if ($file === '.' || $file === '..' || $file === basename(__FILE__)) {
+        if ($file === '.' || $file === '..' || $file === basename(__FILE__) || $file === 'install.php') {
             continue;
         }
 
