@@ -578,6 +578,207 @@ if ($response !== false) {
     }       
 
     /**
+     * Öffnet einen Dialog zum Bearbeiten einer einzelnen Buchung.
+     * @param {number} index - Index der Buchung im Verkaufsarray
+     * @param {string} ansicht - Aktuell angezeigte Umsatzansicht
+     * @param {string|null} kundennummer - Kundennummer bei einer Kundenübersicht
+     */
+    function editVerkauf(index, ansicht, kundennummer = null) {
+        const verkauf = verkäufe[index];
+        if (!verkauf) {
+            alert('Die ausgewählte Buchung wurde nicht gefunden.');
+            return;
+        }
+
+        document.getElementById('verkauf-edit-dialog')?.remove();
+
+        const datumAnfang = document.getElementById('datum_anfang')?.value;
+        const datumEnde = document.getElementById('datum_ende')?.value;
+        const offeneTabellen = Array.from(portalInhalt.querySelectorAll('[id^="Tabelle"], [id^="zusatzspalte_"]'))
+            .filter(element => element.style.display !== 'none' && element.style.display !== '')
+            .map(element => ({ id: element.id, display: element.style.display }));
+
+        const dialog = document.createElement('dialog');
+        dialog.id = 'verkauf-edit-dialog';
+        dialog.style.maxWidth = '900px';
+        dialog.style.width = 'calc(100% - 40px)';
+        dialog.style.borderRadius = '20px';
+        dialog.innerHTML = `
+            <form method="dialog" id="verkauf-edit-form">
+                <h2>Buchung bearbeiten</h2>
+                <div style="display: grid; grid-template-columns: minmax(130px, auto) 1fr; gap: 10px; align-items: center;">
+                    <label for="edit-datum">Datum</label>
+                    <input id="edit-datum" type="date" required>
+                    <label for="edit-zeit">Zeit</label>
+                    <input id="edit-zeit" type="time" required>
+                    <label for="edit-kunde">Kunde</label>
+                    <select id="edit-kunde" required></select>
+                    <label for="edit-ean">EAN</label>
+                    <input id="edit-ean" type="text" inputmode="numeric" required>
+                    <label for="edit-produkt">Produkt</label>
+                    <input id="edit-produkt" type="text" required>
+                    <label for="edit-kategorie">Kategorie</label>
+                    <input id="edit-kategorie" type="text" required>
+                    <label for="edit-preis">Bruttopreis</label>
+                    <input id="edit-preis" type="number" min="0" step="0.01" required>
+                    <label for="edit-mwst">MwSt. in %</label>
+                    <input id="edit-mwst" type="number" min="0" step="0.01" required>
+                    <label for="edit-terminal">Terminal</label>
+                    <input id="edit-terminal" type="text" required>
+                    <label for="edit-schluessel">Schlüssel</label>
+                    <input id="edit-schluessel" type="text" required>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="kleinerBt" id="edit-abbrechen">Abbrechen</button>
+                    <button type="submit" class="kleinerBt" id="edit-speichern">Speichern</button>
+                </div>
+            </form>`;
+        document.body.appendChild(dialog);
+
+        dialog.querySelectorAll('input, select').forEach(element => {
+            element.style.boxSizing = 'border-box';
+            element.style.minWidth = '0';
+            element.style.width = '100%';
+        });
+
+        const kundenAuswahl = dialog.querySelector('#edit-kunde');
+        const kundenOptionen = [...käufer].sort((a, b) =>
+            `${a.lastname || ''} ${a.firstname || ''}`.localeCompare(`${b.lastname || ''} ${b.firstname || ''}`)
+        );
+        if (!kundenOptionen.some(kunde => String(kunde.uid) === String(verkauf.Kundennummer))) {
+            kundenOptionen.unshift({ uid: verkauf.Kundennummer, lastname: 'Unbekannter Kunde', firstname: '' });
+        }
+        kundenOptionen.forEach(kunde => {
+            const option = document.createElement('option');
+            option.value = kunde.uid;
+            option.textContent = `${kunde.lastname || ''}, ${kunde.firstname || ''} (${kunde.uid})`;
+            option.selected = String(kunde.uid) === String(verkauf.Kundennummer);
+            kundenAuswahl.appendChild(option);
+        });
+
+        dialog.querySelector('#edit-datum').value = verkauf.Datum || '';
+        dialog.querySelector('#edit-zeit').value = verkauf.Zeit || '';
+        dialog.querySelector('#edit-ean').value = verkauf.EAN || '';
+        dialog.querySelector('#edit-produkt').value = verkauf.Produkt || '';
+        dialog.querySelector('#edit-kategorie').value = verkauf.Kategorie || '';
+        dialog.querySelector('#edit-preis').value = String(verkauf.Preis || '').replace(',', '.');
+        dialog.querySelector('#edit-mwst').value = String(verkauf.MwSt || '').replace(',', '.');
+        dialog.querySelector('#edit-terminal').value = verkauf.Terminal || '';
+        dialog.querySelector('#edit-schluessel').value = verkauf.Schlüssel || '';
+
+        const eanInput = dialog.querySelector('#edit-ean');
+        eanInput.addEventListener('change', () => {
+            const produkt = produkte.find(eintrag => normalisiereCode(eintrag.EAN) === normalisiereCode(eanInput.value));
+            if (!produkt) return;
+            dialog.querySelector('#edit-produkt').value = produkt.Bezeichnung || '';
+            dialog.querySelector('#edit-kategorie').value = produkt.Kategorie || '';
+            dialog.querySelector('#edit-preis').value = String(produkt.Preis || '').replace(',', '.');
+            dialog.querySelector('#edit-mwst').value = String(produkt.MwSt || '').replace(',', '.');
+        });
+
+        const schliessen = () => {
+            dialog.close();
+            dialog.remove();
+        };
+        dialog.querySelector('#edit-abbrechen').onclick = schliessen;
+        dialog.addEventListener('cancel', event => {
+            event.preventDefault();
+            schliessen();
+        });
+
+        dialog.querySelector('#verkauf-edit-form').onsubmit = event => {
+            event.preventDefault();
+
+            const preis = Number.parseFloat(dialog.querySelector('#edit-preis').value);
+            const mwst = Number.parseFloat(dialog.querySelector('#edit-mwst').value);
+            if (!Number.isFinite(preis) || preis < 0 || !Number.isFinite(mwst) || mwst < 0) {
+                alert('Preis und Mehrwertsteuer müssen gültige, nicht negative Zahlen sein.');
+                return;
+            }
+
+            const aktualisierterVerkauf = {
+                ...verkauf,
+                Datum: dialog.querySelector('#edit-datum').value,
+                Zeit: dialog.querySelector('#edit-zeit').value,
+                Terminal: dialog.querySelector('#edit-terminal').value.trim(),
+                Schlüssel: dialog.querySelector('#edit-schluessel').value.trim(),
+                Kundennummer: kundenAuswahl.value,
+                EAN: normalisiereCode(eanInput.value),
+                Produkt: dialog.querySelector('#edit-produkt').value.trim(),
+                Kategorie: dialog.querySelector('#edit-kategorie').value.trim(),
+                Preis: preis.toFixed(2),
+                MwSt: String(mwst)
+            };
+            const aktualisierteVerkäufe = verkäufe.map((eintrag, verkaufsindex) =>
+                verkaufsindex === index ? aktualisierterVerkauf : eintrag
+            );
+            const speichernButton = dialog.querySelector('#edit-speichern');
+            speichernButton.disabled = true;
+            document.getElementById('preloader').style.display = 'block';
+
+            fetch('csv-schreiben.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    data: aktualisierteVerkäufe,
+                    filename: 'daten/umsatz.csv'
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Der Server konnte die Buchung nicht speichern.');
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (result.success !== true) {
+                    throw new Error(result.error || 'Die Buchung konnte nicht gespeichert werden.');
+                }
+
+                verkäufe = aktualisierteVerkäufe;
+                kundenkontostand = Kundenkontostand(verkäufe);
+                käufer.forEach(kunde => {
+                    const kontostand = kundenkontostand.find(k => k.Kundennummer === kunde.uid);
+                    kunde.Kontostand = parseFloat(kontostand?.Summe || 0);
+                    kunde.Kategorien = kontostand?.Kategorien || [];
+                });
+                schliessen();
+
+                if (ansicht === 'kunde' && kundennummer !== null) {
+                    Kundenübersicht(kundennummer, new Date(datumAnfang), new Date(datumEnde));
+                } else {
+                    Umsätze(new Date(datumAnfang), new Date(datumEnde));
+                }
+
+                offeneTabellen.forEach(zustand => {
+                    const element = document.getElementById(zustand.id);
+                    if (!element) return;
+                    element.style.display = zustand.display;
+                    const linkId = zustand.id.startsWith('zusatzspalte_')
+                        ? `TabellenLink_${zustand.id.substring('zusatzspalte_'.length)}`
+                        : `TabellenLink${zustand.id.substring('Tabelle'.length)}`;
+                    const link = document.getElementById(linkId);
+                    if (link) link.textContent = '⬇️';
+                });
+
+                alert('Die Buchung wurde erfolgreich geändert.');
+            })
+            .catch(error => {
+                speichernButton.disabled = false;
+                alert('Fehler beim Speichern der Buchung: ' + error.message);
+            })
+            .finally(() => {
+                document.getElementById('preloader').style.display = 'none';
+            });
+        };
+
+        dialog.showModal();
+    }
+
+    /**
      * Zeigt Produktauswahl für manuelle Buchung auf ein Kundenkonto
      * @param {string} KdNr - Kundennummer des ausgewählten Kunden
      */
@@ -1494,7 +1695,14 @@ if ($response !== false) {
                 if (newRows.has(index)) {
                     data.splice(index, 1);
                     originalData.splice(index, 1);
-                    newRows.delete(index);
+                    const verschiebeIndizes = set => new Set(
+                        [...set]
+                            .filter(eintragIndex => eintragIndex !== index)
+                            .map(eintragIndex => eintragIndex > index ? eintragIndex - 1 : eintragIndex)
+                    );
+                    editedRows = verschiebeIndizes(editedRows);
+                    newRows = verschiebeIndizes(newRows);
+                    deletedRows = verschiebeIndizes(deletedRows);
                 } else {
                     data[index] = JSON.parse(JSON.stringify(originalData[index]));
                     editedRows.delete(index);
@@ -1648,8 +1856,8 @@ if ($response !== false) {
 // ============================================================================
 
     /**
-     * Verwaltet Produktkatalog in editierbarer Tabelle
-     * Zeigt auch aktuellen Warenbestand, ermöglicht Sortierung
+     * Verwaltet den Produktkatalog über eine Tabelle mit Bearbeitungsdialogen.
+     * Zeigt auch den aktuellen Warenbestand und ermöglicht Sortierung.
      */
     function Produkte_editieren() {
        
@@ -1703,17 +1911,6 @@ if ($response !== false) {
             const addButton = document.getElementById("addButton");
             const saveButton = document.getElementById("saveButton");
 
-            function markAsEdited(index, key, newValue, tdElement) {
-                if (data[index][key] !== newValue) {
-                    data[index][key] = newValue;
-                    if (!newRows.has(index)) {
-                        editedRows.add(index);
-                    }
-                    tdElement.classList.add("edited");
-                }
-                renderTable();
-            }
-            
             function renderHeader() {
                 tableHeader.innerHTML = "";
                 const imageTh = document.createElement("th");
@@ -1730,26 +1927,6 @@ if ($response !== false) {
                             sortColumn = key;
                             sortAscending = true;
                         }
-                        data.sort((a, b) => {
-                            let valueA = a[key];
-                            let valueB = b[key];
-                            
-                            // Check if values can be converted to numbers
-                            const numA = Number(valueA);
-                            const numB = Number(valueB);
-                            
-                            if (!isNaN(numA) && !isNaN(numB)) {
-                                // Numeric sorting
-                                return sortAscending ? numA - numB : numB - numA;
-                            } else {
-                                // String sorting
-                                if (typeof valueA === 'string') valueA = valueA.toLowerCase();
-                                if (typeof valueB === 'string') valueB = valueB.toLowerCase();
-                                if (valueA < valueB) return sortAscending ? -1 : 1;
-                                if (valueA > valueB) return sortAscending ? 1 : -1;
-                                return 0;
-                            }
-                        });
                         renderTable();
                         renderHeader(); 
 
@@ -1766,7 +1943,27 @@ if ($response !== false) {
 
             function renderTable() {
                 tableBody.innerHTML = "";
-                data.forEach((item, index) => {
+                const rows = data.map((item, index) => ({ item, index }));
+                if (sortColumn) {
+                    rows.sort((a, b) => {
+                        let valueA = a.item[sortColumn];
+                        let valueB = b.item[sortColumn];
+                        const numA = Number(valueA);
+                        const numB = Number(valueB);
+
+                        if (!isNaN(numA) && !isNaN(numB)) {
+                            return sortAscending ? numA - numB : numB - numA;
+                        }
+
+                        valueA = String(valueA ?? '').toLowerCase();
+                        valueB = String(valueB ?? '').toLowerCase();
+                        return sortAscending
+                            ? valueA.localeCompare(valueB)
+                            : valueB.localeCompare(valueA);
+                    });
+                }
+
+                rows.forEach(({ item, index }) => {
                     
                     if (item.EAN == 1 || item.EAN == 9990000000000) {return;} // Essen und manuelle Buchung nicht anzeigen
 
@@ -1821,118 +2018,15 @@ if ($response !== false) {
                         }
 
                         if (key === 'Menge' || key === 'Umpumpen') {
-                            const label = document.createElement('label');
-                            label.className = 'switch';
-                            
-                            const input = document.createElement('input');
-                            input.type = 'checkbox';
-                            input.checked = item[key] === "true";
-                            input.disabled = deletedRows.has(index);
-                            
-                            const span = document.createElement('span');
-                            span.className = 'slider round';
-                            
-                            label.appendChild(input);
-                            label.appendChild(span);
-                            td.appendChild(label);
-
-                            input.onchange = () => {
-                                markAsEdited(index, key, input.checked.toString(), td);
-                            };
-
-                        } else if (key === 'Bestand') {
-                            // Bestand ist editierbar - Änderungen werden automatisch als Wareneingang gebucht
-                            td.contentEditable = !deletedRows.has(index); 
-
-                            //Sollte kein "Min" Wert gesetzt sein, dann soll der Bestand leer sein
-                            if (item.Min == 0) {
-                                td.innerText =  '';
-                            }
-                            else {
-                                td.innerText = item[key] || '';
-                            }
-                            
-                            // Prüfe ob Bestand unter Mindestbestand
-                            if (item['Min'] && item['Min'] != 0 && parseInt(item[key] || 0) < parseInt(item['Min'])) {
-                                td.style.backgroundColor = '#ffcccc';
-                            }
-                            td.onblur = () => {
-                                if (isNaN(parseFloat(td.innerText)) && td.innerText !== '') {
-                                    alert('Bitte geben Sie eine gültige Zahl ein.');
-                                    td.innerText = item[key] || '';
-                                    return;
-                                }
-                                const newValue = td.innerText === '' ? 0 : parseInt(td.innerText);
-                                const oldValue = item[key] || 0;
-                                if (newValue !== oldValue) {
-                                    const diff = newValue - oldValue;
-                                    if (diff !== 0) {
-                                        const wareneingangEntry = {
-                                            Eingang: heute.toISOString().split('T')[0],
-                                            EAN: item.EAN,
-                                            Menge: diff
-                                        };
-                                        wareneingang.push(wareneingangEntry);
-                                    }
-                                    markAsEdited(index, key, newValue, td);
-                                }
-                                // Update Hintergrundfarbe nach Änderung
-                                if (item['Min'] && newValue < parseInt(item['Min'])) {
-                                    td.style.backgroundColor = '#ffcccc';
-                                } else {
-                                    td.style.backgroundColor = '';
-                                }
-                            };
-                        } else if (['Preis', 'Sortierung', 'MwSt', 'EAN', 'Min'].includes(key)) {
-                            td.contentEditable = !deletedRows.has(index);
-                            if (key === 'Min' && item[key] == 0) {
-                                td.innerText = '';
-                            } else {
-                                td.innerText = item[key] || '';
-                            }
- 
-                            td.onblur = () => {
-                                if (isNaN(parseFloat(td.innerText)) && td.innerText !== '') {
-                                    alert(`Bitte geben Sie eine gültige Zahl für ${key} ein.`);
-                                    td.innerText = item[key];
-                                    return;
-                                }
-                                if (key === 'Preis') {
-                                    let input = td.innerText.trim();
-
-                                    // Komma durch Punkt ersetzen
-                                    const normalizedInput = input.replace(',', '.');
-
-                                    const priceRegex = /^\d+([.,]\d{2})?$/;
-
-                                    if (!priceRegex.test(input) || parseFloat(normalizedInput) < 0) {
-                                        alert('Der Wert muss eine positive Zahl im Format 0.00 oder 0,00 sein.');
-                                        td.innerText = item[key]; // Ursprünglichen Wert wiederherstellen
-                                        return;
-                                    }
-
-                                    // Formatierung erzwingen: 2 Nachkommastellen, Punkt statt Komma
-                                    const number = parseFloat(normalizedInput);
-                                    td.innerText = number.toFixed(2); // z. B. "12.00"
-                                }
-                                if (key === 'EAN') {
-                                    const newEAN = normalisiereCode(td.innerText);
-                                    const konflikt = produktEanKonflikt(data, index, newEAN, deletedRows);
-                                    if (konflikt) {
-                                        alert(konflikt + ' Bitte wählen Sie eine andere EAN.');
-                                        td.innerText = item[key];
-                                    } else {
-                                        td.innerText = newEAN;
-                                        markAsEdited(index, key, newEAN, td);
-                                    }
-                                } else {
-                                    markAsEdited(index, key, td.innerText, td);
-                                }
-                            };
+                            td.innerText = item[key] === 'true' ? 'Ja' : 'Nein';
+                        } else if ((key === 'Min' || key === 'Bestand') && item.Min == 0) {
+                            td.innerText = '';
                         } else {
-                            td.contentEditable = !deletedRows.has(index);
-                            td.innerText = item[key];
-                            td.onblur = () => markAsEdited(index, key, td.innerText, td);
+                            td.innerText = item[key] ?? '';
+                        }
+
+                        if (key === 'Bestand' && item.Min && item.Min != 0 && parseInt(item[key] || 0) < parseInt(item.Min)) {
+                            td.style.backgroundColor = '#ffcccc';
                         }
                         if (deletedRows.has(index)) {
                             td.classList.add("text");
@@ -1941,11 +2035,28 @@ if ($response !== false) {
                     });
 
                     const actionTd = document.createElement("td");
+                    const editBtn = document.createElement("a");
+                    editBtn.href = "#";
+                    editBtn.classList.add("icon");
+                    editBtn.innerHTML = "✏️";
+                    editBtn.title = "Produkt bearbeiten";
+                    editBtn.onclick = event => {
+                        event.preventDefault();
+                        openProductDialog(index);
+                    };
+                    if (!deletedRows.has(index)) {
+                        actionTd.appendChild(editBtn);
+                    }
+
                     const deleteBtn = document.createElement("a");
                     deleteBtn.href = "#";
                     deleteBtn.classList.add("icon");
                     deleteBtn.innerHTML = deletedRows.has(index) ? "🔄" : "🗑️";
-                    deleteBtn.onclick = () => toggleDeleteRow(index);
+                    deleteBtn.title = deletedRows.has(index) ? "Löschen rückgängig machen" : "Produkt löschen";
+                    deleteBtn.onclick = event => {
+                        event.preventDefault();
+                        toggleDeleteRow(index);
+                    };
                     actionTd.appendChild(deleteBtn);
 
                     if (editedRows.has(index) || deletedRows.has(index) || newRows.has(index)) {
@@ -1960,6 +2071,247 @@ if ($response !== false) {
                     tr.appendChild(actionTd);
                     tableBody.appendChild(tr);
                 });
+            }
+
+            function openProductDialog(index = null) {
+                const istNeu = index === null;
+                const item = istNeu
+                    ? Object.fromEntries(keys.map(key => [key, ['Menge', 'Umpumpen'].includes(key) ? 'false' : '']))
+                    : data[index];
+
+                if (!item || (!istNeu && deletedRows.has(index))) {
+                    return;
+                }
+
+                document.getElementById('produkt-edit-dialog')?.remove();
+                const dialog = document.createElement('dialog');
+                dialog.id = 'produkt-edit-dialog';
+                dialog.style.maxWidth = '1000px';
+                dialog.style.width = 'calc(100% - 40px)';
+                dialog.style.borderRadius = '20px';
+                dialog.innerHTML = `
+                    <form method="dialog" id="produkt-edit-form">
+                        <h2>${istNeu ? 'Produkt hinzufügen' : 'Produkt bearbeiten'}</h2>
+                        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 24px;">
+                            <label>EAN<input data-produkt-feld="EAN" type="text" inputmode="numeric" required></label>
+                            <label>Bezeichnung<input data-produkt-feld="Bezeichnung" type="text" required></label>
+                            <label>Kategorie<input data-produkt-feld="Kategorie" type="text" required></label>
+                            <label>Preis<input data-produkt-feld="Preis" type="number" min="0" step="0.01" required></label>
+                            <label>MwSt. in %<input data-produkt-feld="MwSt" type="number" min="0" step="0.01" required></label>
+                            <label>Sortierung<input data-produkt-feld="Sortierung" type="number" step="1"></label>
+                            <label>Mindestbestand<input data-produkt-feld="Min" type="number" min="0" step="1"></label>
+                            <label>Bestand<input data-produkt-feld="Bestand" type="number" step="1"></label>
+                            <label>Zählerstand<input data-produkt-feld="Zählerstand" type="number" step="any"></label>
+                            <label>Bemerkung<textarea data-produkt-feld="Bemerkung" rows="2"></textarea></label>
+                            <label style="display: flex; align-items: center; gap: 10px;"><input data-produkt-feld="Menge" type="checkbox" style="width: auto;"> Mengeneingabe</label>
+                            <label style="display: flex; align-items: center; gap: 10px;"><input data-produkt-feld="Umpumpen" type="checkbox" style="width: auto;"> Umpumpen</label>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                            <button type="button" class="kleinerBt" id="produkt-edit-abbrechen">Abbrechen</button>
+                            <button type="submit" class="kleinerBt" id="produkt-edit-speichern">Speichern</button>
+                        </div>
+                    </form>`;
+                document.body.appendChild(dialog);
+
+                dialog.querySelectorAll('label').forEach(label => {
+                    if (label.style.display !== 'flex') {
+                        label.style.display = 'grid';
+                        label.style.gap = '5px';
+                    }
+                });
+                dialog.querySelectorAll('input:not([type="checkbox"]), textarea').forEach(element => {
+                    element.classList.add('inputfeld');
+                    element.style.boxSizing = 'border-box';
+                    element.style.minWidth = '0';
+                    element.style.width = '100%';
+                });
+
+                keys.forEach(key => {
+                    const feld = dialog.querySelector(`[data-produkt-feld="${key}"]`);
+                    if (!feld) return;
+                    if (feld.type === 'checkbox') {
+                        feld.checked = item[key] === 'true';
+                    } else {
+                        feld.value = item[key] ?? '';
+                    }
+                });
+
+                const mengenangabeInput = dialog.querySelector('[data-produkt-feld="Menge"]');
+                const zaehlerstandInput = dialog.querySelector('[data-produkt-feld="Zählerstand"]');
+                const umpumpenInput = dialog.querySelector('[data-produkt-feld="Umpumpen"]');
+                const aktualisiereZaehlerstand = () => {
+                    zaehlerstandInput.disabled = !mengenangabeInput.checked;
+                    umpumpenInput.disabled = zaehlerstandInput.disabled;
+                };
+                mengenangabeInput.addEventListener('change', aktualisiereZaehlerstand);
+                aktualisiereZaehlerstand();
+
+                const schliessen = () => {
+                    if (dialog.open) {
+                        dialog.close();
+                    }
+                    dialog.remove();
+                };
+                dialog.querySelector('#produkt-edit-abbrechen').onclick = schliessen;
+                dialog.addEventListener('cancel', event => {
+                    event.preventDefault();
+                    if (dialog.querySelector('#produkt-edit-speichern').disabled) {
+                        return;
+                    }
+                    schliessen();
+                });
+
+                dialog.querySelector('#produkt-edit-form').onsubmit = event => {
+                    event.preventDefault();
+
+                    const feldwert = key => dialog.querySelector(`[data-produkt-feld="${key}"]`).value.trim();
+                    const ean = normalisiereCode(feldwert('EAN'));
+                    if (!/^\d+$/.test(ean)) {
+                        alert('Bitte geben Sie eine gültige EAN aus Ziffern ein.');
+                        return;
+                    }
+
+                    const preis = Number.parseFloat(feldwert('Preis'));
+                    if (!Number.isFinite(preis) || preis < 0) {
+                        alert('Bitte geben Sie einen gültigen, nicht negativen Preis ein.');
+                        return;
+                    }
+
+                    const zielIndex = istNeu ? data.length : index;
+                    const konflikt = produktEanKonflikt(data, zielIndex, ean, new Set());
+                    if (konflikt) {
+                        alert(konflikt + ' Bitte wählen Sie eine andere EAN.');
+                        return;
+                    }
+
+                    const draft = {
+                        ...item,
+                        EAN: ean,
+                        Bezeichnung: feldwert('Bezeichnung'),
+                        Kategorie: feldwert('Kategorie'),
+                        Preis: preis.toFixed(2),
+                        MwSt: feldwert('MwSt'),
+                        Bestand: feldwert('Bestand') === '' ? 0 : Number.parseInt(feldwert('Bestand'), 10),
+                        Min: feldwert('Min'),
+                        Zählerstand: feldwert('Zählerstand'),
+                        Umpumpen: dialog.querySelector('[data-produkt-feld="Umpumpen"]').checked.toString(),
+                        Menge: dialog.querySelector('[data-produkt-feld="Menge"]').checked.toString(),
+                        Sortierung: feldwert('Sortierung'),
+                        Bemerkung: feldwert('Bemerkung')
+                    };
+
+                    const hatAenderungen = istNeu || keys.some(key =>
+                        String(data[index][key] ?? '') !== String(draft[key] ?? '')
+                    );
+                    if (!hatAenderungen) {
+                        schliessen();
+                        return;
+                    }
+
+                    const datenNachSpeichern = istNeu
+                        ? [...data, draft]
+                        : data.map((eintrag, eintragIndex) => eintragIndex === index ? draft : eintrag);
+                    const produktDaten = datenNachSpeichern.map(({Bestand, ...rest}) => rest);
+                    const bestandsBuchungen = [];
+                    const alterBestand = istNeu ? 0 : Number.parseInt(originalData[index]?.Bestand || 0, 10);
+                    const neuerBestand = Number.parseInt(draft.Bestand || 0, 10);
+                    const alteEan = istNeu ? '' : normalisiereCode(originalData[index]?.EAN);
+
+                    if (!istNeu && alteEan && alteEan !== draft.EAN) {
+                        if (alterBestand !== 0) {
+                            bestandsBuchungen.push({
+                                Eingang: heute.toISOString().split('T')[0],
+                                EAN: alteEan,
+                                Menge: -alterBestand
+                            });
+                        }
+                        if (neuerBestand !== 0) {
+                            bestandsBuchungen.push({
+                                Eingang: heute.toISOString().split('T')[0],
+                                EAN: draft.EAN,
+                                Menge: neuerBestand
+                            });
+                        }
+                    } else {
+                        const differenz = neuerBestand - alterBestand;
+                        if (differenz !== 0) {
+                            bestandsBuchungen.push({
+                                Eingang: heute.toISOString().split('T')[0],
+                                EAN: draft.EAN,
+                                Menge: differenz
+                            });
+                        }
+                    }
+
+                    const wareneingangNachSpeichern = [...wareneingang, ...bestandsBuchungen];
+                    const speichernButton = dialog.querySelector('#produkt-edit-speichern');
+                    const abbrechenButton = dialog.querySelector('#produkt-edit-abbrechen');
+                    speichernButton.disabled = true;
+                    abbrechenButton.disabled = true;
+                    document.getElementById('preloader').style.display = 'block';
+
+                    fetch('json-schreiben.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            data: produktDaten,
+                            filename: 'daten/produkte.json'
+                        })
+                    })
+                    .then(response => response.json().then(result => ({ response, result })))
+                    .then(({ response, result }) => {
+                        if (!response.ok || result.success !== true) {
+                            throw new Error(result.error || 'Der Produktkatalog konnte nicht gespeichert werden.');
+                        }
+
+                        return fetch('json-schreiben.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                data: wareneingangNachSpeichern,
+                                filename: 'daten/wareneingang.json'
+                            })
+                        });
+                    })
+                    .then(response => response.json().then(result => ({ response, result })))
+                    .then(({ response, result }) => {
+                        if (!response.ok || result.success !== true) {
+                            throw new Error(result.error || 'Der Wareneingang konnte nicht gespeichert werden.');
+                        }
+
+                        data = datenNachSpeichern;
+                        produkte = produktDaten;
+                        wareneingang = wareneingangNachSpeichern;
+                        if (istNeu) {
+                            originalData.push(JSON.parse(JSON.stringify(draft)));
+                        } else {
+                            originalData[index] = JSON.parse(JSON.stringify(draft));
+                            editedRows.delete(index);
+                            newRows.delete(index);
+                        }
+
+                        schliessen();
+                        renderTable();
+                        alert(istNeu ? 'Das Produkt wurde erfolgreich gespeichert.' : 'Das Produkt wurde erfolgreich geändert.');
+                    })
+                    .catch(error => {
+                        speichernButton.disabled = false;
+                        abbrechenButton.disabled = false;
+                        alert('Fehler beim Speichern des Produkts: ' + error.message);
+                    })
+                    .finally(() => {
+                        document.getElementById('preloader').style.display = 'none';
+                    });
+                };
+
+                dialog.showModal();
+                dialog.querySelector('[data-produkt-feld="EAN"]').focus();
             }
 
             function toggleDeleteRow(index) {
@@ -2098,7 +2450,7 @@ if ($response !== false) {
 
             function validateProduktEans() {
                 for (let index = 0; index < data.length; index++) {
-                    if (deletedRows.has(index)) {
+                    if (deletedRows.has(index) || (!newRows.has(index) && !editedRows.has(index))) {
                         continue;
                     }
 
@@ -2130,21 +2482,53 @@ if ($response !== false) {
                 return savedData;
             }
 
-            addButton.onclick = () => {
-                const newItem = {};
-                keys.forEach(key => newItem[key] = ['Menge', 'Umpumpen'].includes(key) ? 'false' : '');
-                const newIndex = data.length;
-                data.push(newItem);
-                originalData.push(JSON.parse(JSON.stringify(newItem)));
-                newRows.add(newIndex);
-                renderTable();
-            };
+            addButton.onclick = () => openProductDialog();
 
             saveButton.onclick = () => {
                 if (!validateProduktEans()) {
                     renderTable();
                     return;
                 }
+
+                const bestandsBuchungen = [];
+                data.forEach((item, index) => {
+                    if (deletedRows.has(index) || (!newRows.has(index) && !editedRows.has(index))) {
+                        return;
+                    }
+
+                    const alterBestand = Number.parseInt(originalData[index]?.Bestand || 0, 10);
+                    const neuerBestand = Number.parseInt(item.Bestand || 0, 10);
+                    const alteEan = normalisiereCode(originalData[index]?.EAN);
+                    const neueEan = normalisiereCode(item.EAN);
+
+                    if (!newRows.has(index) && alteEan && alteEan !== neueEan) {
+                        if (alterBestand !== 0) {
+                            bestandsBuchungen.push({
+                                Eingang: heute.toISOString().split('T')[0],
+                                EAN: alteEan,
+                                Menge: -alterBestand
+                            });
+                        }
+                        if (neuerBestand !== 0) {
+                            bestandsBuchungen.push({
+                                Eingang: heute.toISOString().split('T')[0],
+                                EAN: neueEan,
+                                Menge: neuerBestand
+                            });
+                        }
+                        return;
+                    }
+
+                    const differenz = neuerBestand - alterBestand;
+                    if (differenz !== 0) {
+                        bestandsBuchungen.push({
+                            Eingang: heute.toISOString().split('T')[0],
+                            EAN: item.EAN,
+                            Menge: differenz
+                        });
+                    }
+                });
+                wareneingang.push(...bestandsBuchungen);
 
                 const updatedData = saveChanges();
                 produkte = updatedData.map(({Bestand, ...rest}) => rest);
@@ -2868,7 +3252,7 @@ if ($response !== false) {
             `;
             
             if (angemeldetesMitglied.cc_admin === true) {
-                html += `<td><a href="#" onclick="deleteVerkauf(${verkauf.originalIndex}, 'kunde', '${kunde.uid}'); return false;">🗑️</a></td>`;
+                html += `<td><a href="#" class="icon" title="Buchung bearbeiten" onclick="editVerkauf(${verkauf.originalIndex}, 'kunde', '${kunde.uid}'); return false;">✏️</a> <a href="#" class="icon" title="Buchung löschen" onclick="deleteVerkauf(${verkauf.originalIndex}, 'kunde', '${kunde.uid}'); return false;">🗑️</a></td>`;
             }
             
             html += `</tr>`;
@@ -3488,7 +3872,7 @@ if ($response !== false) {
                             <td class="rechts">${(verkauf.Preis/(1 + verkauf.MwSt/100)).toFixed(2)} €</td>
                             <td class="rechts">${verkauf.MwSt} %</td>
                             <td class="rechts">${verkauf.Preis} €</td>
-                            <td><a href="#" onclick="deleteVerkauf(${index}, 'umsaetze'); return false;">🗑️</a></td>
+                            <td><a href="#" class="icon" title="Buchung bearbeiten" onclick="editVerkauf(${index}, 'umsaetze'); return false;">✏️</a> <a href="#" class="icon" title="Buchung löschen" onclick="deleteVerkauf(${index}, 'umsaetze'); return false;">🗑️</a></td>
                         </tr>`;
                         if (verkauf.Preis && !isNaN(parseFloat(verkauf.Preis))) {
                             summe += parseFloat(verkauf.Preis);
