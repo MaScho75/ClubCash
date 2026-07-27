@@ -30,6 +30,14 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Einen fehlenden oder abgelaufenen Token vor jeglicher Ausgabe behandeln,
+// damit die Weiterleitung noch per HTTP-Header möglich ist.
+if (!isset($_SESSION['accessToken'], $_SESSION['tokenExpiry']) || $_SESSION['tokenExpiry'] <= time()) {
+    session_destroy();
+    header('Location: index.php');
+    exit();
+}
+
 // Lade die Datei config.json
     $configFile = 'daten/config.json';
 if (!file_exists($configFile)) {
@@ -58,9 +66,7 @@ require_once 'VereinsfliegerRestInterface.php';
 // VereinsfliegerRestInterface-Instanz erstellen
 $restInterface = new VereinsfliegerRestInterface();
 
-// Token-Handling
-if (isset($_SESSION['accessToken']) && isset($_SESSION['tokenExpiry']) && $_SESSION['tokenExpiry'] > time()) {
-    // Bestehenden Token weiterverwenden
+// Bestehenden Token weiterverwenden
     $restInterface->SetAccessToken($_SESSION['accessToken']);
     echo "<p>✅ Bestehender Token wiederverwendet.</p>\n";
     
@@ -118,12 +124,5 @@ if (isset($_SESSION['accessToken']) && isset($_SESSION['tokenExpiry']) && $_SESS
     }
     echo "<p>Bitte aktualisiere die Seite, um die Änderungen zu sehen.</p>\n";
     echo "<button class='kleinerBt' onclick=\"window.location.href='index.php'\">Startseite</button>\n";
-
-} else {
-    // Kein gültiger Token vorhanden - Benutzer abmelden
-    session_destroy();
-    header('Location: index.php');
-    exit();
-}
 
 ?>
