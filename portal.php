@@ -3413,7 +3413,7 @@ if ($response !== false) {
                             </tr>
                         </thead>
                         <tbody>${produktZeilen}</tbody>
-                        <tfoot style="background-color: #f2f2f2; border-top: 1px solid black;">
+                        <tbody style="background-color: #f2f2f2; border-top: 1px solid black;">
                             <tr>
                                 <td><pre><b>Gesamtsumme</b></pre></td>
                                 <td style="text-align: right;"><pre><b>${gesamt.anzahl}</b></pre></td>
@@ -3422,7 +3422,7 @@ if ($response !== false) {
                                 <td style="text-align: right;"><pre><b>${formatiereBetrag(gesamt.mwst)}</b></pre></td>
                                 <td style="text-align: right;"><pre><b>${formatiereBetrag(gesamt.brutto)}</b></pre></td>
                             </tr>
-                        </tfoot>
+                        </tbody>
                     </table>
 
                     <table style="margin-top: 20px;">
@@ -3435,14 +3435,14 @@ if ($response !== false) {
                             </tr>
                         </thead>
                         <tbody>${steuerZeilen || '<tr><td colspan="4"><pre>Keine Steuerdaten vorhanden.</pre></td></tr>'}</tbody>
-                        <tfoot>
+                        <tbody>
                             <tr style="border-top: 1px solid black;">
                                 <td><pre><b>Gesamt</b></pre></td>
                                 <td style="text-align: right;"><pre><b>${formatiereBetrag(gesamt.netto)}</b></pre></td>
                                 <td style="text-align: right;"><pre><b>${formatiereBetrag(gesamt.mwst)}</b></pre></td>
                                 <td style="text-align: right;"><pre><b>${formatiereBetrag(gesamt.brutto)}</b></pre></td>
                             </tr>
-                        </tfoot>
+                        </tbody>
                     </table>
                     ${ungültigeDatensätze > 0 ? `<p><pre>Hinweis: ${ungültigeDatensätze} Datensätze mit ungültigem Preis oder MwSt-Satz wurden nicht berücksichtigt.</pre></p>` : ''}
                 </div>
