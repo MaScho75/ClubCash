@@ -3163,6 +3163,298 @@ if ($response !== false) {
     }
 
     /**
+     * Öffnet die Bilanz für den aktuell ausgewählten Umsatzzeitraum
+     * in einem separaten Druckfenster.
+     */
+    function Bilanz() {
+        const datumAnfang = document.getElementById('datum_anfang')?.value;
+        const datumEnde = document.getElementById('datum_ende')?.value;
+
+        if (!datumAnfang || !datumEnde || datumAnfang > datumEnde) {
+            alert('Bitte einen gültigen Bilanzzeitraum auswählen.');
+            return;
+        }
+
+        const printWindow = window.open('', 'Bilanz', 'width=800,height=1000');
+        if (!printWindow) {
+            console.error('Could not open balance window - popup might be blocked');
+            window.alert('Popup-Blocker erkannt. Bitte erlauben Sie Popups für diese Seite.');
+            return;
+        }
+
+        printWindow.document.write(BilanztextErstellen(datumAnfang, datumEnde));
+        printWindow.document.close();
+        printWindow.onload = () => {
+            printWindow.focus();
+        };
+    }
+
+    /**
+     * Erstellt eine nach Kategorien und Produkten gegliederte Bilanz.
+     * @param {string} datumAnfang - Startdatum im Format YYYY-MM-DD
+     * @param {string} datumEnde - Enddatum im Format YYYY-MM-DD
+     * @returns {string} Vollständiges HTML-Dokument für die Druckansicht
+     */
+    function BilanztextErstellen(datumAnfang, datumEnde) {
+        const htmlSicher = wert => escapeHtml(String(wert ?? ''));
+        const formatiereDatum = datum => {
+            const teile = String(datum).split('-');
+            return teile.length === 3 ? `${teile[2]}.${teile[1]}.${teile[0]}` : datum;
+        };
+        const formatiereBetrag = betrag => `<span class="waehrung">${betrag.toFixed(2)} €</span>`;
+        const bilanzVerkäufe = verkäufe.filter(verkauf =>
+            verkauf.Datum >= datumAnfang &&
+            verkauf.Datum <= datumEnde &&
+            String(verkauf.Produkt || '').trim() !== 'Kontoausgleich-VF'
+        );
+        const kategorien = new Map();
+        const steuerSummen = new Map();
+        const gesamt = { anzahl: 0, netto: 0, mwst: 0, brutto: 0 };
+        let ungültigeDatensätze = 0;
+
+        bilanzVerkäufe.forEach(verkauf => {
+            const brutto = Number.parseFloat(String(verkauf.Preis).replace(',', '.'));
+            const mwstSatz = Number.parseFloat(String(verkauf.MwSt).replace(',', '.'));
+            if (!Number.isFinite(brutto) || !Number.isFinite(mwstSatz) || mwstSatz <= -100) {
+                ungültigeDatensätze++;
+                return;
+            }
+
+            const netto = brutto / (1 + mwstSatz / 100);
+            const mwst = brutto - netto;
+            const kategorieName = String(verkauf.Kategorie || 'Ohne Kategorie');
+            const produktBezeichnung = String(verkauf.Produkt || verkauf.EAN || 'Ohne Bezeichnung');
+            const produktName = kategorieName.trim().toLocaleLowerCase('de') === 'fuel'
+                ? produktBezeichnung.split('-', 1)[0].trim()
+                : produktBezeichnung;
+
+            if (!kategorien.has(kategorieName)) {
+                kategorien.set(kategorieName, {
+                    produkte: new Map(),
+                    anzahl: 0,
+                    netto: 0,
+                    mwst: 0,
+                    brutto: 0
+                });
+            }
+            const kategorie = kategorien.get(kategorieName);
+            const produktSchlüssel = `${produktName}\u001f${mwstSatz}`;
+            if (!kategorie.produkte.has(produktSchlüssel)) {
+                kategorie.produkte.set(produktSchlüssel, {
+                    name: produktName,
+                    mwstSatz,
+                    anzahl: 0,
+                    netto: 0,
+                    mwst: 0,
+                    brutto: 0
+                });
+            }
+
+            const produkt = kategorie.produkte.get(produktSchlüssel);
+            produkt.anzahl++;
+            produkt.netto += netto;
+            produkt.mwst += mwst;
+            produkt.brutto += brutto;
+
+            kategorie.anzahl++;
+            kategorie.netto += netto;
+            kategorie.mwst += mwst;
+            kategorie.brutto += brutto;
+
+            if (!steuerSummen.has(mwstSatz)) {
+                steuerSummen.set(mwstSatz, { netto: 0, mwst: 0, brutto: 0 });
+            }
+            const steuerSumme = steuerSummen.get(mwstSatz);
+            steuerSumme.netto += netto;
+            steuerSumme.mwst += mwst;
+            steuerSumme.brutto += brutto;
+
+            gesamt.anzahl++;
+            gesamt.netto += netto;
+            gesamt.mwst += mwst;
+            gesamt.brutto += brutto;
+        });
+
+        let produktZeilen = '';
+        const sortierteKategorien = [...kategorien.entries()].sort((a, b) =>
+            a[0].localeCompare(b[0], 'de', { sensitivity: 'base' })
+        );
+
+        sortierteKategorien.forEach(([kategorieName, kategorie]) => {
+            produktZeilen += `
+                <tr class="kategoriezeile">
+                    <td colspan="6"><pre><b>${htmlSicher(kategorieName)}</b></pre></td>
+                </tr>`;
+
+            [...kategorie.produkte.values()]
+                .sort((a, b) =>
+                    a.name.localeCompare(b.name, 'de', { sensitivity: 'base' }) ||
+                    a.mwstSatz - b.mwstSatz
+                )
+                .forEach(produkt => {
+                    produktZeilen += `
+                        <tr>
+                            <td><pre>${htmlSicher(produkt.name)}</pre></td>
+                            <td style="text-align: right;"><pre>${produkt.anzahl}</pre></td>
+                            <td style="text-align: right;"><pre>${produkt.mwstSatz.toFixed(0)} %</pre></td>
+                            <td style="text-align: right;"><pre>${formatiereBetrag(produkt.netto)}</pre></td>
+                            <td style="text-align: right;"><pre>${formatiereBetrag(produkt.mwst)}</pre></td>
+                            <td style="text-align: right;"><pre>${formatiereBetrag(produkt.brutto)}</pre></td>
+                        </tr>`;
+                });
+
+            produktZeilen += `
+                <tr class="kategoriesumme">
+                    <td><pre><b>Summe ${htmlSicher(kategorieName)}</b></pre></td>
+                    <td style="text-align: right;"><pre><b>${kategorie.anzahl}</b></pre></td>
+                    <td></td>
+                    <td style="text-align: right;"><pre><b>${formatiereBetrag(kategorie.netto)}</b></pre></td>
+                    <td style="text-align: right;"><pre><b>${formatiereBetrag(kategorie.mwst)}</b></pre></td>
+                    <td style="text-align: right;"><pre><b>${formatiereBetrag(kategorie.brutto)}</b></pre></td>
+                </tr>`;
+        });
+
+        if (!produktZeilen) {
+            produktZeilen = '<tr><td colspan="6"><pre>Keine Umsätze im gewählten Zeitraum.</pre></td></tr>';
+        }
+
+        const steuerZeilen = [...steuerSummen.entries()]
+            .sort((a, b) => a[0] - b[0])
+            .map(([mwstSatz, steuerSumme]) => `
+                <tr>
+                    <td><pre>${mwstSatz.toFixed(0)} %</pre></td>
+                    <td style="text-align: right;"><pre>${formatiereBetrag(steuerSumme.netto)}</pre></td>
+                    <td style="text-align: right;"><pre>${formatiereBetrag(steuerSumme.mwst)}</pre></td>
+                    <td style="text-align: right;"><pre>${formatiereBetrag(steuerSumme.brutto)}</pre></td>
+                </tr>`)
+            .join('');
+
+        return `
+            <html>
+            <head>
+                <title>Bilanz</title>
+                <style>
+                    body {
+                        margin: 0;
+                        font-family: 'Courier New', Courier;
+                        font-size: 14px;
+                        color: #000;
+                        max-width: 600px;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+                    th, td {
+                        text-align: left;
+                        vertical-align: top;
+                        padding: 0 10px 0 0;
+                    }
+                    th, .kategoriezeile {
+                        background-color: #f2f2f2;
+                    }
+                    pre {
+                        margin: 0;
+                        white-space: pre-wrap;
+                        font-family: inherit;
+                    }
+                    .waehrung {
+                        white-space: nowrap;
+                    }
+                    tr {
+                        break-inside: avoid;
+                    }
+                    .kategoriezeile td {
+                        padding-top: 8px;
+                    }
+                    .kategoriesumme {
+                        border-top: 1px solid #999;
+                        border-bottom: 1px solid #999;
+                    }
+                    .druck-button {
+                        position: fixed;
+                        top: 10px;
+                        right: 10px;
+                    }
+                    @media print {
+                        .druck-button { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <button class="druck-button" onclick="window.print();">drucken</button>
+                <div>
+                    <pre><b>${htmlSicher(config.Vereinsname)}</b></pre>
+                    <pre>${htmlSicher(config.Straße)}</pre>
+                    <pre>${htmlSicher(config.PLZ)} ${htmlSicher(config.Ort)}</pre>
+                    <pre>Telefon: ${htmlSicher(config.Telefon)}</pre>
+                    <pre>Email: ${htmlSicher(config.Email)}</pre>
+                    <pre>USt-IdNr: ${htmlSicher(config.UStID)}</pre>
+                    <pre>Bankverbindung: ${htmlSicher(config.Bankverbindung)}</pre>
+                    <pre>IBAN: ${htmlSicher(config.IBAN)}</pre>
+                    <pre>Kontoinhaber: ${htmlSicher(config.Kontoinhaber)}</pre>
+                    <br><br><br>
+                    <pre><b>Bilanz ClubCash</b></pre>
+                    <pre>Umsätze von ${formatiereDatum(datumAnfang)} bis ${formatiereDatum(datumEnde)}</pre>
+                    <pre>Stand: ${heute.toLocaleDateString('de-DE', { year: 'numeric', month: '2-digit', day: '2-digit' })}</pre>
+                    <br><br><br>
+                </div>
+
+                <div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><pre>Produkt</pre></th>
+                                <th style="text-align: right;"><pre>Anzahl</pre></th>
+                                <th style="text-align: right;"><pre>MwSt</pre></th>
+                                <th style="text-align: right;"><pre>Netto</pre></th>
+                                <th style="text-align: right;"><pre>MwSt-Betrag</pre></th>
+                                <th style="text-align: right;"><pre>Brutto</pre></th>
+                            </tr>
+                        </thead>
+                        <tbody>${produktZeilen}</tbody>
+                        <tfoot style="background-color: #f2f2f2; border-top: 1px solid black;">
+                            <tr>
+                                <td><pre><b>Gesamtsumme</b></pre></td>
+                                <td style="text-align: right;"><pre><b>${gesamt.anzahl}</b></pre></td>
+                                <td></td>
+                                <td style="text-align: right;"><pre><b>${formatiereBetrag(gesamt.netto)}</b></pre></td>
+                                <td style="text-align: right;"><pre><b>${formatiereBetrag(gesamt.mwst)}</b></pre></td>
+                                <td style="text-align: right;"><pre><b>${formatiereBetrag(gesamt.brutto)}</b></pre></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <table style="margin-top: 20px;">
+                        <thead>
+                            <tr>
+                                <th><pre>Steuersatz</pre></th>
+                                <th style="text-align: right;"><pre>Nettosumme</pre></th>
+                                <th style="text-align: right;"><pre>MwSt</pre></th>
+                                <th style="text-align: right;"><pre>Bruttosumme</pre></th>
+                            </tr>
+                        </thead>
+                        <tbody>${steuerZeilen || '<tr><td colspan="4"><pre>Keine Steuerdaten vorhanden.</pre></td></tr>'}</tbody>
+                        <tfoot>
+                            <tr style="border-top: 1px solid black;">
+                                <td><pre><b>Gesamt</b></pre></td>
+                                <td style="text-align: right;"><pre><b>${formatiereBetrag(gesamt.netto)}</b></pre></td>
+                                <td style="text-align: right;"><pre><b>${formatiereBetrag(gesamt.mwst)}</b></pre></td>
+                                <td style="text-align: right;"><pre><b>${formatiereBetrag(gesamt.brutto)}</b></pre></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    ${ungültigeDatensätze > 0 ? `<p><pre>Hinweis: ${ungültigeDatensätze} Datensätze mit ungültigem Preis oder MwSt-Satz wurden nicht berücksichtigt.</pre></p>` : ''}
+                </div>
+                <hr>
+                <div>
+                    <pre style="text-align: center;">Die Bilanz beinhaltet alle Umsätze innerhalb des angegebenen Zeitraums.<br>Die Bilanz wurde automatisiert erstellt mit<br>ClubCash - Das bargeldlose Bezahlsystem für Flugsportvereine<br>&copy; 2026 Marcel Schommer</pre>
+                </div>
+            </body>
+            </html>`;
+    }
+
+    /**
      * Zeigt detaillierte Kundenübersicht mit allen Umsätzen
      * Gruppiert nach: Einzelumsätze, Produkte, Produktgruppen
      * @param {string} kundennummer - ID des Kunden
@@ -3882,6 +4174,7 @@ if ($response !== false) {
             <button class="kleinerBt" onclick="Umsätze(monatsbeginn, heute)">Monat</button>
             <button class="kleinerBt" onclick="Umsätze(wochenbeginn, heute)">Woche</button>
             <button class="kleinerBt" onclick="Umsätze(heute, heute)">Tag</button>
+            <button class="kleinerBt" onclick="Bilanz()">Bilanz</button>
         `;
 
         //Tabelle1 - Einzelumsätze
