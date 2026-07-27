@@ -72,9 +72,16 @@ use PHPMailer\PHPMailer\PHPMailer;
 if (($handle = fopen($csvDatei2, "r")) !== FALSE) {
     $header = fgetcsv($handle, 1000, ";"); // Erste Zeile als Header lesen (Spaltennamen)
 
-    while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
-        if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
-            $verkäufe[] = array_combine($header, $row); // Header mit Werten kombinieren
+    if ($header !== false) {
+        // Optionales UTF-8-BOM entfernen, damit der erste Spaltenname exakt "Datum" lautet.
+        if (isset($header[0])) {
+            $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', $header[0]);
+        }
+
+        while (($row = fgetcsv($handle, 1000, ";")) !== FALSE) {
+            if (count($row) == count($header)) { // Nur Zeilen mit vollständigen Werten verarbeiten
+                $verkäufe[] = array_combine($header, $row); // Header mit Werten kombinieren
+            }
         }
     }
     fclose($handle);
@@ -577,6 +584,24 @@ if ($response !== false) {
         }
     }       
 
+    function sortiereVerkaeufeChronologischFallsNoetig(daten) {
+        const vergleiche = (a, b) => {
+            const datumVergleich = String(a.Datum || '').localeCompare(String(b.Datum || ''));
+            if (datumVergleich !== 0) return datumVergleich;
+            return String(a.Zeit || '').localeCompare(String(b.Zeit || ''));
+        };
+
+        const istSortiert = daten.every((verkauf, index) =>
+            index === 0 || vergleiche(daten[index - 1], verkauf) <= 0
+        );
+        if (istSortiert) return daten;
+
+        return daten
+            .map((verkauf, index) => ({ verkauf, index }))
+            .sort((a, b) => vergleiche(a.verkauf, b.verkauf) || a.index - b.index)
+            .map(eintrag => eintrag.verkauf);
+    }
+
     /**
      * Öffnet einen Dialog zum Bearbeiten einer einzelnen Buchung.
      * @param {number} index - Index der Buchung im Verkaufsarray
@@ -709,8 +734,10 @@ if ($response !== false) {
                 Preis: preis.toFixed(2),
                 MwSt: String(mwst)
             };
-            const aktualisierteVerkäufe = verkäufe.map((eintrag, verkaufsindex) =>
-                verkaufsindex === index ? aktualisierterVerkauf : eintrag
+            const aktualisierteVerkäufe = sortiereVerkaeufeChronologischFallsNoetig(
+                verkäufe.map((eintrag, verkaufsindex) =>
+                    verkaufsindex === index ? aktualisierterVerkauf : eintrag
+                )
             );
             const speichernButton = dialog.querySelector('#edit-speichern');
             speichernButton.disabled = true;
@@ -3148,7 +3175,7 @@ if ($response !== false) {
         
         let html = '';
 
-        // die akteullen anmeldedaten holen
+        // die aktuellen anmeldedaten holen
 
         const kunde = käufer.find(kunde => kunde.uid == kundennummer);
 
@@ -4003,9 +4030,10 @@ if ($response !== false) {
                                         <th class="rechts">Netto</th>
                                         <th class="rechts">MwSt</th>
                                         <th class="rechts">Brutto</th>
+                                        <th></th>
                                     </tr>
                                     <tbody>`;
-                                    verkäufe.forEach(verkauf => {
+                                    verkäufe.forEach((verkauf, index) => {
                                         if (verkauf.EAN === produkt.EAN && verkauf.Datum >= datum1.toISOString().split('T')[0] && verkauf.Datum <= datum2.toISOString().split('T')[0]) {
                     
                                             Kunde = käufer.find(kunde => kunde.uid === verkauf.Kundennummer);
@@ -4066,6 +4094,7 @@ if ($response !== false) {
                                                     <td class="rechts">${(verkauf.Preis/(1 + verkauf.MwSt/100)).toFixed(2)} €</td>
                                                     <td class="rechts">${verkauf.MwSt} %</td>
                                                     <td class="rechts">${verkauf.Preis} €</td>
+                                                    <td><a href="#" class="icon" title="Buchung bearbeiten" onclick="editVerkauf(${index}, 'umsaetze'); return false;">✏️</a></td>
                                                 </tr>`; 
                                         }
                                     }); 
@@ -4078,6 +4107,7 @@ if ($response !== false) {
                                             <td class="rechts"><b>${netto_summe.toFixed(2)} €</b></td>
                                             <td></td>
                                             <td class="rechts"><b>${brutto_summe.toFixed(2)} €</b></td>
+                                            <td></td>
                                         </tr>
                                     </tbody>
                                     </table>
@@ -4098,10 +4128,11 @@ if ($response !== false) {
                                     <th class="rechts">Netto</th>
                                     <th class="rechts">MwSt</th>
                                     <th class="rechts">Brutto</th>
+                                    <th></th>
                                 </tr>
                             <tbody>`;
 
-                            verkäufe.forEach(verkauf => {
+                            verkäufe.forEach((verkauf, index) => {
                                 if (verkauf.EAN === produkt.EAN && verkauf.Datum >= datum1.toISOString().split('T')[0] && verkauf.Datum <= datum2.toISOString().split('T')[0]) {
     
                                     Kunde = käufer.find(kunde => kunde.uid === verkauf.Kundennummer);
@@ -4125,6 +4156,7 @@ if ($response !== false) {
                                             <td class="rechts">${(verkauf.Preis/(1 + verkauf.MwSt/100)).toFixed(2)} €</td>
                                             <td class="rechts">${verkauf.MwSt} %</td>
                                             <td class="rechts">${verkauf.Preis} €</td>
+                                            <td><a href="#" class="icon" title="Buchung bearbeiten" onclick="editVerkauf(${index}, 'umsaetze'); return false;">✏️</a></td>
                                         </tr>`; 
                                 }
                             }); 
@@ -5050,7 +5082,7 @@ if ($response !== false) {
                     </div>
                     <hr>
                     <div>
-                    <pre style="text-align: center;">Die Abrechnung beinhaltet alle Umsätze innerhalb des angegebenen Zeitraums. <br>Umsätze außerhalb dieses Zeitraums sind nicht enthalten und geben <br>entsprechend nicht den akteullen Kontostand mit den Buttosummen der MwSt an. <br>Die Abrechnung wurde automatisiert erstellt mit <br> ClubCash - Das bargeldlose Bezahlsystem für Flugsportvereine <br>&copy; 2026 Marcel Schommer</pre>
+                    <pre style="text-align: center;">Die Abrechnung beinhaltet alle Umsätze innerhalb des angegebenen Zeitraums. <br>Umsätze außerhalb dieses Zeitraums sind nicht enthalten und geben <br>entsprechend nicht den aktuellen Kontostand mit den Buttosummen der MwSt an. <br>Die Abrechnung wurde automatisiert erstellt mit <br> ClubCash - Das bargeldlose Bezahlsystem für Flugsportvereine <br>&copy; 2026 Marcel Schommer</pre>
                     </div>
                 </div>    
             </body>

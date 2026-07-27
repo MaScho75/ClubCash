@@ -61,6 +61,11 @@ try {
         exit;
     }
 
+    // Optionales UTF-8-BOM vom ersten Feld entfernen.
+    if (isset($firstRow[0])) {
+        $firstRow[0] = preg_replace('/^\xEF\xBB\xBF/', '', $firstRow[0]);
+    }
+
     $isHeaderRow = true;
     foreach ($requiredHeaderIndexes as $index => $expectedValue) {
         if (!isset($firstRow[$index]) || trim((string) $firstRow[$index]) !== $expectedValue) {
