@@ -4076,9 +4076,7 @@ if ($response !== false) {
                                                     <td>${verkauf.Zeit}</td>
                                                     <td class="links">${Kunde.lastname}, ${Kunde.firstname}</td>
                                                     <td class="rechts">`
-
-
-                                            console.log("Zählerstand_kontrolle: " + Zählerstand_kontrolle);        
+    
                                             if (Zählerstand_kontrolle == Zählerstand_alt||Zählerstand_kontrolle == 0) {
                                                 html += `${Zählerstand_alt} l</td>`;
                                             } else {
